@@ -31,8 +31,17 @@ export default function LoginPage() {
     }
 
     if (isFirebaseConfigured() && password) {
-      // Authenticate with Firebase Auth
-      await firebaseLoginUser(phone, password).catch(() => {});
+      // Try to login with Firebase Auth
+      const fbLogin = await firebaseLoginUser(phone, password);
+      if (!fbLogin.success) {
+        // Student might have been created by admin (no Firebase Auth account yet)
+        // Auto-create their Firebase Auth account on first login
+        const fbReg = await firebaseRegisterUser(phone, password);
+        if (!fbReg.success) {
+          // Account might exist with different password - try to sign in again
+          await firebaseLoginUser(phone, password).catch(() => {});
+        }
+      }
     }
 
     const result = await studentLoginAsync(phone, password);
