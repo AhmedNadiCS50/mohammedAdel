@@ -1,5 +1,6 @@
 import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress } from './types';
 export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress };
+import { STATIC_LESSONS } from '@/data/lessons';
 import { isFirebaseConfigured } from './firebase';
 import {
   getStudentsFromFirestore,
@@ -537,11 +538,19 @@ export function redeemAccessCode(codeString: string, studentId: string): { succe
 // LESSONS MANAGEMENT
 // ---------------------------
 export function getLessons(grade?: GradeLevel): Lesson[] {
-  const lessons = getLocal<Lesson[]>(KEYS.LESSONS, []);
-  if (grade) {
-    return lessons.filter(l => l.grade === grade);
+  const local = getLocal<Lesson[]>(KEYS.LESSONS, []);
+  const map = new Map<string, Lesson>();
+  for (const l of STATIC_LESSONS) {
+    map.set(l.id, l);
   }
-  return lessons;
+  for (const l of local) {
+    map.set(l.id, l);
+  }
+  const all = Array.from(map.values()).sort((a, b) => a.orderIndex - b.orderIndex);
+  if (grade) {
+    return all.filter(l => l.grade === grade);
+  }
+  return all;
 }
 
 export function getLessonById(id: string): Lesson | null {

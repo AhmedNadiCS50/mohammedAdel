@@ -49,32 +49,39 @@ export default function StudentDashboardPage() {
     if (!s) { router.push('/login'); return; }
     setStudent(s);
 
+    // 1. Instant load static & local lessons/exams so user never waits
+    const staticLessons = getLessons(s.grade);
+    const staticExams = getExams(s.grade);
+    setLessons(staticLessons);
+    setExams(staticExams);
+    setDataLoading(false);
+
     const loadData = async () => {
-      setDataLoading(true);
       try {
         if (isFirebaseConfigured()) {
-          // Read directly from Firestore - this is the source of truth
           const [remoteLessons, remoteExams] = await Promise.all([
             getLessonsFromFirestore(s.grade),
             getExamsFromFirestore(s.grade),
           ]);
-          setLessons(remoteLessons);
-          setExams(remoteExams);
+          if (remoteLessons && remoteLessons.length > 0) {
+            const map = new Map<string, Lesson>();
+            staticLessons.forEach(l => map.set(l.id, l));
+            remoteLessons.forEach(l => map.set(l.id, l));
+            setLessons(Array.from(map.values()).sort((a, b) => a.orderIndex - b.orderIndex));
+          }
+          if (remoteExams && remoteExams.length > 0) {
+            const map = new Map<string, Exam>();
+            staticExams.forEach(e => map.set(e.id, e));
+            remoteExams.forEach(e => map.set(e.id, e));
+            setExams(Array.from(map.values()));
+          }
 
-          // Also refresh student data from Firestore
+          // Refresh student data from Firestore
           const freshStudent = await getStudentByIdFromFirestore(s.id);
           if (freshStudent) setStudent(freshStudent);
-        } else {
-          // Fallback to localStorage if Firebase not configured
-          setLessons(getLessons(s.grade));
-          setExams(getExams(s.grade));
         }
       } catch (err) {
-        console.error('Failed to load data from Firestore, using localStorage:', err);
-        setLessons(getLessons(s.grade));
-        setExams(getExams(s.grade));
-      } finally {
-        setDataLoading(false);
+        console.warn('Remote sync notice:', err);
       }
     };
 
