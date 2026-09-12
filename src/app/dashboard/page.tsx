@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   getCurrentStudent,
+  setCurrentStudent,
   getStudentById,
   getLessons,
   getExams,
@@ -47,6 +48,10 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     const s = getCurrentStudent();
     if (!s) { router.push('/login'); return; }
+    if (s.grade && (s.grade as string).includes('baccalaureate')) {
+      s.grade = (s.grade as string).includes('second') ? 'second_secondary_bac' : 'first_secondary_bac';
+      setCurrentStudent(s);
+    }
     setStudent(s);
 
     // 1. Instant load static & local lessons/exams so user never waits
@@ -78,7 +83,14 @@ export default function StudentDashboardPage() {
 
           // Refresh student data from Firestore
           const freshStudent = await getStudentByIdFromFirestore(s.id);
-          if (freshStudent) setStudent(freshStudent);
+          if (freshStudent) {
+            if (freshStudent.grade && (freshStudent.grade as string).includes('baccalaureate')) {
+              freshStudent.grade = (freshStudent.grade as string).includes('second') ? 'second_secondary_bac' : 'first_secondary_bac';
+            }
+            setStudent(freshStudent);
+            setCurrentStudent(freshStudent);
+            setLessons(getLessons(freshStudent.grade));
+          }
         }
       } catch (err) {
         console.warn('Remote sync notice:', err);

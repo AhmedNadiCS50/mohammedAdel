@@ -149,9 +149,9 @@ export default function RegisterPage() {
                 className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 text-gray-900 bg-white focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 text-sm appearance-none cursor-pointer"
               >
                 <option value="first_secondary_general">الصف الأول الثانوي - عام (المنهج الجديد)</option>
-                <option value="first_secondary_baccalaureate">الصف الأول الثانوي - بكالوريا تخصصية</option>
+                <option value="first_secondary_bac">الصف الأول الثانوي - بكالوريا تخصصية</option>
                 <option value="second_secondary_general">الصف الثاني الثانوي - عام (علمي وأدبي)</option>
-                <option value="second_secondary_baccalaureate">الصف الثاني الثانوي - بكالوريا برمجة (كتاب المستر)</option>
+                <option value="second_secondary_bac">الصف الثاني الثانوي - بكالوريا برمجة (كتاب المستر)</option>
               </select>
               <GraduationCap className="w-4 h-4 text-gray-400 absolute right-3.5 top-3 pointer-events-none" />
             </div>

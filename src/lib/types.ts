@@ -1,8 +1,10 @@
 export type GradeLevel = 
   | 'first_secondary_general' 
   | 'first_secondary_bac' 
+  | 'first_secondary_baccalaureate'
   | 'second_secondary_general' 
-  | 'second_secondary_bac';
+  | 'second_secondary_bac'
+  | 'second_secondary_baccalaureate';
 export type AcademicTrack = 'general' | 'scientific' | 'literary';
 export type QuestionType = 'mcq' | 'essay';
 

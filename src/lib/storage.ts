@@ -535,6 +535,22 @@ export function redeemAccessCode(codeString: string, studentId: string): { succe
 }
 
 // ---------------------------
+// Helper to normalize grade level variations (e.g. bac vs baccalaureate)
+export function normalizeGrade(grade?: string): GradeLevel {
+  if (!grade) return 'first_secondary_general';
+  if (grade === 'second_secondary_baccalaureate' || grade === 'second_secondary_bac') {
+    return 'second_secondary_bac';
+  }
+  if (grade === 'first_secondary_baccalaureate' || grade === 'first_secondary_bac') {
+    return 'first_secondary_bac';
+  }
+  if (grade === 'second_secondary_general') {
+    return 'second_secondary_general';
+  }
+  return 'first_secondary_general';
+}
+
+// ---------------------------
 // LESSONS MANAGEMENT
 // ---------------------------
 export function getLessons(grade?: GradeLevel): Lesson[] {
@@ -548,7 +564,8 @@ export function getLessons(grade?: GradeLevel): Lesson[] {
   }
   const all = Array.from(map.values()).sort((a, b) => a.orderIndex - b.orderIndex);
   if (grade) {
-    return all.filter(l => l.grade === grade);
+    const norm = normalizeGrade(grade);
+    return all.filter(l => normalizeGrade(l.grade) === norm);
   }
   return all;
 }
@@ -614,7 +631,7 @@ export function extractYoutubeId(urlOrId: string): string {
 export function canStudentAccessLesson(student: Student | null, lesson: Lesson): boolean {
   if (!student) return false;
   // If student has active subscription for this grade
-  if (student.subscription.isActive && student.grade === lesson.grade) {
+  if (student.subscription.isActive && normalizeGrade(student.grade) === normalizeGrade(lesson.grade)) {
     return true;
   }
   // Or if teacher gave specific custom access to this lesson
@@ -770,7 +787,8 @@ export function manuallyLockLesson(studentId: string, lessonId: string): boolean
 export function getExams(grade?: GradeLevel): Exam[] {
   const exams = getLocal<Exam[]>(KEYS.EXAMS, []);
   if (grade) {
-    return exams.filter(e => e.grade === grade);
+    const norm = normalizeGrade(grade);
+    return exams.filter(e => normalizeGrade(e.grade) === norm);
   }
   return exams;
 }
@@ -974,8 +992,10 @@ export function addLog(entry: Omit<ActivationLog, 'id' | 'timestamp'>): void {
 export const GRADE_LABELS: Record<GradeLevel, string> = {
   first_secondary_general: 'الصف الأول الثانوي (عام)',
   first_secondary_bac: 'الصف الأول الثانوي (بكالوريا)',
+  first_secondary_baccalaureate: 'الصف الأول الثانوي (بكالوريا)',
   second_secondary_general: 'الصف الثاني الثانوي (عام)',
   second_secondary_bac: 'الصف الثاني الثانوي (بكالوريا)',
+  second_secondary_baccalaureate: 'الصف الثاني الثانوي (بكالوريا)',
 };
 
 export const TRACK_LABELS: Record<AcademicTrack, string> = {
