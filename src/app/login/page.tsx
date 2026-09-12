@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { studentLoginAsync, setAdminLoggedIn } from '@/lib/storage';
 import { isFirebaseConfigured } from '@/lib/firebase';
-import { firebaseLoginUser } from '@/lib/firebaseAuth';
+import { firebaseLoginUser, firebaseRegisterUser } from '@/lib/firebaseAuth';
 import { User, Lock, Phone, ShieldCheck, AlertCircle, GraduationCap } from 'lucide-react';
 
 export default function LoginPage() {
@@ -44,17 +44,26 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     const cleanUser = adminUser.trim().toLowerCase();
     if ((cleanUser === 'admin' || cleanUser === 'mohamed') && adminPassword === 'adel2027') {
+      // Authenticate with Firebase Auth so Firestore rules recognize admin
+      if (isFirebaseConfigured()) {
+        const loginResult = await firebaseLoginUser('admin', adminPassword);
+        if (!loginResult.success) {
+          // Admin Firebase account doesn't exist yet - create it
+          await firebaseRegisterUser('admin', adminPassword);
+        }
+      }
       setAdminLoggedIn(true);
       router.push('/admin');
     } else {
       setError('اسم المستخدم أو كلمة مرور لوحة المدرس غير صحيحة.');
+      setLoading(false);
     }
     setLoading(false);
   };

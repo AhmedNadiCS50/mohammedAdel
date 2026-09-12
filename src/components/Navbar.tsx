@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { getCurrentStudent, setCurrentStudent, isAdminLoggedIn, setAdminLoggedIn } from '@/lib/storage';
 import { Student } from '@/lib/types';
+import { firebaseLogoutUser } from '@/lib/firebaseAuth';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -35,11 +36,12 @@ export default function Navbar() {
     return () => window.removeEventListener('platform-data-changed', checkAuth);
   }, [pathname]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setCurrentStudent(null);
     setAdminLoggedIn(false);
     setStudent(null);
     setIsAdmin(false);
+    await firebaseLogoutUser(); // Sign out from Firebase Auth too
     router.push('/');
   };
 
