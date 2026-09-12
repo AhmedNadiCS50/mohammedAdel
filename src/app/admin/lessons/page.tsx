@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { getLessons, saveLesson, deleteLesson, extractYoutubeId, GRADE_LABELS } from '@/lib/storage';
+import { getLessonsFromFirestore, saveLessonToFirestore, deleteLessonFromFirestore } from '@/lib/firestoreService';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { Lesson, GradeLevel } from '@/lib/types';
 import { 
   Video, 
@@ -13,13 +15,18 @@ import {
   FileText, 
   ExternalLink,
   Sparkles,
-  Play
+  Play,
+  Loader2,
+  XCircle
 } from 'lucide-react';
 
 export default function AdminLessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -35,8 +42,20 @@ export default function AdminLessonsPage() {
     loadLessons();
   }, []);
 
-  const loadLessons = () => {
-    setLessons(getLessons());
+  const loadLessons = async () => {
+    setPageLoading(true);
+    try {
+      if (isFirebaseConfigured()) {
+        const remoteLessons = await getLessonsFromFirestore();
+        setLessons(remoteLessons);
+      } else {
+        setLessons(getLessons());
+      }
+    } catch (err) {
+      setLessons(getLessons()); // fallback to localStorage
+    } finally {
+      setPageLoading(false);
+    }
   };
 
   const handleOpenAdd = () => {
@@ -63,17 +82,29 @@ export default function AdminLessonsPage() {
     setIsAdding(true);
   };
 
-  const handleDelete = (id: string, lessonTitle: string) => {
+  const handleDelete = async (id: string, lessonTitle: string) => {
     if (confirm(`هل أنت متأكد من حذف درس "${lessonTitle}"؟`)) {
-      deleteLesson(id);
-      loadLessons();
-      setNotice('تم حذف الدرس بنجاح.');
-      setTimeout(() => setNotice(null), 3000);
+      setSaving(true);
+      try {
+        if (isFirebaseConfigured()) {
+          await deleteLessonFromFirestore(id);
+        } else {
+          deleteLesson(id);
+        }
+        await loadLessons();
+        setNotice('تم حذف الدرس بنجاح.');
+        setTimeout(() => setNotice(null), 3000);
+      } catch (err) {
+        setSaveError('فشل حذف الدرس من قاعدة البيانات.');
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError(null);
     const videoId = extractYoutubeId(youtubeUrl);
 
     if (!videoId) {
@@ -81,21 +112,54 @@ export default function AdminLessonsPage() {
       return;
     }
 
-    saveLesson({
-      title: title.trim(),
-      description: description.trim(),
-      grade,
-      month: month.trim(),
-      youtubeVideoId: videoId,
-      pdfAttachmentUrl: pdfUrl.trim() || undefined,
-      orderIndex: lessons.length + 1,
-    }, editingId || undefined);
+    setSaving(true);
+    try {
+      if (isFirebaseConfigured()) {
+        // Build lesson object manually so we can await Firestore
+        const existingLesson = editingId ? lessons.find(l => l.id === editingId) : null;
+        const lessonToSave: Lesson = {
+          id: editingId || ('les_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+          title: title.trim(),
+          description: description.trim(),
+          grade,
+          month: month.trim(),
+          youtubeVideoId: videoId,
+          pdfAttachmentUrl: pdfUrl.trim() || undefined,
+          orderIndex: existingLesson?.orderIndex ?? (lessons.length + 1),
+          createdAt: existingLesson?.createdAt ?? new Date().toISOString(),
+        };
 
-    setIsAdding(false);
-    setEditingId(null);
-    loadLessons();
-    setNotice(editingId ? 'تم تعديل بيانات الدرس بنجاح.' : 'تم إضافة المحاضرة الجديدة بنجاح.');
-    setTimeout(() => setNotice(null), 3000);
+        const success = await saveLessonToFirestore(lessonToSave);
+        if (!success) {
+          setSaveError('❌ فشل الحفظ في قاعدة البيانات. تأكد من:
+1. تسجيل خروجك ودخولك كأدمن مرة أخرى
+2. إن الـ Firestore Rules مطبقة صح');
+          setSaving(false);
+          return;
+        }
+      } else {
+        // Fallback to localStorage if Firebase not configured
+        saveLesson({
+          title: title.trim(),
+          description: description.trim(),
+          grade,
+          month: month.trim(),
+          youtubeVideoId: videoId,
+          pdfAttachmentUrl: pdfUrl.trim() || undefined,
+          orderIndex: lessons.length + 1,
+        }, editingId || undefined);
+      }
+
+      setIsAdding(false);
+      setEditingId(null);
+      await loadLessons();
+      setNotice(editingId ? 'تم تعديل بيانات الدرس بنجاح. ✅' : 'تم إضافة المحاضرة بنجاح وحُفظت في قاعدة البيانات. ✅');
+      setTimeout(() => setNotice(null), 5000);
+    } catch (err) {
+      setSaveError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const previewId = extractYoutubeId(youtubeUrl);
@@ -124,6 +188,13 @@ export default function AdminLessonsPage() {
         <div className="p-3.5 bg-emerald-100 border border-emerald-300 text-emerald-950 font-bold rounded-xl text-xs flex items-center gap-2">
           <Check className="w-4 h-4 text-emerald-700" />
           <span>{notice}</span>
+        </div>
+      )}
+
+      {saveError && (
+        <div className="p-3.5 bg-red-50 border border-red-300 text-red-800 font-bold rounded-xl text-xs flex items-start gap-2">
+          <XCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+          <span style={{ whiteSpace: 'pre-line' }}>{saveError}</span>
         </div>
       )}
 

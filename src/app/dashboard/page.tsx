@@ -13,10 +13,14 @@ import {
   canStudentAccessLessonSequential,
   getLessonProgress,
   getExamSubmissions,
-  syncFromFirestore,
   GRADE_LABELS
 } from '@/lib/storage';
 import { isFirebaseConfigured } from '@/lib/firebase';
+import {
+  getLessonsFromFirestore,
+  getExamsFromFirestore,
+  getStudentByIdFromFirestore
+} from '@/lib/firestoreService';
 import { Student, Lesson, Exam } from '@/lib/types';
 import {
   Video,
@@ -27,6 +31,7 @@ import {
   AlertTriangle,
   Play,
   BookOpen,
+  Loader2,
 } from 'lucide-react';
 import StudentCourseStats from '@/components/StudentCourseStats';
 
@@ -37,27 +42,58 @@ export default function StudentDashboardPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [activeTab, setActiveTab] = useState<'lessons' | 'exams'>('lessons');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     const s = getCurrentStudent();
     if (!s) { router.push('/login'); return; }
     setStudent(s);
-    setLessons(getLessons(s.grade));
-    setExams(getExams(s.grade));
 
-    if (isFirebaseConfigured()) {
-      syncFromFirestore().then(() => {
-        const freshStudent = getStudentById(s.id);
-        if (freshStudent) {
-          setStudent(freshStudent);
-          setLessons(getLessons(freshStudent.grade));
-          setExams(getExams(freshStudent.grade));
+    const loadData = async () => {
+      setDataLoading(true);
+      try {
+        if (isFirebaseConfigured()) {
+          // Read directly from Firestore - this is the source of truth
+          const [remoteLessons, remoteExams] = await Promise.all([
+            getLessonsFromFirestore(s.grade),
+            getExamsFromFirestore(s.grade),
+          ]);
+          setLessons(remoteLessons);
+          setExams(remoteExams);
+
+          // Also refresh student data from Firestore
+          const freshStudent = await getStudentByIdFromFirestore(s.id);
+          if (freshStudent) setStudent(freshStudent);
+        } else {
+          // Fallback to localStorage if Firebase not configured
+          setLessons(getLessons(s.grade));
+          setExams(getExams(s.grade));
         }
-      });
-    }
+      } catch (err) {
+        console.error('Failed to load data from Firestore, using localStorage:', err);
+        setLessons(getLessons(s.grade));
+        setExams(getExams(s.grade));
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadData();
   }, [router]);
 
   if (!student) return null;
+
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-green-600 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500 font-medium">جاري تحميل بياناتك...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   const daysRemaining = getDaysRemaining(student.subscription.expiresAt);
   const isExpiringSoon = isSubscriptionExpiringSoon(student.subscription.expiresAt);
