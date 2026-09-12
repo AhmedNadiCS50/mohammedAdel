@@ -131,9 +131,7 @@ export default function AdminLessonsPage() {
 
         const success = await saveLessonToFirestore(lessonToSave);
         if (!success) {
-          setSaveError('❌ فشل الحفظ في قاعدة البيانات. تأكد من:
-1. تسجيل خروجك ودخولك كأدمن مرة أخرى
-2. إن الـ Firestore Rules مطبقة صح');
+          setSaveError('❌ فشل الحفظ في قاعدة البيانات. تأكد من:\n1. تسجيل خروجك ودخولك كأدمن مرة أخرى\n2. إن الـ Firestore Rules مطبقة صح');
           setSaving(false);
           return;
         }
