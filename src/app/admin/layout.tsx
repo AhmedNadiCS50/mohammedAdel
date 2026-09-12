@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { isAdminLoggedIn, setAdminLoggedIn, getPendingEssaySubmissions } from '@/lib/storage';
+import { ensureAdminFirebaseAuth } from '@/lib/firebaseAuth';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { 
   LayoutDashboard, 
   Users, 
@@ -30,6 +32,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsAdmin(check);
     if (!check && pathname !== '/login') {
       router.push('/login');
+    } else if (check && isFirebaseConfigured()) {
+      ensureAdminFirebaseAuth().catch(() => {});
     }
     setPendingCount(getPendingEssaySubmissions().length);
 

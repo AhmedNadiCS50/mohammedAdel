@@ -11,7 +11,14 @@ import {
   orderBy,
   Timestamp
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase';
+import { db, auth, isFirebaseConfigured } from './firebase';
+import { ensureAdminFirebaseAuth } from './firebaseAuth';
+
+async function makeSureAdminIsAuthenticated() {
+  if (auth && (!auth.currentUser || auth.currentUser.email !== 'admin@adel-tech.local')) {
+    await ensureAdminFirebaseAuth();
+  }
+}
 import {
   Student,
   Lesson,
@@ -66,6 +73,7 @@ export async function getStudentByIdFromFirestore(studentId: string): Promise<St
 export async function saveStudentToFirestore(student: Student): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     const docRef = doc(db, COLLECTIONS.STUDENTS, student.id);
     await setDoc(docRef, student, { merge: true });
     return true;
@@ -78,6 +86,7 @@ export async function saveStudentToFirestore(student: Student): Promise<boolean>
 export async function deleteStudentFromFirestore(studentId: string): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     const docRef = doc(db, COLLECTIONS.STUDENTS, studentId);
     await deleteDoc(docRef);
     return true;
@@ -107,6 +116,7 @@ export async function getLessonsFromFirestore(grade?: GradeLevel): Promise<Lesso
 export async function saveLessonToFirestore(lesson: Lesson): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     const docRef = doc(db, COLLECTIONS.LESSONS, lesson.id);
     await setDoc(docRef, lesson, { merge: true });
     return true;
@@ -119,6 +129,7 @@ export async function saveLessonToFirestore(lesson: Lesson): Promise<boolean> {
 export async function deleteLessonFromFirestore(lessonId: string): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     await deleteDoc(doc(db, COLLECTIONS.LESSONS, lessonId));
     return true;
   } catch (err) {
@@ -146,6 +157,7 @@ export async function getExamsFromFirestore(grade?: GradeLevel): Promise<Exam[]>
 export async function saveExamToFirestore(exam: Exam): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     await setDoc(doc(db, COLLECTIONS.EXAMS, exam.id), exam, { merge: true });
     return true;
   } catch (err) {
@@ -157,6 +169,7 @@ export async function saveExamToFirestore(exam: Exam): Promise<boolean> {
 export async function deleteExamFromFirestore(examId: string): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     await deleteDoc(doc(db, COLLECTIONS.EXAMS, examId));
     return true;
   } catch (err) {
@@ -259,6 +272,7 @@ export async function getAccessCodesFromFirestore(): Promise<AccessCode[]> {
 export async function saveAccessCodeToFirestore(code: AccessCode): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     const docId = code.code.trim().toUpperCase();
     await setDoc(doc(db, COLLECTIONS.ACCESS_CODES, docId), code, { merge: true });
     return true;
@@ -285,6 +299,7 @@ export async function getSettingsFromFirestore(): Promise<PlatformSettings | nul
 export async function saveSettingsToFirestore(settings: PlatformSettings): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
+    await makeSureAdminIsAuthenticated();
     await setDoc(doc(db, COLLECTIONS.SETTINGS, 'platform_settings'), settings, { merge: true });
     return true;
   } catch (err) {
@@ -319,6 +334,7 @@ export async function migrateLocalStorageToFirestore(localData: {
   };
 
   try {
+    await makeSureAdminIsAuthenticated();
     // 1. Students
     for (const student of localData.students) {
       await setDoc(doc(db, COLLECTIONS.STUDENTS, student.id), student, { merge: true });

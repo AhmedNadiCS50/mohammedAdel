@@ -9,8 +9,31 @@ import { auth, isFirebaseConfigured } from './firebase';
 
 // Helper to convert phone to internal Firebase email
 export function phoneToEmail(phone: string): string {
-  const cleanPhone = phone.trim().replace(/[^0-9]/g, '');
+  const trimmed = phone.trim().toLowerCase();
+  if (trimmed === 'admin' || trimmed === 'mohamed') {
+    return 'admin@adel-tech.local';
+  }
+  const cleanPhone = trimmed.replace(/[^0-9]/g, '');
   return `${cleanPhone}@adel-tech.local`;
+}
+
+export async function ensureAdminFirebaseAuth(): Promise<boolean> {
+  if (!isFirebaseConfigured() || !auth) return false;
+  if (auth.currentUser && auth.currentUser.email === 'admin@adel-tech.local') {
+    return true;
+  }
+  try {
+    const cred = await signInWithEmailAndPassword(auth, 'admin@adel-tech.local', 'adel2027');
+    return !!cred.user;
+  } catch (err) {
+    try {
+      const reg = await createUserWithEmailAndPassword(auth, 'admin@adel-tech.local', 'adel2027');
+      return !!reg.user;
+    } catch (regErr) {
+      console.error('ensureAdminFirebaseAuth error:', regErr);
+      return false;
+    }
+  }
 }
 
 export async function firebaseRegisterUser(phone: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
