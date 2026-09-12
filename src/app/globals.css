@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════
+   DESIGN TOKENS — WHITE & GREEN
+═══════════════════════════════════════ */
+:root {
+  --green-dark:   #1B4332;
+  --green-mid:    #2D6A4F;
+  --green-light:  #52B788;
+  --green-pale:   #D8F3DC;
+
+  --bg-body:      #FAFAF8;
+  --bg-section:   #F3F7F4;
+  --bg-card:      #FFFFFF;
+  --bg-card-alt:  #F7FBF8;
+
+  --border:       #D1E8D9;
+  --border-dark:  #A8D5B5;
+
+  --text-900:     #0F1E17;
+  --text-700:     #2D4A38;
+  --text-500:     #5A7A68;
+  --text-400:     #8AA89A;
+}
+
+/* ═══════════════════════════════════════
+   BASE RESET
+═══════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  font-family: 'Tajawal', system-ui, sans-serif;
+  direction: rtl;
+  text-align: right;
+  background-color: var(--bg-body);
+  color: var(--text-900);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Tajawal', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.45;
+  color: var(--text-900);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+p {
+  color: var(--text-500);
+  line-height: 1.85;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════ */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: #f0f0f0; }
+::-webkit-scrollbar-thumb  { background: var(--green-mid); border-radius: 99px; }
+
+/* ═══════════════════════════════════════
+   CARD — clean white card with shadow
+═══════════════════════════════════════ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(27,67,50,0.05);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-dark);
+  box-shadow: 0 4px 16px rgba(27,67,50,0.10), 0 8px 24px rgba(27,67,50,0.06);
+}
+
+/* Keep cyber-glass-card as alias to .card for backward compat */
+.cyber-glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(27,67,50,0.05);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.cyber-glass-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-dark);
+  box-shadow: 0 4px 16px rgba(27,67,50,0.10), 0 8px 24px rgba(27,67,50,0.06);
+}
+
+/* ═══════════════════════════════════════
+   PRIMARY BUTTON
+═══════════════════════════════════════ */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-family: 'Tajawal', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background: var(--green-dark);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.btn-primary:hover {
+  background: var(--green-mid);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════ */
+.animated-gradient-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════
+   CARD HOVER
+═══════════════════════════════════════ */
+.card-hover {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(27,67,50,0.10);
+}
+
+/* ═══════════════════════════════════════
+   SECTION BACKGROUNDS
+═══════════════════════════════════════ */
+.section-alt {
+  background: var(--bg-section);
+}
+
+/* ═══════════════════════════════════════
+   STATUS RING (removed glow, kept ring)
+═══════════════════════════════════════ */
+.status-ring {
+  position: relative;
+}
+.status-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid var(--green-light);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════
+   VIDEO WATERMARK
+═══════════════════════════════════════ */
+.video-watermark-layer {
+  pointer-events: none;
+  user-select: none;
+  z-index: 25;
+  opacity: 0.15;
+}
+
+/* ═══════════════════════════════════════
+   CODE FONT
+═══════════════════════════════════════ */
+.font-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ═══════════════════════════════════════
+   TEXT SELECTION
+═══════════════════════════════════════ */
+::selection {
+  background: var(--green-pale);
+  color: var(--green-dark);
+}
