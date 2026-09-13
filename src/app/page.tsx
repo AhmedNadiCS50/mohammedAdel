@@ -116,22 +116,22 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <ScrollCanvas>
         <Reveal>
-          <span className="text-[11px] sm:text-xs tracking-[0.3em] text-white/40">
+          <span className="text-[11px] sm:text-xs tracking-[0.3em] text-white/60 drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
             المنصة الرسمية المعتمدة • دفعة 2027
           </span>
         </Reveal>
 
         <Reveal delay={100}>
-          <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.2rem] sm:leading-[1.25] font-semibold text-white tracking-tight">
+          <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.2rem] sm:leading-[1.25] font-bold text-white tracking-tight drop-shadow-[0_4px_22px_rgba(0,0,0,0.65)]">
             مادة التكنولوجيا مع
-            <span className="block mt-2 bg-gradient-to-l from-[#F3D879] via-[#E8C666] to-[#D4AF37] bg-clip-text text-transparent">
+            <span className="block mt-2 bg-gradient-to-l from-white via-[#F1F0FF] to-[#C9C2FF] bg-clip-text text-transparent drop-shadow-[0_2px_18px_rgba(0,0,0,0.7)]">
               الخبير مستر محمد عادل
             </span>
           </h1>
         </Reveal>
 
         <Reveal delay={180}>
-          <p className="mt-6 text-white/50 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto">
+          <p className="mt-6 text-white/75 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
             المنصة التعليمية الأولى المتخصصة في شرح وتدريس مناهج الحاسب الآلي وتكنولوجيا المعلومات والبرمجة لطلاب المرحلة الثانوية، من أول المفاهيم وحتى الدرجة النهائية.
           </p>
         </Reveal>
@@ -163,7 +163,7 @@ export default function Home() {
         </Reveal>
 
         <Reveal delay={340}>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/35">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/60 drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
             <span>4 صفوف · عام وبكالوريا</span>
             <span className="w-px h-3 bg-white/15" />
             <span>تغطية 100% للمنهج</span>

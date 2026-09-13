@@ -203,6 +203,14 @@ export default function ScrollCanvas({
 
       <div className="sticky top-0 h-screen overflow-hidden">
         <div
+          className="absolute inset-0 z-[5] pointer-events-none"
+          aria-hidden="true"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 12%, rgba(0,0,0,0.16) 30%, rgba(0,0,0,0.30) 62%, rgba(0,0,0,0.55) 100%), radial-gradient(ellipse 80% 60% at 50% 32%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.30) 55%, rgba(0,0,0,0.55) 100%)",
+          }}
+        />
+        <div
           ref={contentRef}
           className="relative z-10 px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-14 sm:pb-20 text-center"
         >
