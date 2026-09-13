@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   GraduationCap,
   Zap,
@@ -17,6 +18,13 @@ import {
   Trophy,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
+import Tilt from "@/components/Tilt";
+import Parallax from "@/components/Parallax";
+
+const HeroScene = dynamic(() => import("@/components/HeroScene"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function Home() {
   const grades = [
@@ -122,6 +130,11 @@ export default function Home() {
         />
         <div className="absolute top-1/3 left-1/3 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl animate-blob pointer-events-none" style={{ animationDelay: "-2s" }} />
 
+        {/* live 3D particles + shapes */}
+        <Parallax speed={0.12}>
+          <HeroScene />
+        </Parallax>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-14 sm:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
 
@@ -195,10 +208,12 @@ export default function Home() {
 
             {/* Teacher card side */}
             <Reveal delay={200} className="lg:col-span-5">
+              <Parallax speed={0.3}>
               <div className="relative flex justify-center">
                 {/* glow behind card */}
                 <div className="absolute inset-0 -m-6 rounded-[2.5rem] bg-gradient-to-b from-[#D4AF37]/25 to-transparent blur-2xl pointer-events-none" />
 
+                <Tilt max={10} scale={1.03}>
                 <div className="relative w-full max-w-[300px] sm:max-w-[330px] rounded-[1.8rem] p-[3px] bg-gradient-to-b from-[#F3D879] via-[#D4AF37]/40 to-[#1B4332] shadow-2xl shadow-black/40">
                   <div className="rounded-[1.65rem] bg-white overflow-hidden">
                     <div className="relative w-full aspect-[4/5] bg-gradient-to-b from-[#E7F3EA] to-[#D6EBDC] flex items-end justify-center">
@@ -244,13 +259,15 @@ export default function Home() {
                     <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
                       <PenLine className="w-5 h-5" />
                     </span>
-                    <div className="text-right">
-                      <div className="text-[13px] font-black text-gray-900 leading-none">واجبات وتصحيح</div>
-                      <div className="text-[10px] text-gray-500 mt-1">بتعليق شخصي من المدرس</div>
-                    </div>
+<div className="text-right">
+                        <div className="text-[13px] font-black text-gray-900 leading-none">واجبات وتصحيح</div>
+                        <div className="text-[10px] text-gray-500 mt-1">بتعليق شخصي من المدرس</div>
+                      </div>
                   </div>
                 </div>
+                </Tilt>
               </div>
+              </Parallax>
             </Reveal>
 
           </div>
@@ -340,9 +357,11 @@ export default function Home() {
             <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-l from-[#F3D879] via-[#D4AF37] to-transparent" />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
               <div className="lg:col-span-4 flex justify-center">
-                <div className="relative w-44 h-60 sm:w-52 sm:h-72 lg:w-56 lg:h-80 rounded-2xl overflow-hidden shadow-xl border border-gray-200 shrink-0 -rotate-1 hover:rotate-0 transition-transform">
-                  <Image src="/images/book-cover.jpg" alt="كتاب الصف الثاني البكالوريا" fill className="object-cover" />
-                </div>
+                <Tilt max={12} className="shrink-0">
+                  <div className="relative w-44 h-60 sm:w-52 sm:h-72 lg:w-56 lg:h-80 rounded-2xl overflow-hidden shadow-xl border border-gray-200">
+                    <Image src="/images/book-cover.jpg" alt="كتاب الصف الثاني البكالوريا" fill className="object-cover" />
+                  </div>
+                </Tilt>
               </div>
 
               <div className="lg:col-span-8 space-y-4 text-center lg:text-right">

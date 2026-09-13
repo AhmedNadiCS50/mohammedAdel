@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ScrollProgress from "@/components/ScrollProgress";
 import { Cairo } from "next/font/google";
 
 const cairo = Cairo({
@@ -30,6 +31,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className={`min-h-screen flex flex-col antialiased ${cairo.className} ${cairo.variable}`}>
+        <ScrollProgress />
         <Navbar />
         <main className="flex-grow">
           {children}
