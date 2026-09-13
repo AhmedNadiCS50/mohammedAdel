@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   Sparkles,
   ArrowRight,
+  MessagesSquare,
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'الكتب', href: '/products', icon: Library },
     { name: 'الامتحانات', href: '/dashboard/exams', icon: HelpCircle },
     { name: 'الواجبات', href: '/dashboard/assignments', icon: ClipboardList },
+    { name: 'المنتدى', href: '/forum', icon: MessagesSquare },
   ];
 
   if (!student) return null;
