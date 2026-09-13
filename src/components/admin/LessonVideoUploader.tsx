@@ -213,13 +213,31 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
       console.error('Encode/upload error:', err);
       setStage('error');
       const raw = String(err?.message || err || '');
-      const msg =
-        raw.includes('abort') && raw.includes('overload')
-          ? 'الملف أكبر من سعة معالجة المتصفح. قلّل حجم الملف أو الدقة ثم أعد المحاولة.'
-          : raw.includes('BLOB_READ_WRITE_TOKEN') || raw.includes('token') || raw.includes('ENV VAR')
-            ? 'التخزين السحابي (Vercel Blob) مش مربوط بالموقع. أنشئ Blob Store من لوحة Vercel واربطه بالمشروع (خطوة 3 دقايق — مجانية)، ثم أعد النشر وجرّب تاني.'
-            : raw || 'خطأ غير متوقع أثناء التشفير أو الرفع.';
-      setErrorMsg(msg);
+      const isTokenIssue =
+        raw.includes('BLOB_READ_WRITE_TOKEN') || raw.includes('token') || raw.includes('ENV VAR');
+      if (isTokenIssue) {
+        let d: { rw?: boolean; rwLooksMasked?: boolean; oidc?: boolean; vercelEnv?: string } | null = null;
+        try {
+          d = await (await fetch('/api/hls/upload')).json();
+        } catch {}
+        if (!d?.rw && !d?.oidc) {
+          setErrorMsg(
+            `خادم النشر لا يمتلك بيانات اعتماد التخزين — المتغير لم يصِل للنسخة المنشورة. تأكد من:\n1) BLOB_READ_WRITE_TOKEN موجود في Settings ← Environment Variables مع تفعيل Production.\n2) نفّذت Redeploy من تبويب Deployments آخر مرة.\n(البيئة الحالية: ${d?.vercelEnv ?? 'غير معروفة'})`
+          );
+        } else if (d?.rwLooksMasked) {
+          setErrorMsg(
+            'قيمة BLOB_READ_WRITE_TOKEN محفوظة بشكل مقنّع (****) — هذه ليست قيمة حقيقية. امسح المتغير وأعد إضافته بقيمة منسوخة من صفحة المخزن (Storage)، ثم نفّذ Redeploy.'
+          );
+        } else {
+          setErrorMsg(
+            `التخزين متصل جزئياً لكن الرفع فشل. أرسل تفاصيل الخطأ كاملة إن أمكن: ${raw}\nالتشخيص: ${JSON.stringify(d ?? {})}`
+          );
+        }
+      } else if (raw.includes('abort') && raw.includes('overload')) {
+        setErrorMsg('الملف أكبر من سعة معالجة المتصفح. قلّل حجم الملف أو الدقة ثم أعد المحاولة.');
+      } else {
+        setErrorMsg(raw || 'خطأ غير متوقع أثناء التشفير أو الرفع.');
+      }
     }
   };
 

@@ -8,6 +8,23 @@ const ALLOWED_TYPES = [
   'application/octet-stream',      // .bin key
 ];
 
+function diag() {
+  const rw = process.env.BLOB_READ_WRITE_TOKEN ?? '';
+  return {
+    rw: !!rw,
+    rwLooksMasked: !!rw && rw.includes('*'),
+    storeId: !!process.env.BLOB_STORE_ID,
+    oidc: !!process.env.VERCEL_OIDC_TOKEN,
+    vercelEnv: process.env.VERCEL_ENV ?? '(local)',
+    projectName: process.env.VERCEL_PROJECT_NAME ?? '',
+    region: process.env.VERCEL_REGION ?? '',
+  };
+}
+
+export async function GET(_request: Request): Promise<Response> {
+  return Response.json(diag());
+}
+
 export async function POST(request: Request): Promise<Response> {
   const body = (await request.json()) as HandleUploadBody;
 
@@ -30,7 +47,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(jsonResponse);
   } catch (error) {
     return Response.json(
-      { error: (error as Error).message || 'upload failed' },
+      { error: (error as Error).message || 'upload failed', diag: diag() },
       { status: 400 }
     );
   }
