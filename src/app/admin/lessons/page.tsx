@@ -5,7 +5,8 @@ import { getLessons, saveLesson, deleteLesson, extractYoutubeId, GRADE_LABELS } 
 import { getLessonsFromFirestore, saveLessonToFirestore, deleteLessonFromFirestore } from '@/lib/firestoreService';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { adminAuthErrorMessage } from '@/lib/firebaseAuth';
-import { Lesson, GradeLevel } from '@/lib/types';
+import { Lesson, GradeLevel, LessonVideoSource } from '@/lib/types';
+import LessonVideoUploader from '@/components/admin/LessonVideoUploader';
 import { 
   Video, 
   PlusCircle, 
@@ -24,6 +25,7 @@ import {
 export default function AdminLessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -36,6 +38,8 @@ export default function AdminLessonsPage() {
 
   const [month, setMonth] = useState('شهر أكتوبر');
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [videoMode, setVideoMode] = useState<LessonVideoSource>('youtube');
+  const [hlsPath, setHlsPath] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -66,8 +70,11 @@ export default function AdminLessonsPage() {
 
     setMonth('شهر أكتوبر');
     setYoutubeUrl('');
+    setVideoMode('youtube');
+    setHlsPath('');
     setPdfUrl('');
-    setEditingId(null);
+    setEditingId('les_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    setIsEditing(false);
     setIsAdding(true);
   };
 
@@ -77,9 +84,12 @@ export default function AdminLessonsPage() {
     setGrade(lesson.grade);
 
     setMonth(lesson.month);
-    setYoutubeUrl(`https://youtu.be/${lesson.youtubeVideoId}`);
+    setVideoMode(lesson.videoSource === 'hls' ? 'hls' : 'youtube');
+    setYoutubeUrl(lesson.videoSource === 'hls' ? '' : `https://youtu.be/${lesson.youtubeVideoId || ''}`);
+    setHlsPath(lesson.hlsPath || '');
     setPdfUrl(lesson.pdfAttachmentUrl || '');
     setEditingId(lesson.id);
+    setIsEditing(true);
     setIsAdding(true);
   };
 
@@ -113,12 +123,22 @@ export default function AdminLessonsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
+    const wasEditing = isEditing;
     const videoId = extractYoutubeId(youtubeUrl);
 
-    if (!videoId) {
-      alert('يرجى إدخال رابط يوتيوب صحيح (Unlisted Video Link).');
+    if (videoMode === 'youtube' && !videoId) {
+      alert('يرجى إدخال رابط يوتيوب صحيح (Unlisted Video Link) أو اختيار وضع رفع الفيديو.');
       return;
     }
+    if (videoMode === 'hls' && !hlsPath) {
+      alert('يرجى رفع الفيديو وتشفيره أولاً من خانة "رفع فيديو (تشفير تلقائي)".');
+      return;
+    }
+
+    const videoFields: Partial<Lesson> =
+      videoMode === 'hls'
+        ? { videoSource: 'hls', hlsPath, youtubeVideoId: '' }
+        : { videoSource: 'youtube', youtubeVideoId: videoId };
 
     setSaving(true);
     try {
@@ -126,12 +146,12 @@ export default function AdminLessonsPage() {
         // Build lesson object manually so we can await Firestore
         const existingLesson = editingId ? lessons.find(l => l.id === editingId) : null;
         const lessonToSave: Lesson = {
-          id: editingId || ('les_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+          id: editingId as string,
           title: title.trim(),
           description: description.trim(),
           grade,
           month: month.trim(),
-          youtubeVideoId: videoId,
+          ...videoFields,
           orderIndex: existingLesson?.orderIndex ?? (lessons.length + 1),
           createdAt: existingLesson?.createdAt ?? new Date().toISOString(),
           ...(pdfUrl.trim() ? { pdfAttachmentUrl: pdfUrl.trim() } : {}),
@@ -150,7 +170,7 @@ export default function AdminLessonsPage() {
           description: description.trim(),
           grade,
           month: month.trim(),
-          youtubeVideoId: videoId,
+          ...videoFields,
           orderIndex: lessons.length + 1,
           ...(pdfUrl.trim() ? { pdfAttachmentUrl: pdfUrl.trim() } : {}),
         }, editingId || undefined);
@@ -158,8 +178,9 @@ export default function AdminLessonsPage() {
 
 setIsAdding(false);
       setEditingId(null);
+      setIsEditing(false);
       await loadLessons();
-      setNotice(editingId ? 'تم تعديل بيانات المحاضرة بنجاح. ✅' : 'تم إضافة المحاضرة بنجاح وحُفظت في قاعدة البيانات. ✅');
+      setNotice(wasEditing ? 'تم تعديل بيانات المحاضرة بنجاح. ✅' : 'تم إضافة المحاضرة بنجاح وحُفظت في قاعدة البيانات. ✅');
       setTimeout(() => setNotice(null), 5000);
     } catch (err: any) {
       const msg = String(err?.message || '') || String(err?.code || '');
@@ -216,7 +237,7 @@ setIsAdding(false);
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-2 border-emerald-700/40 space-y-5">
           <div className="flex items-center justify-between border-b pb-3">
             <h2 className="text-lg font-black text-slate-900">
-              {editingId ? 'تعديل بيانات المحاضرة' : 'إضافة محاضرة جديدة للمنصة'}
+              {isEditing ? 'تعديل بيانات المحاضرة' : 'إضافة محاضرة جديدة للمنصة'}
             </h2>
             <button
               type="button"
@@ -272,37 +293,69 @@ setIsAdding(false);
 
             </div>
 
+            {/* Video source tabs */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                رابط فيديو يوتيوب (Unlisted YouTube Link أو معرف الفيديو)
-              </label>
-              <input
-                type="text"
-                required
-                dir="ltr"
-                placeholder="https://youtu.be/xxxxxx أو https://youtube.com/watch?v=xxxxxx"
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-emerald-600"
-              />
-              <p className="text-[10px] text-slate-500 mt-1">
-                * ملاحظة هامة: اضبط حالة الفيديو على قناتك كـ <strong>Unlisted (غير مدرج)</strong> حتى لا يظهر في نتائج بحث يوتيوب العامة، وسيقوم نظام المنصة بحمايته وتضمينه للطلاب فقط.
-              </p>
-            </div>
-
-            {/* Live Video Preview if valid ID */}
-            {previewId && (
-              <div className="p-3 bg-slate-900 rounded-2xl">
-                <span className="text-[11px] font-bold text-gold-400 block mb-2">معاينة مشغل الفيديو:</span>
-                <div className="aspect-video w-full max-w-sm mx-auto rounded-xl overflow-hidden border border-slate-700">
-                  <iframe
-                    className="w-full h-full border-0"
-                    src={`https://www.youtube-nocookie.com/embed/${previewId}?modestbranding=1`}
-                    title="معاينة"
-                  />
-                </div>
+              <label className="block text-xs font-bold text-slate-700 mb-2">مصدر فيديو المحاضرة</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setVideoMode('youtube')}
+                  className={`px-4 py-3 rounded-xl text-xs font-bold border transition-all ${
+                    videoMode === 'youtube'
+                      ? 'bg-emerald-800 text-white border-emerald-800 shadow'
+                      : 'bg-white text-slate-600 border-slate-300 hover:border-emerald-400'
+                  }`}
+                >
+                  رابط يوتيوب (غير مدرج)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVideoMode('hls')}
+                  className={`px-4 py-3 rounded-xl text-xs font-bold border transition-all ${
+                    videoMode === 'hls'
+                      ? 'bg-emerald-800 text-white border-emerald-800 shadow'
+                      : 'bg-white text-slate-600 border-slate-300 hover:border-emerald-400'
+                  }`}
+                >
+                  رفع فيديو (تشفير آمن تلقائي)
+                </button>
               </div>
-            )}
+
+              {videoMode === 'youtube' ? (
+                <>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    placeholder="https://youtu.be/xxxxxx أو https://youtube.com/watch?v=xxxxxx"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    * ملاحظة هامة: اضبط حالة الفيديو على قناتك كـ <strong>Unlisted (غير مدرج)</strong> حتى لا يظهر في نتائج بحث يوتيوب العامة.
+                  </p>
+
+                  {previewId && (
+                    <div className="p-3 bg-slate-900 rounded-2xl mt-2">
+                      <span className="text-[11px] font-bold text-gold-400 block mb-2">معاينة مشغل الفيديو:</span>
+                      <div className="aspect-video w-full max-w-sm mx-auto rounded-xl overflow-hidden border border-slate-700">
+                        <iframe
+                          className="w-full h-full border-0"
+                          src={`https://www.youtube-nocookie.com/embed/${previewId}?modestbranding=1`}
+                          title="معاينة"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <LessonVideoUploader
+                  key={editingId || 'new'}
+                  lessonId={editingId || 'new'}
+                  onReady={(r) => setHlsPath(r.hlsPath)}
+                />
+              )}
+            </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -335,7 +388,7 @@ setIsAdding(false);
                 className="px-6 py-3 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
               >
                 <Check className="w-4 h-4" />
-                <span>{editingId ? 'حفظ التعديلات' : 'نشر المحاضرة'}</span>
+                <span>{isEditing ? 'حفظ التعديلات' : 'نشر المحاضرة'}</span>
               </button>
               <button
                 type="button"
@@ -373,12 +426,23 @@ setIsAdding(false);
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                         {les.month}
                       </span>
+                      {les.videoSource === 'hls' ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 text-emerald-300 border border-slate-800" title="فيديو مشفر بالكامل">
+                          مشفّر HLS
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+                          يوتيوب
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-1 line-clamp-1">{les.description || 'لا يوجد وصف'}</p>
                     <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-2 font-mono">
                       <span>{GRADE_LABELS[les.grade]}</span>
                       <span>•</span>
-                      <span>YouTube ID: {les.youtubeVideoId}</span>
+                      {les.videoSource === 'hls'
+                        ? <span className="text-emerald-700" dir="ltr">HLS • {les.hlsPath}</span>
+                        : <span>YouTube ID: {les.youtubeVideoId}</span>}
                     </div>
                   </div>
                 </div>

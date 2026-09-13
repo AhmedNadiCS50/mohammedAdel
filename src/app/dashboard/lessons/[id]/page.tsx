@@ -203,7 +203,9 @@ export default function WatchLessonPage() {
         {/* Video Player Container */}
         <div className="space-y-4">
           <VideoPlayer
-            videoUrlOrId={lesson.youtubeVideoId}
+            videoUrlOrId={lesson.youtubeVideoId || ''}
+            videoSource={lesson.videoSource}
+            hlsPath={lesson.hlsPath}
             title={lesson.title}
             student={student}
             lessonId={lesson.id}

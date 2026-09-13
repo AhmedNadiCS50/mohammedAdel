@@ -29,6 +29,8 @@ export interface Student {
   notes?: string;
 }
 
+export type LessonVideoSource = 'youtube' | 'hls';
+
 export interface Lesson {
   id: string;
   title: string;
@@ -36,7 +38,9 @@ export interface Lesson {
   grade: GradeLevel;
   track?: AcademicTrack | 'all';
   month: string;
-  youtubeVideoId: string;
+  videoSource?: LessonVideoSource;
+  youtubeVideoId?: string;
+  hlsPath?: string;
   pdfAttachmentUrl?: string;
   durationMinutes?: number;
   orderIndex: number;

@@ -1,32 +1,16 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    function isAdmin() {
-      return request.auth != null &&
-             request.auth.token.email == 'admin@adel-tech.local';
+    // Lesson HLS packages (encrypted segments + manifest). Public read is safe:
+    // the segments are AES-128 encrypted and the playback goes through /api/hls/*
+    match /lessons/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
-
-    // صور تسليمات الواجبات: الطالب (أي مستخدم مصادق) يرفع صوره،
-    // الأدمن والطالب أنفسهم يقرأوا.
-    match /submissions/{submissionId}/{fileName} {
-      allow read: if isAdmin() || request.auth != null;
-      allow write: if request.auth != null &&
-        fileName.matches('.*\\.(jpg|jpeg|png|webp)$') &&
-        request.resource.size < 5 * 1024 * 1024;
-    }
-
-    // صور ردود الواجبات المستقلة
-    match /assignment_submissions/{submissionId}/{fileName} {
-      allow read: if isAdmin() || request.auth != null;
-      allow write: if request.auth != null &&
-        fileName.matches('.*\\.(jpg|jpeg|png|webp)$') &&
-        request.resource.size < 5 * 1024 * 1024;
-    }
-
-    // أي مسار آخر: الأدمن فقط
+    // Everything else (attachments, uploads) keeps working for authenticated users
     match /{allPaths=**} {
-      allow read, write: if isAdmin();
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }

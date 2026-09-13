@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { extractYoutubeId, getLessonProgress, saveLessonProgress, getSettings } from '@/lib/storage';
-import { Student, LessonProgress } from '@/lib/types';
-import { Shield, AlertCircle, CheckCircle2, Clock, Play, Award, Sparkles } from 'lucide-react';
+import { Student, LessonProgress, LessonVideoSource } from '@/lib/types';
+import { Shield, AlertCircle, CheckCircle2, Clock, Sparkles } from 'lucide-react';
 
 interface VideoPlayerProps {
   videoUrlOrId: string;
   title: string;
   student: Student | null;
   lessonId?: string;
+  videoSource?: LessonVideoSource;
+  hlsPath?: string;
   onProgressUpdate?: (progress: LessonProgress) => void;
 }
 
@@ -20,24 +22,48 @@ declare global {
   }
 }
 
-export default function VideoPlayer({ 
-  videoUrlOrId, 
-  title, 
-  student, 
+// Watermark spec: appears every 5s, drifts for 3s, then hides (2s rest)
+const WM_CYCLE_MS = 5000;
+const WM_MOVE_MS = 3000;
+
+export default function VideoPlayer({
+  videoUrlOrId,
+  title,
+  student,
   lessonId,
-  onProgressUpdate 
+  videoSource,
+  hlsPath,
+  onProgressUpdate
 }: VideoPlayerProps) {
-  const [watermarkPos, setWatermarkPos] = useState({ top: 20, left: 20 });
+  const [wmVisible, setWmVisible] = useState(false);
+  const [wmPos, setWmPos] = useState({ top: 20, left: 20 });
   const [currentProgress, setCurrentProgress] = useState<LessonProgress | null>(null);
   const [threshold, setThreshold] = useState(90);
   const [isResumed, setIsResumed] = useState(false);
   const [apiReady, setApiReady] = useState(false);
+  const [hlsError, setHlsError] = useState(false);
 
   const playerRef = useRef<any>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const containerIdRef = useRef<string>(`yt-player-${lessonId || 'vid'}-${Math.random().toString(36).substring(2, 7)}`);
+  const currentTimeRef = useRef(0);
+  const durationRef = useRef(0);
 
-  const videoId = extractYoutubeId(videoUrlOrId);
+  const isHls = videoSource === 'hls';
+  const videoId = isHls ? '' : extractYoutubeId(videoUrlOrId);
+
+  // Resolve HLS playback URL from lessonId or hlsPath
+  const hlsPlayUrl = useCallback((): string | null => {
+    if (!isHls) return null;
+    let id = lessonId || '';
+    if (!id && hlsPath) {
+      const match = hlsPath.match(/^lessons\/([^/]+)\/hls\/index\.m3u8$/);
+      id = match ? match[1] : '';
+    }
+    return id ? `/api/hls/play/${id}/index.m3u8` : null;
+  }, [isHls, lessonId, hlsPath]);
 
   // Load completion threshold & existing progress
   useEffect(() => {
@@ -56,28 +82,89 @@ export default function VideoPlayer({
     }
   }, [student, lessonId]);
 
-  // Floating watermark for intellectual property protection
+  // Dynamic security watermark: shown every 5s, drifting for 3s, hidden until next cycle
   useEffect(() => {
     if (!student) return;
-    const interval = setInterval(() => {
-      const top = Math.floor(Math.random() * 70) + 15;
-      const left = Math.floor(Math.random() * 70) + 15;
-      setWatermarkPos({ top, left });
-    }, 12000);
-
+    const drift = () => {
+      setWmPos({
+        top: Math.floor(Math.random() * 68) + 8,
+        left: Math.floor(Math.random() * 68) + 8,
+      });
+      setWmVisible(true);
+      window.setTimeout(() => setWmVisible(false), WM_MOVE_MS);
+    };
+    drift();
+    const interval = setInterval(drift, WM_CYCLE_MS);
     return () => clearInterval(interval);
   }, [student]);
 
-  // Load YouTube IFrame API
+  // ---------- HLS MODE ----------
+  const initHls = useCallback(async () => {
+    const url = hlsPlayUrl();
+    const el = videoRef.current;
+    if (!url || !el) return;
+
+    const handleHlsError = () => setHlsError(true);
+
+    const Hls = (await import('hls.js')).default;
+    if (Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true, maxBufferLength: 30, backBufferLength: 60 });
+      hlsRef.current = hls;
+      hls.attachMedia(el);
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(url));
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (student && lessonId) {
+          const saved = getLessonProgress(student.id, lessonId);
+          if (saved && saved.watchedSeconds > 5) {
+            el.currentTime = saved.watchedSeconds;
+          }
+        }
+        el.play().catch(() => {});
+      });
+      hls.on(Hls.Events.ERROR, (_e, data) => {
+        if (data?.fatal) {
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR) {
+            handleHlsError();
+          }
+          setHlsError(true);
+        }
+      });
+    } else if (el.canPlayType('application/vnd.apple.mpegurl')) {
+      el.src = url;
+      el.addEventListener('loadedmetadata', () => {
+        if (student && lessonId) {
+          const saved = getLessonProgress(student.id, lessonId);
+          if (saved && saved.watchedSeconds > 5) {
+            el.currentTime = saved.watchedSeconds;
+          }
+        }
+        el.play().catch(() => {});
+      });
+    } else {
+      setHlsError(true);
+    }
+  }, [hlsPlayUrl, student, lessonId]);
+
   useEffect(() => {
-    if (!videoId) return;
+    if (!isHls || !hlsPlayUrl()) return;
+    initHls();
+    return () => {
+      if (hlsRef.current) {
+        try { hlsRef.current.destroy(); } catch { /* noop */ }
+        hlsRef.current = null;
+      }
+    };
+  }, [isHls, initHls, hlsPlayUrl]);
+
+  // ---------- YOUTUBE MODE ----------
+  useEffect(() => {
+    if (isHls || !videoId) return;
 
     if (window.YT && window.YT.Player) {
       setApiReady(true);
       return;
     }
 
-    // Check if script already exists
     const existingScript = document.getElementById('youtube-iframe-api-script');
     if (!existingScript) {
       const tag = document.createElement('script');
@@ -93,7 +180,6 @@ export default function VideoPlayer({
       setApiReady(true);
     };
 
-    // Fallback timer if onYouTubeIframeAPIReady doesn't fire
     const checkInterval = setInterval(() => {
       if (window.YT && window.YT.Player) {
         setApiReady(true);
@@ -102,36 +188,24 @@ export default function VideoPlayer({
     }, 500);
 
     return () => clearInterval(checkInterval);
-  }, [videoId]);
+  }, [isHls, videoId]);
 
-  // Initialize YT Player once API is ready
   useEffect(() => {
-    if (!apiReady || !videoId || typeof window === 'undefined') return;
+    if (isHls || !apiReady || !videoId || typeof window === 'undefined') return;
 
     const domElement = document.getElementById(containerIdRef.current);
     if (!domElement) return;
 
-    // Destroy existing player instance if re-mounting
     if (playerRef.current && typeof playerRef.current.destroy === 'function') {
-      try {
-        playerRef.current.destroy();
-      } catch (e) {
-        // Safe catch
-      }
+      try { playerRef.current.destroy(); } catch { /* noop */ }
     }
 
     try {
       const player = new window.YT.Player(containerIdRef.current, {
         videoId: videoId,
-        playerVars: {
-          rel: 0,
-          modestbranding: 1,
-          controls: 1,
-          playsinline: 1,
-        },
+        playerVars: { rel: 0, modestbranding: 1, controls: 1, playsinline: 1 },
         events: {
           onReady: (event: any) => {
-            // Restore previous watch progress if available
             if (student && lessonId) {
               const saved = getLessonProgress(student.id, lessonId);
               if (saved && saved.watchedSeconds > 5) {
@@ -140,7 +214,6 @@ export default function VideoPlayer({
             }
           },
           onStateChange: (event: any) => {
-            // event.data: 1 = PLAYING, 2 = PAUSED, 0 = ENDED
             if (event.data === 1) {
               startTracking(event.target);
             } else {
@@ -150,7 +223,6 @@ export default function VideoPlayer({
           },
         },
       });
-
       playerRef.current = player;
     } catch (e) {
       console.error('Error initializing YouTube Player:', e);
@@ -159,15 +231,31 @@ export default function VideoPlayer({
     return () => {
       stopTracking();
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
-        try {
-          playerRef.current.destroy();
-        } catch (e) {
-          // Safe catch
-        }
+        try { playerRef.current.destroy(); } catch { /* noop */ }
       }
     };
-  }, [apiReady, videoId, student, lessonId]);
+  }, [isHls, apiReady, videoId, student, lessonId]);
 
+  // HLS native video tracking
+  useEffect(() => {
+    if (!isHls) return;
+    const el = videoRef.current;
+    if (!el) return;
+    const onTime = () => {
+      currentTimeRef.current = el.currentTime || 0;
+      durationRef.current = el.duration || 0;
+      recordFromTimes(currentTimeRef.current, durationRef.current);
+    };
+    el.addEventListener('timeupdate', onTime);
+    const onEnded = () => stopTracking();
+    el.addEventListener('ended', onEnded);
+    return () => {
+      el.removeEventListener('timeupdate', onTime);
+      el.removeEventListener('ended', onEnded);
+    };
+  }, [isHls]);
+
+  // ---------- shared tracking ----------
   const startTracking = (player: any) => {
     stopTracking();
     intervalRef.current = setInterval(() => {
@@ -183,36 +271,40 @@ export default function VideoPlayer({
   };
 
   const recordProgress = (player: any) => {
-    if (!student || !lessonId || !player) return;
+    if (!player) return;
     try {
-      if (typeof player.getCurrentTime !== 'function' || typeof player.getDuration !== 'function') {
-        return;
-      }
-      const currentTime = Math.floor(player.getCurrentTime() || 0);
-      const duration = Math.floor(player.getDuration() || 0);
-
-      if (duration > 0) {
-        const percentage = Math.min(100, Math.round((currentTime / duration) * 100));
-        const completed = percentage >= threshold;
-
-        const updated = saveLessonProgress({
-          studentId: student.id,
-          lessonId,
-          watchedSeconds: currentTime,
-          durationSeconds: duration,
-          watchPercentage: percentage,
-          completed,
-        });
-
-        setCurrentProgress(updated);
-        if (onProgressUpdate) {
-          onProgressUpdate(updated);
-        }
-      }
-    } catch (e) {
-      // safe fallback
-    }
+      if (typeof player.getCurrentTime !== 'function' || typeof player.getDuration !== 'function') return;
+      recordFromTimes(Math.floor(player.getCurrentTime() || 0), Math.floor(player.getDuration() || 0));
+    } catch { /* safe fallback */ }
   };
+
+  const recordFromTimes = (currentTime: number, duration: number) => {
+    if (!student || !lessonId || !duration || duration <= 0) return;
+    const percentage = Math.min(100, Math.round((currentTime / duration) * 100));
+    const completed = percentage >= threshold;
+
+    const updated = saveLessonProgress({
+      studentId: student.id,
+      lessonId,
+      watchedSeconds: currentTime,
+      durationSeconds: duration,
+      watchPercentage: percentage,
+      completed,
+    });
+
+    setCurrentProgress(updated);
+    if (onProgressUpdate) onProgressUpdate(updated);
+  };
+
+  // cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopTracking();
+      if (hlsRef.current) {
+        try { hlsRef.current.destroy(); } catch { /* noop */ }
+      }
+    };
+  }, []);
 
   const formatSeconds = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -220,55 +312,68 @@ export default function VideoPlayer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!videoId) {
-    return (
-      <div className="w-full aspect-video bg-slate-900 rounded-2xl flex flex-col items-center justify-center p-6 text-center text-slate-400 border border-slate-800">
-        <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
-        <p className="font-semibold text-white">لم يتم تحديد رابط فيديو صالح لهذا الدرس</p>
-        <p className="text-xs mt-1 text-slate-400">يرجى من المدرس مراجعة رابط يوتيوب في لوحة التحكم</p>
-      </div>
-    );
-  }
-
-  const isCompleted = currentProgress?.completed || (currentProgress && currentProgress.watchPercentage >= threshold);
-  const currentPct = currentProgress?.watchPercentage || 0;
+  const showEmptyState = !isHls && !videoId;
 
   return (
     <div className="space-y-3">
-      {/* Video Container */}
-      <div 
+      <div
         className="relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-emerald-800/40 select-none group"
         onContextMenu={(e) => e.preventDefault()}
       >
-        {/* YouTube API Mount Element */}
-        <div id={containerIdRef.current} className="w-full h-full" />
+        {isHls ? (
+          hlsError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center text-center text-slate-400 p-6">
+              <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
+              <p className="font-semibold text-white">تعذّر تشغيل المحاضرة المشفّرة</p>
+              <p className="text-xs mt-1 text-slate-400">تأكد من نشر قواعد Firebase Storage للسماح بقراءة ملفات الدرس، ثم حدّث الصفحة.</p>
+            </div>
+          ) : (
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain bg-black"
+              controls
+              playsInline
+              preload="auto"
+            />
+          )
+        ) : showEmptyState ? (
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-slate-400">
+            <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
+            <p className="font-semibold text-white">لم يتم تحديد مصدر فيديو صالح لهذا الدرس</p>
+            <p className="text-xs mt-1 text-slate-400">يرجى من المدرس إضافة يوتيوب أو رفع ملف في لوحة التحكم</p>
+          </div>
+        ) : (
+          <div id={containerIdRef.current} className="w-full h-full" />
+        )}
 
-        {/* Dynamic Security Watermark (Anti-Piracy) */}
+        {/* Resulting moving watermark (5s show / 3s drift) */}
         {student && (
           <div
-            className="video-watermark-layer absolute transition-all duration-1000 ease-in-out pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white/45 tracking-wider bg-black/30 px-3 py-1 rounded-md backdrop-blur-[1px] border border-white/10 z-10"
+            className={`video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-black/30 px-3 py-1 rounded-md backdrop-blur-[1px] border border-white/10 z-10 transition-opacity duration-300 ${
+              wmVisible ? 'opacity-80' : 'opacity-0'
+            }`}
             style={{
-              top: `${watermarkPos.top}%`,
-              left: `${watermarkPos.left}%`,
+              top: `${wmPos.top}%`,
+              left: `${wmPos.left}%`,
+              transform: 'translate(-50%, -50%)',
+              transition: 'top 3s ease-in-out, left 3s ease-in-out, opacity 300ms ease-in-out',
             }}
           >
             <span>{student.name} • {student.phone}</span>
           </div>
         )}
 
-        {/* Top-corner platform badge */}
         <div className="absolute top-3 right-3 pointer-events-none z-20 flex items-center gap-1.5 bg-emerald-950/85 backdrop-blur-sm border border-emerald-700/50 text-[11px] font-bold text-emerald-300 px-2.5 py-1 rounded-lg shadow-sm">
           <Shield className="w-3 h-3 text-gold-400" />
           <span>منصة الخبير م. محمد عادل</span>
         </div>
       </div>
 
-      {/* Sequential Progress & Watch Tracking Bar */}
       {student && lessonId && (
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
-              {isCompleted ? (
+              {currentProgress?.completed || (currentProgress && currentProgress.watchPercentage >= threshold) ? (
                 <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-xl">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>تمت مشاهدة المحاضرة بنجاح (المحاضرة التالية مفتوحة لك الآن)</span>
@@ -276,7 +381,7 @@ export default function VideoPlayer({
               ) : (
                 <span className="inline-flex items-center gap-1 font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">
                   <Clock className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>نسبة المشاهدة الفعلية: <strong className="text-emerald-800 font-mono text-sm">{currentPct}%</strong></span>
+                  <span>نسبة المشاهدة الفعلية: <strong className="text-emerald-800 font-mono text-sm">{currentProgress?.watchPercentage || 0}%</strong></span>
                 </span>
               )}
             </div>
@@ -291,15 +396,14 @@ export default function VideoPlayer({
             </div>
           </div>
 
-          {/* Progress Bar Line */}
           <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
-            <div 
+            <div
               className={`h-full rounded-full transition-all duration-500 ${
-                isCompleted 
-                  ? 'bg-emerald-600 shadow-sm' 
+                currentProgress?.completed
+                  ? 'bg-emerald-600 shadow-sm'
                   : 'bg-gradient-to-r from-emerald-700 to-gold-500'
               }`}
-              style={{ width: `${Math.min(100, Math.max(currentPct, 2))}%` }}
+              style={{ width: `${Math.min(100, Math.max(currentProgress?.watchPercentage || 0, 2))}%` }}
             />
           </div>
 
