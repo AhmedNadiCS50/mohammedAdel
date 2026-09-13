@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { storageDownloadUrl, isSafeHlsToken } from '@/lib/hlsStorage';
+import { head } from '@vercel/blob';
+import { isSafeHlsToken } from '@/lib/hlsStorage';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,9 +10,10 @@ export async function GET(_req: Request, { params }: { params: { lessonId: strin
   if (!isSafeHlsToken(lessonId)) {
     return new NextResponse('invalid lesson', { status: 400 });
   }
-  const path = `lessons/${lessonId}/hls/key.bin`;
+  const pathname = `lessons/${lessonId}/hls/key.bin`;
   try {
-    const res = await fetch(storageDownloadUrl(path), { cache: 'no-store' });
+    const blob = await head(pathname);
+    const res = await fetch(blob.url);
     if (!res.ok) {
       return new NextResponse('key unavailable', { status: 404 });
     }
@@ -24,6 +26,6 @@ export async function GET(_req: Request, { params }: { params: { lessonId: strin
     });
   } catch (err) {
     console.error('hls key error:', err);
-    return new NextResponse('key error', { status: 500 });
+    return new NextResponse('key unavailable', { status: 404 });
   }
 }

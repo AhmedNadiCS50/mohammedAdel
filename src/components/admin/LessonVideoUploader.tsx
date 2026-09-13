@@ -3,9 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
-import { ref as storageRef, uploadBytesResumable } from 'firebase/storage';
-import { storage, isStorageConfigured, isFirebaseConfigured } from '@/lib/firebase';
-import { ensureAdminFirebaseAuth } from '@/lib/firebaseAuth';
+import { upload } from '@vercel/blob/client';
 import { ShieldCheck, Upload, Loader2, FileVideo, CheckCircle2, AlertCircle, Wand2 } from 'lucide-react';
 
 interface LessonVideoUploaderProps {
@@ -100,25 +98,6 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
     setTotalFiles(0);
     setEncodePct(0);
 
-    if (!isFirebaseConfigured() || !isStorageConfigured() || !storage) {
-      setStage('error');
-      setErrorMsg('مشتغلش بدون ربط Firebase Storage. حدّث NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET في .env.local و Vercel ثم أعد النشر.');
-      return;
-    }
-
-    try {
-      const authStatus = await ensureAdminFirebaseAuth();
-      if (authStatus !== 'ok') {
-        setStage('error');
-        setErrorMsg('تعذّر تسجيل دخول الأدمن لتشغيل الرفع. تأكد من حساب admin@adel-tech.local.');
-        return;
-      }
-    } catch {
-      setStage('error');
-      setErrorMsg('خطأ في الاتصال بـ Firebase قبل الرفع.');
-      return;
-    }
-
     try {
       setStage('preparing');
       const ffmpeg = await loadFFmpeg();
@@ -178,7 +157,7 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
       const keyRaw = (await ffmpeg.readFile('lesson.key')) as any;
       const keyBin = typeof keyRaw === 'string' ? new TextEncoder().encode(keyRaw) : (keyRaw as Uint8Array);
 
-      // 5) Upload everything to Firebase Storage
+      // 5) Upload everything to Vercel Blob (public store = encrypted chunks + manifest)
       setStage('uploading');
       const base = `lessons/${lessonId}/hls`;
       const allFiles: { name: string; data: Uint8Array; contentType: string }[] = [
@@ -193,20 +172,15 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
 
       for (let i = 0; i < allFiles.length; i++) {
         const f = allFiles[i];
-        const fileRef = storageRef(storage, `${base}/${f.name}`);
-        const task = uploadBytesResumable(fileRef, f.data, { contentType: f.contentType });
-        await new Promise<void>((resolve, reject) => {
-          task.on(
-            'state_changed',
-            (snap) => {
-              const fileUploaded = snap.bytesTransferred;
-              setUploadPct(Math.round(((uploadedBytes + fileUploaded) / totalBytes) * 100));
-            },
-            (err) => reject(err),
-            () => resolve()
-          );
+        const ab = new ArrayBuffer(f.data.byteLength);
+        new Uint8Array(ab).set(f.data);
+        const blobFile = new Blob([ab], { type: f.contentType });
+        await upload(`${base}/${f.name}`, blobFile, {
+          access: 'public',
+          handleUploadUrl: '/api/hls/upload',
         });
         uploadedBytes += f.data.length;
+        setUploadPct(Math.round((uploadedBytes / totalBytes) * 100));
         setUploadedFiles(i + 1);
       }
 
@@ -218,12 +192,14 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
     } catch (err: any) {
       console.error('Encode/upload error:', err);
       setStage('error');
-      const msg = String(err?.message || err || '');
-      setErrorMsg(
-        msg.includes('abort') && msg.includes('overload')
+      const raw = String(err?.message || err || '');
+      const msg =
+        raw.includes('abort') && raw.includes('overload')
           ? 'الملف أكبر من سعة معالجة المتصفح. قلّل حجم الملف أو الدقة ثم أعد المحاولة.'
-          : msg || 'خطأ غير متوقع أثناء التشفير أو الرفع.'
-      );
+          : raw.includes('BLOB_READ_WRITE_TOKEN') || raw.includes('token') || raw.includes('ENV VAR')
+            ? 'التخزين السحابي (Vercel Blob) مش مربوط بالموقع. أنشئ Blob Store من لوحة Vercel واربطه بالمشروع (خطوة 3 دقايق — مجانية)، ثم أعد النشر وجرّب تاني.'
+            : raw || 'خطأ غير متوقع أثناء التشفير أو الرفع.';
+      setErrorMsg(msg);
     }
   };
 

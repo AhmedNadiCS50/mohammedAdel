@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { storageDownloadUrl, isSafeHlsToken, hlsContentType } from '@/lib/hlsStorage';
+import { head } from '@vercel/blob';
+import { isSafeHlsToken, hlsContentType } from '@/lib/hlsStorage';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,9 +10,10 @@ export async function GET(_req: Request, { params }: { params: { lessonId: strin
   if (!isSafeHlsToken(lessonId) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
     return new NextResponse('invalid request', { status: 400 });
   }
-  const path = `lessons/${lessonId}/hls/${file}`;
+  const pathname = `lessons/${lessonId}/hls/${file}`;
   try {
-    const res = await fetch(storageDownloadUrl(path), { cache: 'no-store' });
+    const blob = await head(pathname);
+    const res = await fetch(blob.url);
     if (!res.ok) {
       return new NextResponse('segment unavailable', { status: 404 });
     }
@@ -24,6 +26,6 @@ export async function GET(_req: Request, { params }: { params: { lessonId: strin
     });
   } catch (err) {
     console.error('hls play error:', err);
-    return new NextResponse('segment error', { status: 500 });
+    return new NextResponse('segment unavailable', { status: 404 });
   }
 }

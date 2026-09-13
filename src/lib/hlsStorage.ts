@@ -1,9 +1,3 @@
-const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '';
-
-export function storageDownloadUrl(path: string): string {
-  return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${encodeURIComponent(path)}?alt=media`;
-}
-
 export function isSafeHlsToken(value: string): boolean {
   return typeof value === 'string' && /^[a-zA-Z0-9_-]+$/.test(value);
 }
