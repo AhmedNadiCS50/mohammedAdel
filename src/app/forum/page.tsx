@@ -8,7 +8,7 @@ import {
   GRADE_LABELS,
   normalizeGrade
 } from '@/lib/storage';
-import { Student, ForumPost, GradeLevel } from '@/lib/types';
+import { Student, ForumPost } from '@/lib/types';
 import {
   subscribePublishedPosts,
   subscribeMyPosts,
@@ -31,13 +31,6 @@ import {
   Inbox,
   AlertCircle
 } from 'lucide-react';
-
-const AVAILABLE_GRADES: GradeLevel[] = [
-  'first_secondary_general',
-  'first_secondary_bac',
-  'second_secondary_general',
-  'second_secondary_bac',
-];
 
 function statusBadge(post: ForumPost) {
   if (post.status === 'pending') {
@@ -64,7 +57,6 @@ function statusBadge(post: ForumPost) {
 export default function StudentForumPage() {
   const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
-  const [selectedGrade, setSelectedGrade] = useState<GradeLevel>('first_secondary_general');
   const [tab, setTab] = useState<'forum' | 'mine'>('forum');
   const [published, setPublished] = useState<ForumPost[]>([]);
   const [myPosts, setMyPosts] = useState<ForumPost[]>([]);
@@ -91,7 +83,6 @@ export default function StudentForumPage() {
       s.grade = norm;
     }
     setStudent(s);
-    setSelectedGrade(norm);
     setLoading(true);
     if (isFirebaseConfigured()) {
       ensureForumAuth().finally(() => setAuthReady(true));
@@ -108,7 +99,7 @@ export default function StudentForumPage() {
       return;
     }
     const unsub = subscribePublishedPosts(
-      selectedGrade,
+      student.grade,
       (posts) => {
         setPublished(posts);
         setLoading(false);
@@ -126,7 +117,7 @@ export default function StudentForumPage() {
       }
     );
     return () => unsub();
-  }, [student, selectedGrade, authReady]);
+  }, [student, authReady]);
 
   // Live subscription: my own posts (any status)
   useEffect(() => {
@@ -148,7 +139,7 @@ export default function StudentForumPage() {
     const res = await createForumPost({
       title: postTitle,
       content: postContent,
-      grade: selectedGrade,
+      grade: student.grade,
       author: { studentId: student.id, name: student.name, phone: student.phone },
     });
     setSending(false);
@@ -278,61 +269,43 @@ export default function StudentForumPage() {
           </div>
         )}
 
-        {/* Grade tabs + Search */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-gray-500">منتدى الصف:</span>
-            {AVAILABLE_GRADES.map((g) => (
-              <button
-                key={g}
-                onClick={() => setSelectedGrade(g)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                  selectedGrade === g
-                    ? 'bg-green-800 text-white shadow-sm'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                {GRADE_LABELS[g].replace('الصف الأول الثانوي (', '').replace('الصف الثاني الثانوي (', '').replace(')', '')}
-              </button>
-            ))}
-          </div>
-          <div className="relative">
-            <Search className="w-4 h-4 text-gray-400 absolute right-3.5 top-3" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث في أسئلة وأجوبة المنتدى…"
-              className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-            />
-          </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-gray-400 absolute right-3.5 top-3" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ابحث في أسئلة وأجوبة منتدى صفك…"
+            className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+          />
         </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
-          <button
-            onClick={() => setTab('forum')}
-            className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-              tab === 'forum' ? 'bg-green-800 text-white shadow-sm' : 'text-gray-600 border border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <span className="flex items-center gap-1.5">
-              <MessagesSquare className="w-4 h-4" />
-              أسئلة الصف ({published.length})
-            </span>
-          </button>
-          <button
-            onClick={() => setTab('mine')}
-            className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-              tab === 'mine' ? 'bg-green-800 text-white shadow-sm' : 'text-gray-600 border border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <span className="flex items-center gap-1.5">
-              <MessageCircleQuestion className="w-4 h-4" />
-              أسئلتي ({myPosts.length})
-            </span>
-          </button>
-          <span className="text-[11px] text-gray-400 mr-auto">{GRADE_LABELS[selectedGrade]}</span>
-        </div>
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
+        <button
+          onClick={() => setTab('forum')}
+          className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+            tab === 'forum' ? 'bg-green-800 text-white shadow-sm' : 'text-gray-600 border border-gray-200 bg-white hover:border-gray-300'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <MessagesSquare className="w-4 h-4" />
+            أسئلة الصف ({published.length})
+          </span>
+        </button>
+        <button
+          onClick={() => setTab('mine')}
+          className={`px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+            tab === 'mine' ? 'bg-green-800 text-white shadow-sm' : 'text-gray-600 border border-gray-200 bg-white hover:border-gray-300'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <MessageCircleQuestion className="w-4 h-4" />
+            أسئلتي ({myPosts.length})
+          </span>
+        </button>
+        <span className="text-[11px] text-gray-400 mr-auto">{GRADE_LABELS[student.grade]}</span>
+      </div>
 
         {/* Content */}
         {loading && tab === 'forum' ? (

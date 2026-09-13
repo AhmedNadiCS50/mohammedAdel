@@ -75,6 +75,7 @@ export default function ForumPostPage() {
         setPost(p);
         setLoading(false);
         if (!p) setNotFound(true);
+        else if (student && p.grade !== student.grade) setNotFound(true);
       },
       (err) => {
         if ((err?.code || '').includes('permission-denied')) {
@@ -86,7 +87,7 @@ export default function ForumPostPage() {
       }
     );
     return () => unsub();
-  }, [postId, authReady]);
+  }, [postId, authReady, student]);
 
   // Live replies
   useEffect(() => {
