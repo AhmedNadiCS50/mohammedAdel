@@ -30,6 +30,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [pendingEssays, setPendingEssays] = useState(0);
   const [forumPending, setForumPending] = useState(0);
 
+  // Let the mouse wheel scroll the horizontal nav pill bar.
+  const handleNavWheel = (e: React.WheelEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  };
+
   useEffect(() => {
     const check = isAdminLoggedIn();
     setIsAdmin(check);
@@ -138,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
             {/* Desktop Navigation Tabs (wide screens only - small laptops use the scrollable bar below) */}
-            <nav className="hidden xl:flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            <nav onWheel={handleNavWheel} className="hidden xl:flex items-center gap-1.5 overflow-x-auto scrollbar-none">
               {adminNav.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -199,7 +208,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Mobile, Tablet & Small-Laptop Admin Navigation Bar */}
-          <div className="flex xl:hidden overflow-x-auto py-2.5 gap-2 scrollbar-none border-t border-white/10 -mx-4 px-4 sm:-mx-6 sm:px-6">
+          <div onWheel={handleNavWheel} className="flex xl:hidden overflow-x-auto py-2.5 gap-2 scrollbar-none border-t border-white/10 -mx-4 px-4 sm:-mx-6 sm:px-6">
             {adminNav.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
