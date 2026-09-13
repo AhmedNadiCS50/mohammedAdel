@@ -16,65 +16,18 @@ export default function ScrollCanvas({
   const sectionRef = useRef<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const section = sectionRef.current;
     const overlay = overlayRef.current;
     const content = contentRef.current;
-    const canvas = canvasRef.current;
-    if (!section || !overlay || !content || !canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    if ("filter" in ctx) {
-      ctx.filter = "brightness(1.5) contrast(1.3) saturate(1.15)";
-    }
+    const video = videoRef.current;
+    if (!section || !overlay || !content || !video) return;
 
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-
-    const video = document.createElement("video");
-    video.src = VIDEO_SRC;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = "auto";
-    video.disableRemotePlayback = true;
-    video.loop = false;
-    video.pause();
-
-    let W = 0;
-    let H = 0;
-
-    const videoReady = () =>
-      video.videoWidth > 0 &&
-      video.videoHeight > 0 &&
-      video.currentTime >= 0;
-
-    const drawVideo = () => {
-      if (!videoReady()) return;
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, W, H);
-      const s = Math.max(W / video.videoWidth, H / video.videoHeight);
-      const dw = video.videoWidth * s;
-      const dh = video.videoHeight * s;
-      ctx.imageSmoothingEnabled = true;
-      if ("imageSmoothingQuality" in ctx) {
-        ctx.imageSmoothingQuality = "high";
-      }
-      ctx.drawImage(video, (W - dw) / 2, (H - dh) / 2, dw, dh);
-    };
-
-    const resize = () => {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      const scale = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.round(W * scale));
-      canvas.height = Math.max(1, Math.round(H * scale));
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      drawVideo();
-    };
 
     const scrollProgress = () => {
       const rect = section.getBoundingClientRect();
@@ -84,60 +37,42 @@ export default function ScrollCanvas({
     };
 
     let visible = true;
-    let lastTarget = -1;
-    let requested = false;
-
-    const requestDraw = () => {
-      if (requested) return;
-      requested = true;
-      requestAnimationFrame(() => {
-        requested = false;
-        if (visible) drawVideo();
-      });
-    };
+    let lastT = -1;
 
     const update = (p: number) => {
-      if (!video.duration || !videoReady()) {
-        lastTarget = -1;
-        return;
-      }
+      if (!video.duration) return;
       if (reduceMotion) {
-        if (lastTarget !== 0) {
-          lastTarget = 0;
+        if (lastT !== 0) {
+          lastT = 0;
           video.currentTime = 0;
         }
         return;
       }
       const t = Math.min(
-        Math.max(0, video.duration - 0.02),
+        Math.max(0, video.duration - 0.05),
         p * video.duration
       );
-      if (Math.abs(t - lastTarget) < 0.02) return;
-      lastTarget = t;
-      video.currentTime = t;
-      requestDraw();
-    };
-
-    video.addEventListener("loadedmetadata", () => {
+      if (Math.abs(t - lastT) < 0.015) return;
+      lastT = t;
       try {
-        video.currentTime = 0;
+        video.currentTime = t;
       } catch {
         /* ignore */
       }
-      requestDraw();
-    });
-    video.addEventListener("seeked", () => {
-      if (visible) drawVideo();
-    });
-    video.addEventListener("loadeddata", () => {
-      if (visible) drawVideo();
-    });
+    };
 
     const frame = () => {
       const p = scrollProgress();
       const isHeroDone = p >= 0.999;
       overlay.style.opacity = visible && !isHeroDone ? "1" : "0";
-      if (visible) update(p);
+      if (visible && !isHeroDone) update(p);
+      if (content && !reduceMotion) {
+        const fade = Math.max(0, Math.min(1, 1 - Math.pow(p, 1.5)));
+        const rise = p * -50;
+        content.style.opacity = String(fade);
+        content.style.transform = `translateY(${rise}px)`;
+        content.style.willChange = "opacity, transform";
+      }
       requestAnimationFrame(frame);
     };
 
@@ -149,19 +84,11 @@ export default function ScrollCanvas({
     );
     io.observe(section);
 
-    window.addEventListener("resize", resize);
-    window.addEventListener("orientationchange", resize);
-    resize();
-    video.load();
     const raf = requestAnimationFrame(frame);
 
     return () => {
       cancelAnimationFrame(raf);
       io.disconnect();
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("orientationchange", resize);
-      video.removeAttribute("src");
-      video.load();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -176,7 +103,17 @@ export default function ScrollCanvas({
         className="fixed inset-0 z-0 pointer-events-none"
         aria-hidden="true"
       >
-        <canvas ref={canvasRef} className="w-full h-full" />
+        <video
+          ref={videoRef}
+          src={VIDEO_SRC}
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover"
+          style={{
+            filter: "brightness(1.5) contrast(1.3) saturate(1.15)",
+          }}
+        />
       </div>
 
       <div className="sticky top-0 h-screen overflow-hidden">
