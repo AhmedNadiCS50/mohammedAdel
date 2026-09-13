@@ -30,13 +30,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [pendingEssays, setPendingEssays] = useState(0);
   const [forumPending, setForumPending] = useState(0);
 
-  // Let the mouse wheel scroll the horizontal nav pill bar.
+  // Let the mouse wheel scroll the horizontal nav pill bar with a smooth glide.
   const handleNavWheel = (e: React.WheelEvent<HTMLElement>) => {
     const el = e.currentTarget;
-    if (el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
-      el.scrollLeft += e.deltaY;
-    }
+    const vertical = Math.abs(e.deltaY) > Math.abs(e.deltaX);
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0 || !vertical) return;
+    e.preventDefault();
+
+    const clamp = (v: number) => Math.min(Math.max(v, 0), maxScroll);
+    const currentTarget = Number(el.dataset.navTarget ?? el.scrollLeft);
+    el.dataset.navTarget = String(clamp(currentTarget + e.deltaY));
+
+    if (el.dataset.navRaf) return;
+    el.dataset.navRaf = '1';
+    const glide = () => {
+      const end = Number(el.dataset.navTarget ?? el.scrollLeft);
+      const next = el.scrollLeft + (end - el.scrollLeft) * 0.16;
+      if (Math.abs(end - next) > 0.6) {
+        el.scrollLeft = next;
+        requestAnimationFrame(glide);
+      } else {
+        el.scrollLeft = end;
+        delete el.dataset.navRaf;
+        delete el.dataset.navTarget;
+      }
+    };
+    requestAnimationFrame(glide);
   };
 
   useEffect(() => {
