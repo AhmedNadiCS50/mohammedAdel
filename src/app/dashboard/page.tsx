@@ -33,6 +33,7 @@ import {
   Play,
   BookOpen,
   Loader2,
+  MessagesSquare,
 } from 'lucide-react';
 import StudentCourseStats from '@/components/StudentCourseStats';
 
@@ -172,6 +173,27 @@ export default function StudentDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Forum quick access */}
+        <Link
+          href="/forum"
+          className="block bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-green-300 transition-all"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+                <MessagesSquare className="w-6 h-6 text-green-800" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-gray-900">منتدى الأسئلة والنقاش</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  اسأل المدرس، شاهد إجاباته المباشرة، وشارك زملاء صفّك في النقاش.
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 text-xs font-bold text-green-800 hover:underline">دخول ←</span>
+          </div>
+        </Link>
 
         {/* Inactive notice */}
         {!student.subscription.isActive && (

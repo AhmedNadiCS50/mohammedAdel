@@ -1,0 +1,117 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════
+// قواعد أمان Firestore — منصة مستر محمد عادل
+// كنشر القواعد: firebase deploy --only firestore:rules
+//
+// البنية الأمنية:
+//  - admin@adel-tech.local  = المدرس (إدارة كاملة: موافقة/رفض/تثبيت/حذف)
+//  - أي مستخدم مُصادق (request.auth != null)  = طالب أو زائر
+//    يستطيع قراءة المنشورات المنشورة فقط، وإنشاء محتوى بحالة "قيد المراجعة".
+//  - لا يمكن لأي مستخدم تغيير حالة محتوى (status) إلا المدرس، لذا تمام التعديل
+//    وقع على إنشاء المحتوى فقط والقراءة.
+// ═══════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────
+    // قاعدة عامة: كل شيء مرفوض افتراضياً ما لم يُسمح صراحةً
+    // ─────────────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@adel-tech.local';
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // بيانات الطلاب — يقرأها المستخدمون المصادقون، لا يعدلها إلا المدرس
+    // ─────────────────────────────────────────────────────────────
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // منشورات المنتدى
+    // ─────────────────────────────────────────────────────────────
+    match /forum_posts/{postId} {
+      // القراءة: أي مستخدم مصادق يقرأ، لكن التطبيق يعرض "المنشورة" فقط للطلاب
+      allow read: if isSignedIn();
+
+      // إنشاء: أي مستخدم مصادق يكتب منشوراً بحالة "قيد المراجعة" دائماً.
+      // لا يمكن لأحد رفع منشور منشور مباشرة إلا المدرس (يغيّر الحالة).
+      allow create: if isSignedIn()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.authorStudentId is string
+        && request.resource.data.grade is string
+        && request.resource.data.title is string
+        && request.resource.data.content.size() <= 2000;
+
+      // تعديل/حذف: للمدرس فقط (موافقة/رفض/تثبيت/حذف/تحديث ردود)
+      allow update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ردود المنتدى (collection علوي للسماح بالمراجعة المجمّعة)
+    // ─────────────────────────────────────────────────────────────
+    match /forum_replies/{replyId} {
+      // القراءة: أي مستخدم مصادق، والتطبيق يعرض المنشورة فقط للطلاب
+      allow read: if isSignedIn();
+
+      // إنشاء: أي مستخدم مصادق يكتب رداً بحالة "قيد المراجعة".
+      // المدرس يكتب ردوداً منشورة مباشرة عبر تغيير الحالة بعد الإنشاء.
+      allow create: if isSignedIn()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.postId is string
+        && request.resource.data.content.size() <= 1000;
+
+      // تعديل/حذف: للمدرس فقط
+      allow update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // باقي مجموعات المنصة (للتوافق مع التطبيق الحالي)
+    // ─────────────────────────────────────────────────────────────
+    match /lessons/{lessonId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /exams/{examId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /submissions/{submissionId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /progress/{docId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /access_codes/{codeId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /activation_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

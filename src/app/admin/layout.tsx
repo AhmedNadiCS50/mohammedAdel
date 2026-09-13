@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { isAdminLoggedIn, setAdminLoggedIn, getPendingEssaySubmissions } from '@/lib/storage';
 import { ensureAdminFirebaseAuth } from '@/lib/firebaseAuth';
 import { isFirebaseConfigured } from '@/lib/firebase';
+import { subscribePendingPostsCount, subscribePendingReplies } from '@/lib/forumService';
 import { 
   LayoutDashboard, 
   Users, 
@@ -18,14 +19,16 @@ import {
   ShieldCheck,
   Sparkles,
   ArrowRight,
-  FileCheck
+  FileCheck,
+  MessagesSquare
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingEssays, setPendingEssays] = useState(0);
+  const [forumPending, setForumPending] = useState(0);
 
   useEffect(() => {
     const check = isAdminLoggedIn();
@@ -35,13 +38,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } else if (check && isFirebaseConfigured()) {
       ensureAdminFirebaseAuth().catch(() => {});
     }
-    setPendingCount(getPendingEssaySubmissions().length);
+
+    const refreshEssays = () => {
+      setPendingEssays(getPendingEssaySubmissions().length);
+    };
+    refreshEssays();
 
     const handleDataChange = () => {
-      setPendingCount(getPendingEssaySubmissions().length);
+      refreshEssays();
     };
     window.addEventListener('platform-data-changed', handleDataChange);
-    return () => window.removeEventListener('platform-data-changed', handleDataChange);
+
+    // Live forum moderation count (pending posts + pending replies)
+    let pendingPosts = 0;
+    let pendingReplies = 0;
+    let unsubPostsCount = () => {};
+    let unsubRepliesCount = () => {};
+    const refreshForum = () => setForumPending(pendingPosts + pendingReplies);
+    if (isFirebaseConfigured()) {
+      unsubPostsCount = subscribePendingPostsCount((n) => {
+        pendingPosts = n;
+        refreshForum();
+      });
+      unsubRepliesCount = subscribePendingReplies((list) => {
+        pendingReplies = list.length;
+        refreshForum();
+      });
+    }
+    return () => {
+      window.removeEventListener('platform-data-changed', handleDataChange);
+      unsubPostsCount();
+      unsubRepliesCount();
+    };
   }, [pathname, router]);
 
   if (isAdmin === null) {
@@ -59,7 +87,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const adminNav = [
     { name: 'نظرة عامة', href: '/admin', icon: LayoutDashboard },
     { name: 'سجل الطلاب والاشتراكات', href: '/admin/students', icon: Users },
-    { name: 'التسليمات وتصحيح المقالي', href: '/admin/submissions', icon: FileCheck, badge: pendingCount > 0 ? pendingCount : undefined },
+    { name: 'التسليمات وتصحيح المقالي', href: '/admin/submissions', icon: FileCheck, badge: pendingEssays > 0 ? pendingEssays : undefined },
+    { name: 'منتدى الأسئلة والمراجعة', href: '/admin/forum', icon: MessagesSquare, badge: forumPending > 0 ? forumPending : undefined },
     { name: 'إدارة المحاضرات (YouTube)', href: '/admin/lessons', icon: Video },
     { name: 'بنك الأسئلة والامتحانات', href: '/admin/exams', icon: HelpCircle },
     { name: 'توليد أكواد التفعيل', href: '/admin/codes', icon: KeyRound },

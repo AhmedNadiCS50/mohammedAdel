@@ -14,6 +14,7 @@ import {
   LogOut,
   CheckCircle2,
   Clock,
+  MessagesSquare,
 } from 'lucide-react';
 import { getCurrentStudent, setCurrentStudent, isAdminLoggedIn, setAdminLoggedIn } from '@/lib/storage';
 import { Student } from '@/lib/types';
@@ -49,6 +50,7 @@ export default function Navbar() {
     { name: 'الرئيسية',      href: '/',           icon: BookOpen  },
     { name: 'المنتجات والكتب', href: '/products',   icon: ShoppingBag },
     { name: 'لوحة الطالب',   href: '/dashboard',  icon: User      },
+    { name: 'منتدى الأسئلة', href: '/forum',      icon: MessagesSquare },
     { name: 'لوحة المدرس',   href: '/admin',      icon: ShieldCheck },
   ];
 

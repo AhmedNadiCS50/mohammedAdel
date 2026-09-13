@@ -119,6 +119,38 @@ export interface ActivationLog {
   timestamp: string;
 }
 
+export type ForumPostStatus = 'pending' | 'published' | 'rejected';
+export type ForumAuthorRole = 'student' | 'teacher';
+
+export interface ForumPost {
+  id: string;
+  title: string;
+  content: string;
+  grade: GradeLevel;
+  authorStudentId: string;
+  authorName: string;
+  authorPhone: string;
+  authorRole: ForumAuthorRole;
+  status: ForumPostStatus;
+  pinned?: boolean;
+  rejectionReason?: string;
+  replyCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ForumReply {
+  id: string;
+  postId: string;
+  content: string;
+  authorStudentId: string;
+  authorName: string;
+  authorPhone: string;
+  authorRole: ForumAuthorRole;
+  status: ForumPostStatus;
+  createdAt: string;
+}
+
 export interface PlatformSettings {
   teacherName: string;
   platformTitle: string;
