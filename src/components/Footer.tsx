@@ -77,7 +77,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-emerald-900/60 text-center text-xs text-emerald-100/60">
           <p>© 2026 - 2027 منصة مادة التكنولوجيا مع الخبير مستر محمد عادل. جميع الحقوق محفوظة.</p>
-          <p className="mt-2 text-emerald-200/60">تم تطوير الموقع من قبل أحمد نادي · <span dir="ltr">+20 1030585226</span></p>
+          <p className="mt-2 text-emerald-200/60">تم تطوير الموقع من قبل أحمد نادي · <span dir="ltr">01091275990</span></p>
         </div>
 
       </div>
