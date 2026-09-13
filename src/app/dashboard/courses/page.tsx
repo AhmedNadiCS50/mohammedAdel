@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   Loader2,
 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 export default function CoursesPage() {
   const router = useRouter();
@@ -24,16 +26,13 @@ export default function CoursesPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 text-green-700 animate-spin" /></div>;
+  if (!student) return <DashboardSkeleton />;
 
   const allLessons = getLessons(student.grade);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900">الكورسات</h1>
-        <p className="text-sm text-gray-500 mt-1">نظرة عامة على المواد والمحاضرات المتاحة</p>
-      </div>
+      <PageHeader title="الكورسات" subtitle="نظرة عامة على المواد والمحاضرات المتاحة" icon={<BookOpen className="w-6 h-6" />} />
 
       {/* Grade Course Card */}
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">

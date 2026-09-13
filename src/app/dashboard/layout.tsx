@@ -66,24 +66,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isActive = (href: string) => pathname === href;
 
   const StudentCard = (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm mb-4">
-      <div className="flex items-center gap-3">
+    <div className="prem-page-header p-4 mb-4">
+      <div className="relative flex items-center gap-3">
         <div className="relative w-14 h-14 shrink-0">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-900 text-white flex items-center justify-center font-black text-xl shadow-md">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F3D879] to-[#D4AF37] text-[#241a03] flex items-center justify-center font-black text-xl shadow-md ring-2 ring-white/30">
             {student.name.trim().charAt(0) || 'ط'}
           </div>
           <span className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-emerald-400 border-2 border-white" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-black text-gray-900 truncate">{student.name}</p>
-          <p className="flex items-center gap-1 text-[11px] text-emerald-800 font-bold mt-0.5" dir="ltr">
-            <Phone className="w-3 h-3 text-emerald-600" />
+          <p className="text-sm font-black text-white truncate">{student.name}</p>
+          <p className="flex items-center gap-1 text-[11px] text-emerald-100/80 font-bold mt-0.5" dir="ltr">
+            <Phone className="w-3 h-3 text-[#F3D879]" />
             <span>{student.phone}</span>
           </p>
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-[11px] font-bold text-gray-600">
-        <GraduationCap className="w-3.5 h-3.5 text-emerald-700" />
+      <div className="relative mt-3 pt-3 border-t border-white/15 flex items-center gap-1.5 text-[11px] font-bold text-[#F3E9C0]">
+        <GraduationCap className="w-3.5 h-3.5 text-[#F3D879]" />
         <span className="truncate">{GRADE_LABELS[student.grade]}</span>
       </div>
     </div>
@@ -98,23 +98,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link
             key={item.name}
             href={item.href}
-            className={`group relative flex items-center gap-3 px-4 py-2.5 rounded-2xl text-[13px] font-bold transition-colors duration-200 cursor-pointer ${
+            className={`group relative flex items-center gap-3 px-4 py-2.5 rounded-2xl text-[13px] font-bold transition-all duration-200 cursor-pointer ${
               active
-                ? 'bg-white text-emerald-950 shadow-md shadow-emerald-900/10 ring-1 ring-emerald-100'
+                ? 'bg-gradient-to-l from-emerald-900 to-emerald-800 text-white shadow-md shadow-emerald-900/20 ring-1 ring-emerald-700/50'
                 : 'text-slate-600 hover:bg-white hover:text-emerald-900 hover:shadow-sm hover:ring-1 hover:ring-emerald-50'
             }`}
           >
             <span
               className={`flex items-center justify-center w-9 h-9 rounded-xl transition-colors duration-200 ${
                 active
-                  ? 'bg-emerald-800 text-white shadow-sm'
+                  ? 'bg-white/15 text-[#F3D879]'
                   : 'bg-emerald-50 text-emerald-800 group-hover:bg-emerald-100'
               }`}
             >
               <Icon className="w-4 h-4" />
             </span>
             <span className="flex-1 min-w-0">{item.name}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-emerald-700 transition-colors" />
+            <ArrowRight className={`w-3.5 h-3.5 transition-colors ${active ? 'text-[#F3D879]' : 'text-gray-300 group-hover:text-emerald-700'}`} />
           </Link>
         );
       })}

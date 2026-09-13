@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   Loader2,
 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 export default function WalletPage() {
   const router = useRouter();
@@ -28,7 +30,7 @@ export default function WalletPage() {
     return () => window.removeEventListener('platform-data-changed', sync);
   }, [router]);
 
-  if (!student) return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 text-green-700 animate-spin" /></div>;
+  if (!student) return <DashboardSkeleton />;
 
   const sub = student.subscription;
   const activeMonths = sub.expiresAt
@@ -37,10 +39,7 @@ export default function WalletPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900">المحفظة</h1>
-        <p className="text-sm text-gray-500 mt-1">إدارة اشتراكك وطرق الدفع</p>
-      </div>
+      <PageHeader title="المحفظة" subtitle="إدارة اشتراكك وطرق الدفع" icon={<Wallet className="w-6 h-6" />} />
 
       {/* Subscription Summary */}
       <div className={`border rounded-2xl p-6 shadow-sm ${sub.isActive ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'}`}>

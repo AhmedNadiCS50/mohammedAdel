@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   Loader2,
 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 export default function TermPage() {
   const router = useRouter();
@@ -24,7 +26,7 @@ export default function TermPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 text-green-700 animate-spin" /></div>;
+  if (!student) return <DashboardSkeleton />;
 
   const allLessons = getLessons(student.grade);
   const monthMap: Record<string, typeof allLessons> = {};
@@ -37,10 +39,7 @@ export default function TermPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900">الترم</h1>
-        <p className="text-sm text-gray-500 mt-1">المدة الزمنية والمحاضرات حسب الشهر</p>
-      </div>
+      <PageHeader title="الترم" subtitle="المدة الزمنية والمحاضرات حسب الشهر" icon={<CalendarDays className="w-6 h-6" />} />
 
       {months.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">

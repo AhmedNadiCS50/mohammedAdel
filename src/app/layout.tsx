@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Cairo } from "next/font/google";
+
+const cairo = Cairo({
+  subsets: ["arabic"],
+  weight: ["400", "600", "700", "800", "900"],
+  variable: "--font-cairo",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "مادة التكنولوجيا مع الخبير مستر محمد عادل",
@@ -21,7 +29,7 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body className="min-h-screen flex flex-col antialiased">
+      <body className={`min-h-screen flex flex-col antialiased ${cairo.className} ${cairo.variable}`}>
         <Navbar />
         <main className="flex-grow">
           {children}

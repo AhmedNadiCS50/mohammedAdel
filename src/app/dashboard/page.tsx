@@ -34,8 +34,10 @@ import {
   BookOpen,
   Loader2,
   MessagesSquare,
+  GraduationCap,
 } from 'lucide-react';
 import StudentCourseStats from '@/components/StudentCourseStats';
+import PageHeader from '@/components/PageHeader';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
@@ -157,38 +159,27 @@ export default function StudentDashboardPage() {
         )}
 
         {/* Welcome Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <p className="text-xs text-gray-500 font-medium mb-1">لوحة الطالب</p>
-              <h1 className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">مرحباً يا {student.name} 👋</h1>
-              <p className="text-xs sm:text-sm text-green-800 font-bold mt-1">{GRADE_LABELS[student.grade]}</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-              <div className="px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm">
-                <p className="text-[11px] text-gray-500 mb-0.5">حالة الاشتراك</p>
-                {student.subscription.isActive ? (
-                  <span className="text-green-700 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> مفعّل · {daysRemaining} يوم
-                  </span>
-                ) : (
-                  <span className="text-amber-600 font-bold flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-amber-500" /> غير مفعّل
-                  </span>
-                )}
-              </div>
-
-              <Link
-                href="/dashboard/subscription"
-                className="px-4 py-2.5 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all hover:-translate-y-0.5"
-                style={{ background: '#1B4332' }}
-              >
-                {student.subscription.isActive ? 'تفاصيل الاشتراك' : 'تفعيل الاشتراك'}
-              </Link>
-            </div>
+        <PageHeader
+          title={`مرحباً يا ${student.name} 👋`}
+          subtitle={`${GRADE_LABELS[student.grade]} • لوحة الطالب`}
+          icon={<GraduationCap className="w-6 h-6" />}
+        >
+          <div className="px-3.5 py-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm text-xs sm:text-sm">
+            <p className="text-[11px] text-emerald-100/70 mb-0.5">حالة الاشتراك</p>
+            {student.subscription.isActive ? (
+              <span className="text-[#F3D879] font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل · {daysRemaining} يوم
+              </span>
+            ) : (
+              <span className="text-amber-300 font-bold flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> غير مفعّل
+              </span>
+            )}
           </div>
-        </div>
+          <Link href="/dashboard/subscription" className="btn-hero btn-hero--gold px-4 py-2 text-xs sm:text-sm">
+            {student.subscription.isActive ? 'تفاصيل الاشتراك' : 'تفعيل الاشتراك'}
+          </Link>
+        </PageHeader>
 
         {/* Forum quick access */}
         <Link

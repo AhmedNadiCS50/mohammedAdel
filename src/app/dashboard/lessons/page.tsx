@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentStudent, getLessons } from '@/lib/storage';
 import { Student } from '@/lib/types';
 import LessonCard from '@/components/LessonCard';
+import PageHeader from '@/components/PageHeader';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 import { BookOpen, Loader2 } from 'lucide-react';
 
 export default function LessonsPage() {
@@ -20,7 +22,7 @@ export default function LessonsPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 text-green-700 animate-spin" /></div>;
+  if (!student) return <DashboardSkeleton />;
 
   const allLessons = getLessons(student.grade);
   const months = Array.from(new Set(allLessons.map(l => l.month).filter(Boolean))) as string[];
@@ -28,23 +30,18 @@ export default function LessonsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">الدروس</h1>
-          <p className="text-sm text-gray-500 mt-1">{filteredLessons.length} محاضرة متاحة</p>
-        </div>
-
+      <PageHeader title="الدروس" subtitle={`${filteredLessons.length} محاضرة متاحة`} icon={<BookOpen className="w-6 h-6" />}>
         {months.length > 0 && (
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-300 text-xs font-semibold bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-700 cursor-pointer"
+            className="px-3 py-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#F3D879]/50 cursor-pointer"
           >
-            <option value="all">جميع الشهور</option>
-            {months.map(m => <option key={m} value={m}>{m}</option>)}
+            <option value="all" className="text-gray-900">جميع الشهور</option>
+            {months.map(m => <option key={m} value={m} className="text-gray-900">{m}</option>)}
           </select>
         )}
-      </div>
+      </PageHeader>
 
       {filteredLessons.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">

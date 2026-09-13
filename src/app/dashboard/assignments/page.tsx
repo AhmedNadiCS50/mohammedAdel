@@ -25,6 +25,7 @@ import {
   CalendarDays,
   Send,
 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
 
 export default function StudentAssignmentsPage() {
   const router = useRouter();
@@ -151,10 +152,7 @@ export default function StudentAssignmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900">الواجبات</h1>
-        <p className="text-sm text-gray-500 mt-1">أجب عن واجباتك واكتب ردك وأرفق صور كراستك</p>
-      </div>
+      <PageHeader title="الواجبات" subtitle="أجب عن واجباتك واكتب ردك وأرفق صور كراستك" icon={<ClipboardList className="w-6 h-6" />} />
 
       {notice && (
         <div className="p-4 bg-emerald-100 border border-emerald-300 text-emerald-950 font-bold rounded-2xl flex items-center gap-2 text-xs">

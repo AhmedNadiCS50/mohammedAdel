@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -13,6 +13,10 @@
   --green-light:  #52B788;
   --green-pale:   #D8F3DC;
 
+  --gold:         #D4AF37;
+  --gold-soft:    #F3E5AB;
+  --gold-pale:    #FBF3D9;
+
   --bg-body:      #FAFAF8;
   --bg-section:   #F3F7F4;
   --bg-card:      #FFFFFF;
@@ -25,6 +29,9 @@
   --text-700:     #2D4A38;
   --text-500:     #5A7A68;
   --text-400:     #8AA89A;
+
+  --shadow-sm:    0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(27,67,50,0.05);
+  --shadow-md:    0 6px 18px rgba(27,67,50,0.12), 0 12px 32px rgba(27,67,50,0.08);
 }
 
 /* ═══════════════════════════════════════
@@ -40,7 +47,7 @@ html, body {
 }
 
 body {
-  font-family: 'Tajawal', system-ui, sans-serif;
+  font-family: var(--font-cairo), 'Cairo', 'Tajawal', system-ui, sans-serif;
   direction: rtl;
   text-align: right;
   background-color: var(--bg-body);
@@ -53,7 +60,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Tajawal', system-ui, sans-serif;
+  font-family: var(--font-cairo), 'Cairo', 'Tajawal', system-ui, sans-serif;
   font-weight: 800;
   line-height: 1.45;
   color: var(--text-900);
@@ -121,7 +128,7 @@ p {
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
-  font-family: 'Tajawal', sans-serif;
+  font-family: var(--font-cairo), 'Cairo', 'Tajawal', sans-serif;
   font-weight: 800;
   font-size: 0.9rem;
   color: #ffffff;
@@ -196,8 +203,186 @@ p {
 
 /* ═══════════════════════════════════════
    TEXT SELECTION
-═══════════════════════════════════════ */
+╔══════════════════════════════════════ */
 ::selection {
   background: var(--green-pale);
   color: var(--green-dark);
+}
+
+/* ═══════════════════════════════════════
+   PREMIUM UPGRADE — shared component classes
+╔══════════════════════════════════════ */
+
+/* Section eyebrow chip */
+.prem-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  background: var(--green-pale);
+  border: 1px solid var(--border);
+  color: var(--green-dark);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.prem-chip--gold {
+  background: var(--gold-pale);
+  border-color: rgba(212,175,55,0.35);
+  color: #8a6d1a;
+}
+
+/* Section heading */
+.prem-h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1.35;
+  color: var(--text-900);
+}
+
+/* Card with premium hover */
+.prem-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.prem-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--border-dark);
+  box-shadow: var(--shadow-md);
+}
+
+/* Gradient buttons */
+.btn-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 0.9rem;
+  font-weight: 900;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.btn-hero:hover { transform: translateY(-2px); }
+
+.btn-hero--gold {
+  background: linear-gradient(135deg, #F3D879 0%, #D4AF37 100%);
+  color: #241a03;
+  box-shadow: 0 6px 18px rgba(212,175,55,0.35);
+}
+.btn-hero--gold:hover { box-shadow: 0 10px 26px rgba(212,175,55,0.45); }
+
+.btn-hero--green {
+  background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(27,67,50,0.30);
+}
+.btn-hero--green:hover { box-shadow: 0 10px 26px rgba(27,67,50,0.38); }
+
+.btn-hero--ghost {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+
+.btn-hero--light {
+  background: #fff;
+  color: var(--green-dark);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* Input */
+.prem-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border-dark);
+  background: #fff;
+  font-size: 0.9rem;
+  color: var(--text-900);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.prem-input:focus {
+  outline: none;
+  border-color: var(--green-light);
+  box-shadow: 0 0 0 4px rgba(82,183,136,0.15);
+}
+
+/* Float animation for hero chips */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.animate-float { animation: float-y 5s ease-in-out infinite; }
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(14px, -18px) scale(1.06); }
+  66%      { transform: translate(-10px, 12px) scale(0.96); }
+}
+.animate-blob { animation: blob-drift 12s ease-in-out infinite; }
+
+/* Elegant entrance (pair with Reveal component) */
+.reveal-enter {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal-enter.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Shimmer skeleton */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #EAEFEA;
+  border-radius: 0.75rem;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Page header band used across dashboard/admin pages */
+.prem-page-header {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 55%, #1B4332 100%);
+  border: 1px solid var(--border-dark);
+  box-shadow: var(--shadow-md);
+}
+.prem-page-header::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -15%;
+  width: 55%;
+  height: 220%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(212,175,55,0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-blob, .status-ring::after, .skeleton::after {
+    animation: none;
+  }
+  .reveal-enter {
+    transition: none;
+  }
 }

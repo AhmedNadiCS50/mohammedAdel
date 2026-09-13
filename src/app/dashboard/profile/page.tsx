@@ -16,6 +16,8 @@ import {
   Loader2,
   Image,
 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -27,17 +29,14 @@ export default function ProfilePage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 text-green-700 animate-spin" /></div>;
+  if (!student) return <DashboardSkeleton />;
 
   const sub = student.subscription;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-gray-900">الملف الشخصي</h1>
-        <p className="text-sm text-gray-500 mt-1">بيانات حسابك على المنصة</p>
-      </div>
+      <PageHeader title="الملف الشخصي" subtitle="بيانات حسابك على المنصة" icon={<User className="w-6 h-6" />} />
 
       {/* Profile Card */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">

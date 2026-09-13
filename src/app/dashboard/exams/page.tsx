@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { getCurrentStudent, getExams } from '@/lib/storage';
 import { Student } from '@/lib/types';
 import ExamCard from '@/components/ExamCard';
-import { HelpCircle, Loader2 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import DashboardSkeleton from '@/components/DashboardSkeleton';
+import { HelpCircle, Loader2, ClipboardCheck } from 'lucide-react';
 
 export default function ExamsPage() {
   const router = useRouter();
@@ -17,16 +19,13 @@ export default function ExamsPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <div className="flex items-center justify-center py-40"><Loader2 className="w-8 h-8 text-green-700 animate-spin" /></div>;
+  if (!student) return <DashboardSkeleton />;
 
   const exams = getExams(student.grade);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-gray-900">الامتحانات</h1>
-        <p className="text-sm text-gray-500 mt-1">{exams.length} امتحان متاح</p>
-      </div>
+      <PageHeader title="الامتحانات" subtitle={`${exams.length} امتحان متاح`} icon={<ClipboardCheck className="w-6 h-6" />} />
 
       {exams.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
