@@ -33,9 +33,9 @@ import { normalizePhone } from './phone';
 export const DEFAULT_SETTINGS: PlatformSettings = {
   teacherName: 'مستر محمد عادل',
   platformTitle: 'مادة التكنولوجيا مع الخبير مستر محمد عادل',
-  vodafoneCashNumber: '01000000000', // قابل للتعديل فوراً من لوحة تحكم المدرس
+  vodafoneCashNumber: '01030585226', // قابل للتعديل فوراً من لوحة تحكم المدرس
   instapayUsername: 'mr-mohamed-adel@instapay',
-  whatsappNumber: '201000000000',
+  whatsappNumber: '201030585226',
   announcementText: 'أهلاً بكم في المنصة الرسمية لمادة التكنولوجيا والبرمجة - دفعة 2027',
   completionThreshold: 90,
 };
