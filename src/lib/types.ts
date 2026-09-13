@@ -93,6 +93,15 @@ export interface ExamSubmission {
   essayGrades: Record<string, number | null>; // Essay grades set by teacher (null = pending)
   hasPendingEssays: boolean;
   submittedAt: string;
+  // Homework attachments (photos of the notebook etc.)
+  attachments?: SubmissionAttachment[];
+  // Overall teacher feedback shown to the student with the result
+  teacherComment?: string;
+}
+
+export interface SubmissionAttachment {
+  name: string;
+  url: string;
 }
 
 export interface AccessCode {

@@ -1,5 +1,5 @@
-import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress } from './types';
-export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress };
+import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment } from './types';
+export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment };
 import { STATIC_LESSONS } from '@/data/lessons';
 import { isFirebaseConfigured } from './firebase';
 import {
@@ -867,8 +867,10 @@ export function submitExamAnswers(params: {
   student: Student;
   answers: Record<string, number>; // questionId -> selectedIndex
   essayAnswers?: Record<string, string>; // questionId -> student text
+  submissionId?: string;
+  attachments?: SubmissionAttachment[];
 }): ExamSubmission {
-  const { exam, student, answers, essayAnswers = {} } = params;
+  const { exam, student, answers, essayAnswers = {}, submissionId, attachments } = params;
   let earnedScore = 0;
   let totalScore = 0;
   const essayGrades: Record<string, number | null> = {};
@@ -892,7 +894,7 @@ export function submitExamAnswers(params: {
   const passed = hasPendingEssays ? false : percentage >= (exam.passingScore || 50);
 
   const submission: ExamSubmission = {
-    id: 'sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    id: submissionId || 'sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     examId: exam.id,
     examTitle: exam.title,
     studentId: student.id,
@@ -907,6 +909,7 @@ export function submitExamAnswers(params: {
     essayGrades,
     hasPendingEssays,
     submittedAt: new Date().toISOString(),
+    attachments: attachments && attachments.length > 0 ? attachments : undefined,
   };
 
   const list = getExamSubmissions();
@@ -973,6 +976,27 @@ export function gradeEssayAnswer(submissionId: string, questionId: string, grade
 
   if (isFirebaseConfigured()) {
     saveSubmissionToFirestore(updatedSubmission).catch(err => console.error('Firestore gradeEssay error:', err));
+  }
+
+  return updatedSubmission;
+}
+
+// Teacher saves an overall feedback comment on a submission
+export function saveTeacherComment(submissionId: string, comment: string): ExamSubmission | null {
+  const list = getLocal<ExamSubmission[]>(KEYS.SUBMISSIONS, []);
+  const subIndex = list.findIndex(s => s.id === submissionId);
+  if (subIndex === -1) return null;
+
+  const updatedSubmission: ExamSubmission = {
+    ...list[subIndex],
+    teacherComment: comment.trim() || undefined,
+  };
+
+  list[subIndex] = updatedSubmission;
+  setLocal(KEYS.SUBMISSIONS, list);
+
+  if (isFirebaseConfigured()) {
+    saveSubmissionToFirestore(updatedSubmission).catch(err => console.error('Firestore saveTeacherComment error:', err));
   }
 
   return updatedSubmission;

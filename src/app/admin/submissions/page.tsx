@@ -7,8 +7,11 @@ import {
   gradeEssayAnswer, 
   getExams,
   getStudents,
-  GRADE_LABELS 
+  GRADE_LABELS,
+  saveTeacherComment
 } from '@/lib/storage';
+import { getSubmissionsFromFirestore } from '@/lib/firestoreService';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { ExamSubmission, Exam, Student, Question, GradeLevel } from '@/lib/types';
 import { 
   FileCheck, 
@@ -26,7 +29,9 @@ import {
   ChevronLeft,
   GraduationCap,
   Layers,
-  BookOpen
+  BookOpen,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 
 const GRADES_LIST: GradeLevel[] = [
@@ -48,6 +53,7 @@ export default function AdminSubmissionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   
   const [gradeInputs, setGradeInputs] = useState<Record<string, number>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,8 +66,24 @@ export default function AdminSubmissionsPage() {
     return () => window.removeEventListener('platform-data-changed', handleDataChange);
   }, []);
 
-  const loadData = () => {
-    const allSubs = getExamSubmissions();
+  const loadData = async () => {
+    let allSubs = getExamSubmissions();
+
+    // Merge submissions created on other devices (synced via Firestore)
+    if (isFirebaseConfigured()) {
+      try {
+        const remote = await getSubmissionsFromFirestore();
+        if (remote && remote.length > 0) {
+          const dedupe = new Map<string, ExamSubmission>();
+          allSubs.forEach(s => dedupe.set(s.id, s));
+          remote.forEach(s => dedupe.set(s.id, s)); // Firestore is source of truth
+          allSubs = Array.from(dedupe.values());
+        }
+      } catch (err) {
+        console.error('Error merging Firestore submissions:', err);
+      }
+    }
+
     const allExams = getExams();
     const allStudents = getStudents();
 
@@ -71,6 +93,7 @@ export default function AdminSubmissionsPage() {
 
     // Prepopulate inputs with existing grades
     const initialInputs: Record<string, number> = {};
+    const initialComments: Record<string, string> = {};
     allSubs.forEach(sub => {
       if (sub.essayGrades) {
         Object.entries(sub.essayGrades).forEach(([qId, grade]) => {
@@ -79,8 +102,10 @@ export default function AdminSubmissionsPage() {
           }
         });
       }
+      if (sub.teacherComment) initialComments[sub.id] = sub.teacherComment;
     });
     setGradeInputs(initialInputs);
+    setCommentInputs(initialComments);
   };
 
   const handleGradeChange = (subId: string, qId: string, value: number) => {
@@ -107,6 +132,16 @@ export default function AdminSubmissionsPage() {
     const updated = gradeEssayAnswer(submission.id, question.id, grade);
     if (updated) {
       setNotice(`تم حفظ واعتماد درجة الطالب (${submission.studentName}) بنجاح: ${grade} من ${question.points}.`);
+      loadData();
+      setTimeout(() => setNotice(null), 3500);
+    }
+  };
+
+  const handleSaveComment = (submission: ExamSubmission) => {
+    const comment = (commentInputs[submission.id] || '').trim();
+    const updated = saveTeacherComment(submission.id, comment);
+    if (updated) {
+      setNotice(`تم حفظ تعليقك للطالب (${submission.studentName}).`);
       loadData();
       setTimeout(() => setNotice(null), 3500);
     }
@@ -408,6 +443,29 @@ export default function AdminSubmissionsPage() {
                             </p>
                           </div>
 
+                          {/* Attached photos from the student's notebook */}
+                          {(submission.attachments || []).filter(a => a.name.startsWith(q.id + '-')).length > 0 && (
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                              <span className="text-[11px] font-black text-slate-500 flex items-center gap-1 mb-2">
+                                صور مرفقة من كراسة الطالب ({submission.attachments!.filter(a => a.name.startsWith(q.id + '-')).length}):
+                              </span>
+                              <div className="flex flex-wrap gap-2.5">
+                                {submission.attachments!
+                                  .filter(a => a.name.startsWith(q.id + '-'))
+                                  .map(att => (
+                                    <a key={att.url} href={att.url} target="_blank" rel="noopener noreferrer" title={att.name}>
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={att.url}
+                                        alt={att.name}
+                                        className="w-24 h-24 rounded-xl object-cover border border-slate-200 shadow-sm hover:ring-2 hover:ring-emerald-600 hover:scale-105 transition-all cursor-pointer"
+                                      />
+                                    </a>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Teacher's Model Answer / Reference */}
                           {q.explanation && (
                             <div className="p-3 bg-gold-50/80 rounded-xl border border-gold-200 text-xs text-gold-950">
@@ -445,6 +503,32 @@ export default function AdminSubmissionsPage() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Teacher overall comment for the student */}
+                  <div className="pt-2 border-t border-slate-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-emerald-700" />
+                      <h4 className="text-xs font-black text-slate-900">تعليق المدرس للطالب (اختياري):</h4>
+                    </div>
+                    <textarea
+                      value={commentInputs[submission.id] || ''}
+                      onChange={(e) => setCommentInputs(prev => ({ ...prev, [submission.id]: e.target.value }))}
+                      rows={3}
+                      placeholder="اكتب تعليقاً أو ملاحظة يراها الطالب مع نتيجة الواجب..."
+                      className="w-full p-3.5 rounded-xl border border-slate-300 text-sm text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-emerald-700 bg-white resize-y"
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[11px] text-slate-400 font-medium">يظهر للطالب في صفحة نتيجة الامتحان وصفحة الواجبات.</p>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveComment(submission)}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>حفظ التعليق وإرساله للطالب</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

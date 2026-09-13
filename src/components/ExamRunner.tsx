@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Exam, ExamSubmission, Student } from '@/lib/types';
+import React, { useState, useEffect, useRef } from 'react';
+import { Exam, ExamSubmission, Student, SubmissionAttachment } from '@/lib/types';
 import { submitExamAnswers, getExamSubmissions } from '@/lib/storage';
+import { uploadSubmissionImage, deleteSubmissionImage } from '@/lib/upload';
+import { isStorageConfigured } from '@/lib/firebase';
 import { 
   Clock, 
   CheckCircle2, 
@@ -14,7 +16,10 @@ import {
   HelpCircle,
   FileText,
   Sparkles,
-  Info
+  Info,
+  ImagePlus,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -31,6 +36,10 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
   const [timeLeftSeconds, setTimeLeftSeconds] = useState((exam.durationMinutes || 20) * 60);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<ExamSubmission | null>(null);
+  // Homework photo attachments: questionId -> uploaded attachments
+  const submissionIdRef = useRef('sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+  const [attachmentsByQuestion, setAttachmentsByQuestion] = useState<Record<string, SubmissionAttachment[]>>({});
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
 
   useEffect(() => {
     const loadExisting = () => {
@@ -79,13 +88,64 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
     }));
   };
 
+  const openFilePicker = (questionId: string) => {
+    if (isSubmitted || uploadingKey) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.multiple = true;
+    input.onchange = () => {
+      const files = input.files ? Array.from(input.files) : [];
+      if (files.length) handleAttach(questionId, files);
+    };
+    input.click();
+  };
+
+  const handleAttach = async (questionId: string, files: File[]) => {
+    if (isSubmitted || !files.length) return;
+    if (!isStorageConfigured()) {
+      alert('مرفق الصور غير متاح الآن، اكتب إجابتك النصية وأرسلها.');
+      return;
+    }
+    setUploadingKey(questionId);
+    try {
+      const uploaded: SubmissionAttachment[] = [];
+      for (const file of files) {
+        const att = await uploadSubmissionImage(submissionIdRef.current, file);
+        uploaded.push(att);
+      }
+      setAttachmentsByQuestion((prev) => ({
+        ...prev,
+        [questionId]: [...(prev[questionId] || []), ...uploaded],
+      }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'فشل رفع الصورة، حاول مرة أخرى.');
+    } finally {
+      setUploadingKey(null);
+    }
+  };
+
+  const removeAttachment = async (questionId: string, attachment: SubmissionAttachment) => {
+    await deleteSubmissionImage(submissionIdRef.current, attachment);
+    setAttachmentsByQuestion((prev) => ({
+      ...prev,
+      [questionId]: (prev[questionId] || []).filter((a) => a.url !== attachment.url),
+    }));
+  };
+
   const handleSubmit = () => {
     if (isSubmitted) return;
+    const submitAttachments = Object.entries(attachmentsByQuestion).reduce<SubmissionAttachment[]>(
+      (acc, [qid, list]) => acc.concat(list.map((a) => ({ name: `${qid}-${a.name}`, url: a.url }))),
+      []
+    );
     const result = submitExamAnswers({
       exam,
       student,
       answers: selectedAnswers,
       essayAnswers,
+      submissionId: submissionIdRef.current,
+      attachments: submitAttachments.length > 0 ? submitAttachments : undefined,
     });
     setSubmissionResult(result);
     setIsSubmitted(true);
@@ -195,6 +255,16 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
           </div>
         )}
 
+        {submissionResult.teacherComment && (
+          <div className="mx-6 p-4 bg-white border border-green-300 rounded-xl flex items-start gap-3 text-xs shadow-sm">
+            <FileText className="w-5 h-5 text-green-700 shrink-0 mt-0.5" />
+            <div>
+              <strong className="block text-green-900 font-black mb-0.5">تعليق مستر محمد عادل على واجبك:</strong>
+              <p className="text-green-900 whitespace-pre-line leading-relaxed font-medium">{submissionResult.teacherComment}</p>
+            </div>
+          </div>
+        )}
+
         {/* Detailed Question Review */}
         <div className="p-6 md:p-8 space-y-6">
           <h3 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-3">
@@ -250,6 +320,23 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
                         {studentText}
                       </p>
                     </div>
+
+                    {/* Attachments for this essay question */}
+                    {(submissionResult.attachments || []).filter(a => a.name.startsWith(q.id + '-')).length > 0 && (
+                      <div className="mt-3 p-3.5 bg-white rounded-lg border border-gray-200">
+                        <span className="text-[11px] font-bold text-gray-500 block mb-2">صور مرفقة من كراستك:</span>
+                        <div className="flex flex-wrap gap-2.5">
+                          {(submissionResult.attachments || [])
+                            .filter(a => a.name.startsWith(q.id + '-'))
+                            .map(att => (
+                              <a key={att.url} href={att.url} target="_blank" rel="noopener noreferrer" title={att.name}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={att.url} alt={att.name} className="w-24 h-24 rounded-lg object-cover border border-gray-200 shadow-sm hover:opacity-85 hover:scale-105 transition-all" />
+                              </a>
+                            ))}
+                        </div>
+                      </div>
+                    )}
 
                     {q.explanation && isGraded && (
                       <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200 text-xs text-gray-700">
@@ -425,6 +512,60 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>عدد الحروف: {(essayAnswers[currentQuestion.id] || '').length}</span>
               <span>درجة السؤال: {currentQuestion.points} درجات</span>
+            </div>
+
+            {/* Attach photos from the notebook */}
+            <div className="border-t border-gray-100 pt-4 space-y-3">
+              <button
+                type="button"
+                disabled={uploadingKey !== null}
+                onClick={() => openFilePicker(currentQuestion.id)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-green-900 bg-green-50 border border-green-300 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer"
+              >
+                {uploadingKey === currentQuestion.id ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-green-700" />
+                    جارٍ رفع الصور...
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="w-4 h-4 text-green-700" />
+                    إرفاق صور من الكراسة (اختياري)
+                    {(attachmentsByQuestion[currentQuestion.id] || []).length > 0 && (
+                      <span className="bg-green-700 text-white px-1.5 py-0.5 rounded-md text-[10px] font-black">
+                        {(attachmentsByQuestion[currentQuestion.id] || []).length}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+
+              {(attachmentsByQuestion[currentQuestion.id] || []).length > 0 && (
+                <div className="flex flex-wrap gap-2.5">
+                  {(attachmentsByQuestion[currentQuestion.id] || []).map((att) => (
+                    <div key={att.url} className="relative group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={att.url}
+                        alt={att.name}
+                        className="w-20 h-20 rounded-xl object-cover border border-gray-200 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(currentQuestion.id, att)}
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md opacity-90 hover:opacity-100 cursor-pointer"
+                        title="حذف الصورة"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-[11px] text-gray-400 font-medium">
+                يمكنك تصوير حل الكراسة وإرفاقه هنا لتقوم مراجعة واعتماد درجتك.
+              </p>
             </div>
           </div>
         ) : (
