@@ -4,6 +4,7 @@ import { STATIC_LESSONS } from '@/data/lessons';
 import { isFirebaseConfigured } from './firebase';
 import {
   getStudentsFromFirestore,
+  findStudentByPhoneFromFirestore,
   saveStudentToFirestore,
   deleteStudentFromFirestore,
   getLessonsFromFirestore,
@@ -21,6 +22,7 @@ import {
   saveSettingsToFirestore,
   migrateLocalStorageToFirestore
 } from './firestoreService';
+import { normalizePhone } from './phone';
 
 // Default platform settings
 export const DEFAULT_SETTINGS: PlatformSettings = {
@@ -170,15 +172,23 @@ export async function executeMigrationToFirestore() {
 // Async student login that checks Firestore if the user logged in from another device
 export async function studentLoginAsync(phone: string, pin: string): Promise<{ success: boolean; student?: Student; error?: string }> {
   let students = getStudents();
-  const cleanPhone = phone.trim();
-  let found = students.find(s => s.phone.trim() === cleanPhone);
+  const cleanPhone = normalizePhone(phone);
+  let found = students.find(s => normalizePhone(s.phone) === cleanPhone);
 
   if (!found && isFirebaseConfigured()) {
     try {
-      const remoteStudents = await getStudentsFromFirestore();
-      if (remoteStudents.length > 0) {
-        setLocal(KEYS.STUDENTS, remoteStudents);
-        found = remoteStudents.find(s => s.phone.trim() === cleanPhone);
+      // Query by exact phone so only the student's own readable document
+      // is evaluated (a full collection read is denied by rules).
+      const remoteStudent = await findStudentByPhoneFromFirestore(cleanPhone);
+      if (remoteStudent) {
+        // Merge this one student into the local list instead of replacing it
+        if (!students.some(s => s.id === remoteStudent.id)) {
+          students.push(remoteStudent);
+        } else {
+          students = students.map(s => s.id === remoteStudent.id ? remoteStudent : s);
+        }
+        setLocal(KEYS.STUDENTS, students);
+        found = remoteStudent;
       }
     } catch (err) {
       console.warn('Could not query Firestore on login:', err);
@@ -196,8 +206,8 @@ export async function studentLoginAsync(phone: string, pin: string): Promise<{ s
 
 export function studentLogin(phone: string, pin: string): { success: boolean; student?: Student; error?: string } {
   const students = getStudents();
-  const cleanPhone = phone.trim();
-  const found = students.find(s => s.phone.trim() === cleanPhone);
+  const cleanPhone = normalizePhone(phone);
+  const found = students.find(s => normalizePhone(s.phone) === cleanPhone);
 
   if (!found) {
     return { success: false, error: 'رقم الهاتف غير مسجل في المنصة. يرجى إنشاء حساب جديد أولاً.' };
@@ -226,15 +236,16 @@ export function getStudentById(id: string): Student | null {
 
 export function registerStudent(studentData: Omit<Student, 'id' | 'createdAt' | 'subscription'>): { success: boolean; student?: Student; error?: string } {
   const students = getStudents();
-  const cleanPhone = studentData.phone.trim();
+  const cleanPhone = normalizePhone(studentData.phone);
 
-  if (students.some(s => s.phone.trim() === cleanPhone)) {
+  if (students.some(s => normalizePhone(s.phone) === cleanPhone)) {
     return { success: false, error: 'رقم الهاتف مسجل بالفعل مسبقاً. يرجى تسجيل الدخول.' };
   }
 
   const newStudent: Student = {
     ...studentData,
     id: 'std_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    phone: cleanPhone,
     createdAt: new Date().toISOString(),
     subscription: {
       isActive: false,
@@ -262,9 +273,12 @@ export function updateStudent(id: string, updates: Partial<Student>): Student | 
   if (index === -1) return null;
 
   const current = students[index];
+  const normalizedUpdates = updates.phone
+    ? { ...updates, phone: normalizePhone(updates.phone) }
+    : updates;
   const updated: Student = {
     ...current,
-    ...updates,
+    ...normalizedUpdates,
     subscription: {
       ...current.subscription,
       ...(updates.subscription || {}),

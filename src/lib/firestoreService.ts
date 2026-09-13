@@ -1,15 +1,14 @@
 import {
   collection,
-  doc,
   getDocs,
   getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
+  doc,
   query,
   where,
-  orderBy,
-  Timestamp
+  CollectionReference
 } from 'firebase/firestore';
 import { db, auth, isFirebaseConfigured } from './firebase';
 import { ensureAdminFirebaseAuth } from './firebaseAuth';
@@ -62,6 +61,24 @@ export async function getStudentsFromFirestore(): Promise<Student[]> {
   } catch (err) {
     console.error('Error fetching students from Firestore:', err);
     return [];
+  }
+}
+
+// Lookup a single student document by exact phone. Rules only allow a
+// student to read their OWN document, so a full-collection read always
+// fails for students. A `where(phone == ...)` query only evaluates the
+// matching readable doc(s) and passes rules.
+export async function findStudentByPhoneFromFirestore(phone: string): Promise<Student | null> {
+  if (!isFirebaseConfigured() || !db) return null;
+  try {
+    const colRef = collection(db, COLLECTIONS.STUDENTS);
+    const q = query(colRef, where('phone', '==', phone));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return snap.docs[0].data() as Student;
+  } catch (err) {
+    console.error('Error finding student by phone:', err);
+    return null;
   }
 }
 

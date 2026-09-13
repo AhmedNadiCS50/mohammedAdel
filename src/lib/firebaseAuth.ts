@@ -6,6 +6,7 @@ import {
   User
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from './firebase';
+import { normalizePhone } from './phone';
 
 // Helper to convert phone to internal Firebase email
 export function phoneToEmail(phone: string): string {
@@ -13,8 +14,7 @@ export function phoneToEmail(phone: string): string {
   if (trimmed === 'admin' || trimmed === 'mohamed') {
     return 'admin@adel-tech.local';
   }
-  const cleanPhone = trimmed.replace(/[^0-9]/g, '');
-  return `${cleanPhone}@adel-tech.local`;
+  return `${normalizePhone(trimmed)}@adel-tech.local`;
 }
 
 export async function ensureAdminFirebaseAuth(): Promise<string> {
