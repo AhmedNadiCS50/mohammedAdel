@@ -3,11 +3,13 @@
 import React, { useEffect, useRef } from "react";
 
 const FRAME_FIRST = 1;
-const FRAME_LAST = 25;
+const FRAME_LAST = 121;
+const SKIPPED = new Set<number>([108]);
 
 function buildFrameUrls(): string[] {
   const urls: string[] = [];
   for (let i = FRAME_FIRST; i <= FRAME_LAST; i++) {
+    if (SKIPPED.has(i)) continue;
     urls.push(`/images/frames/frame_${String(i).padStart(3, "0")}.png`);
   }
   return urls;
@@ -95,45 +97,18 @@ export default function ScrollCanvas({
     };
 
     let currentIdx = 0;
-    let drawnIdx = -1;
-    let drawnFrac = -1;
+    let drawnFrame = -1;
     let wall = 0;
-
-    const nearestLoaded = (start: number, dir: 1 | -1) => {
-      let i = Math.max(0, Math.min(urls.length - 1, start));
-      while (i >= 0 && i < urls.length) {
-        if (loaded[i] && images[i].naturalWidth) return i;
-        i += dir;
-      }
-      return -1;
-    };
 
     const draw = (idx: number) => {
       const clamped = Math.max(0, Math.min(urls.length - 1, idx));
-      const i0 = Math.floor(clamped);
-      const frac = clamped - i0;
-
-      if (i0 === drawnIdx && Math.abs(frac - drawnFrac) < 0.01) return;
-
-      let base = nearestLoaded(i0, -1);
-      if (base < 0) base = nearestLoaded(0, 1);
-      if (base < 0) return;
-
+      let i = clamped;
+      while (i >= 0 && (!loaded[i] || !images[i].naturalWidth)) i--;
+      if (i < 0 || i === drawnFrame) return;
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, W, H);
-      drawImage(images[base]);
-
-      if (frac > 0.03) {
-        const up = nearestLoaded(i0 + 1, 1);
-        if (up > i0 && base !== up) {
-          ctx.globalAlpha = Math.min(1, frac);
-          drawImage(images[up]);
-          ctx.globalAlpha = 1;
-        }
-      }
-
-      drawnIdx = i0;
-      drawnFrac = frac;
+      drawImage(images[i]);
+      drawnFrame = i;
     };
 
     const scrollProgress = () => {
