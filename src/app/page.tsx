@@ -177,7 +177,7 @@ href="/dashboard/subscription"
           </div>
 
           <Reveal delay={150}>
-            <div className="relative w-52 h-52 sm:w-64 sm:h-64 lg:w-80 lg:h-80 mx-auto lg:mr-auto">
+            <div className="relative w-60 sm:w-72 lg:w-[26rem] aspect-[834/1024] mx-auto lg:mr-auto">
               <div className="absolute -inset-3 rounded-[2.2rem] bg-gradient-to-br from-[#4ADE80]/25 via-transparent to-[#C9C2FF]/25 blur-xl" />
               <Image
                 src="/images/teacher.png"
