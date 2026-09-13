@@ -39,15 +39,7 @@ export default function ScrollCanvas({
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    const scrollProgress = () => {
-      const rect = section.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      if (total <= 0) return 0;
-      return Math.min(1, Math.max(0, -rect.top / total));
-    };
-
-    let visible = true;
-    let lastT = -1;
+let lastT = -1;
 
     const update = (p: number) => {
       if (!video.duration) return;
@@ -87,20 +79,23 @@ export default function ScrollCanvas({
     });
 
     const frame = () => {
-      const p = scrollProgress();
+      const rect = section.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      const p = total <= 0 ? 0 : Math.min(1, Math.max(0, -rect.top / total));
+      const onScreen = rect.top < window.innerHeight && rect.bottom > 0;
       const isHeroDone = p >= 0.999;
-      overlay.style.opacity = visible && !isHeroDone ? "1" : "0";
+      overlay.style.opacity = onScreen && !isHeroDone ? "1" : "0";
 
       if (touchDevice) {
-        if (visible && !isHeroDone && !reduceMotion && video.paused) {
+        if (onScreen && !isHeroDone && !reduceMotion && video.paused) {
           video.play().catch(() => {
             /* ignore */
           });
-        } else if ((!visible || isHeroDone || reduceMotion) && !video.paused) {
+        } else if ((!onScreen || isHeroDone || reduceMotion) && !video.paused) {
           video.pause();
         }
       } else {
-        if (visible && !isHeroDone) update(p);
+        if (onScreen && !isHeroDone) update(p);
         if (content && !reduceMotion) {
           const fade = Math.max(0, Math.min(1, 1 - Math.pow(p, 1.5)));
           const rise = p * -50;
@@ -112,19 +107,10 @@ export default function ScrollCanvas({
       requestAnimationFrame(frame);
     };
 
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting;
-      },
-      { rootMargin: "15% 0px 15% 0px" }
-    );
-    io.observe(section);
-
     const raf = requestAnimationFrame(frame);
 
     return () => {
       cancelAnimationFrame(raf);
-      io.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
