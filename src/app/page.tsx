@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import Tilt from "@/components/Tilt";
+import ScrollCanvas from "@/components/ScrollCanvas";
 
 export default function Home() {
   const grades = [
@@ -111,70 +112,66 @@ export default function Home() {
   return (
     <div className="pb-16 sm:pb-20">
       {/* ═════════════════════════════════════════════
-          1. HERO — dark premium
+          1. HERO — cinematic scroll sequence
       ════════════════════════════════════════════════ */}
-      <section className="relative bg-black">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-14 sm:pb-20 text-center">
-          <Reveal>
-            <span className="text-[11px] sm:text-xs tracking-[0.3em] text-white/40">
-              المنصة الرسمية المعتمدة • دفعة 2027
+      <ScrollCanvas>
+        <Reveal>
+          <span className="text-[11px] sm:text-xs tracking-[0.3em] text-white/40">
+            المنصة الرسمية المعتمدة • دفعة 2027
+          </span>
+        </Reveal>
+
+        <Reveal delay={100}>
+          <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.2rem] sm:leading-[1.25] font-semibold text-white tracking-tight">
+            مادة التكنولوجيا مع
+            <span className="block mt-2 bg-gradient-to-l from-[#F3D879] via-[#E8C666] to-[#D4AF37] bg-clip-text text-transparent">
+              الخبير مستر محمد عادل
             </span>
-          </Reveal>
+          </h1>
+        </Reveal>
 
-          <Reveal delay={100}>
-            <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.2rem] sm:leading-[1.25] font-semibold text-white tracking-tight">
-              مادة التكنولوجيا مع
-              <span className="block mt-2 bg-gradient-to-l from-[#F3D879] via-[#E8C666] to-[#D4AF37] bg-clip-text text-transparent">
-                الخبير مستر محمد عادل
-              </span>
-            </h1>
-          </Reveal>
+        <Reveal delay={180}>
+          <p className="mt-6 text-white/50 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto">
+            المنصة التعليمية الأولى المتخصصة في شرح وتدريس مناهج الحاسب الآلي وتكنولوجيا المعلومات والبرمجة لطلاب المرحلة الثانوية، من أول المفاهيم وحتى الدرجة النهائية.
+          </p>
+        </Reveal>
 
-          <Reveal delay={180}>
-            <p className="mt-6 text-white/50 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto">
-              المنصة التعليمية الأولى المتخصصة في شرح وتدريس مناهج الحاسب الآلي وتكنولوجيا المعلومات والبرمجة لطلاب المرحلة الثانوية، من أول المفاهيم وحتى الدرجة النهائية.
-            </p>
-          </Reveal>
+        <Reveal delay={260}>
+          <div className="mt-9 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/register"
+              className="btn-hero btn-hero--gold w-full sm:w-auto px-7 py-3 text-sm sm:text-base"
+            >
+              <GraduationCap className="w-4 h-4 shrink-0" />
+              أنشئ حسابك وابدأ المذاكرة
+            </Link>
+            <Link
+              href="/dashboard/subscription"
+              className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+            >
+              <Zap className="w-4 h-4 text-[#F3D879] shrink-0" />
+              تفعيل كود الاشتراك
+            </Link>
+            <Link
+              href="/products"
+              className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+            >
+              <ShoppingBag className="w-4 h-4 shrink-0" />
+              كتاب البكالوريا الورقي
+            </Link>
+          </div>
+        </Reveal>
 
-          <Reveal delay={260}>
-            <div className="mt-9 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/register"
-                className="btn-hero btn-hero--gold w-full sm:w-auto px-7 py-3 text-sm sm:text-base"
-              >
-                <GraduationCap className="w-4 h-4 shrink-0" />
-                أنشئ حسابك وابدأ المذاكرة
-              </Link>
-              <Link
-                href="/dashboard/subscription"
-                className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
-              >
-                <Zap className="w-4 h-4 text-[#F3D879] shrink-0" />
-                تفعيل كود الاشتراك
-              </Link>
-              <Link
-                href="/products"
-                className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
-              >
-                <ShoppingBag className="w-4 h-4 shrink-0" />
-                كتاب البكالوريا الورقي
-              </Link>
-            </div>
-          </Reveal>
-
-          <Reveal delay={340}>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/35">
-              <span>4 صفوف · عام وبكالوريا</span>
-              <span className="w-px h-3 bg-white/15" />
-              <span>تغطية 100% للمنهج</span>
-              <span className="w-px h-3 bg-white/15" />
-              <span>تصحيح فوري</span>
-            </div>
-          </Reveal>
-        </div>
-
-        <div className="h-px bg-white/10" />
-      </section>
+        <Reveal delay={340}>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/35">
+            <span>4 صفوف · عام وبكالوريا</span>
+            <span className="w-px h-3 bg-white/15" />
+            <span>تغطية 100% للمنهج</span>
+            <span className="w-px h-3 bg-white/15" />
+            <span>تصحيح فوري</span>
+          </div>
+        </Reveal>
+      </ScrollCanvas>
 
       {/* ═════════════════════════════════════════════
           2. CURRICULUM & GRADES
