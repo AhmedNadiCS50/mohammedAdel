@@ -95,8 +95,15 @@ export default function AdminLessonsPage() {
         await loadLessons();
         setNotice('تم حذف الدرس بنجاح.');
         setTimeout(() => setNotice(null), 3000);
-      } catch (err) {
-        setSaveError('فشل حذف الدرس من قاعدة البيانات.');
+      } catch (err: any) {
+        const msg = String(err?.message || '') || String(err?.code || '');
+        if (msg.startsWith('auth/')) {
+          setSaveError(adminAuthErrorMessage(msg));
+        } else if (err?.code === 'permission-denied' || msg.includes('permission-denied') || msg.includes('does not have permission')) {
+          setSaveError('قواعد Firestore تمنع الحذف بهذه الجلسة. تأكد من تسجيل دخول حساب الأدمن في Firebase ثم أعد المحاولة.');
+        } else {
+          setSaveError(`فشل حذف الدرس من قاعدة البيانات: ${msg || 'خطأ غير معروف'}.`);
+        }
       } finally {
         setSaving(false);
       }
@@ -132,7 +139,7 @@ export default function AdminLessonsPage() {
 
         const success = await saveLessonToFirestore(lessonToSave);
         if (!success) {
-          setSaveError('❌ فشل الحفظ في قاعدة البيانات. تأكد من:\n1. تسجيل خروجك ودخولك كأدمن مرة أخرى\n2. إن الـ Firestore Rules مطبقة صح');
+          setSaveError('فشل الحفظ: بيانات Firebase غير مكتملة أو غير مربوطة في هذا الموقع. تأكد من أن السبعة متغيرات NEXT_PUBLIC_FIREBASE_* موجودة في Vercel ثم أعد النشر.');
           setSaving(false);
           return;
         }
@@ -155,10 +162,13 @@ setIsAdding(false);
       setNotice(editingId ? 'تم تعديل بيانات المحاضرة بنجاح. ✅' : 'تم إضافة المحاضرة بنجاح وحُفظت في قاعدة البيانات. ✅');
       setTimeout(() => setNotice(null), 5000);
     } catch (err: any) {
-      if (typeof err?.message === 'string' && err.message.startsWith('auth/')) {
-        setSaveError(adminAuthErrorMessage(err.message));
+      const msg = String(err?.message || '') || String(err?.code || '');
+      if (msg.startsWith('auth/')) {
+        setSaveError(adminAuthErrorMessage(msg));
+      } else if (err?.code === 'permission-denied' || msg.includes('permission-denied') || msg.includes('does not have permission')) {
+        setSaveError('قواعد Firestore في المشروع تمنع حفظ المحاضرات بهذه الجلسة. تأكد من: (1) أنك مسجل دخول في Firebase بحساب الأدمن admin@adel-tech.local، (2) قواعد lessons فيها "allow write for isAdmin"، ثم اخرج من لوحة الأدمن وادخل تاني.');
       } else {
-        setSaveError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+        setSaveError(`فشل الحفظ في قاعدة البيانات: ${msg || 'خطأ غير معروف'}. اكتب هذه الرسالة كاملة وأرسلها للمطور.`);
       }
     } finally {
       setSaving(false);

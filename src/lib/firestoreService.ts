@@ -131,8 +131,7 @@ export async function saveLessonToFirestore(lesson: Lesson): Promise<boolean> {
     return true;
   } catch (err: any) {
     console.error('Error saving lesson to Firestore:', err);
-    if (isAuthFailure(err)) throw err;
-    return false;
+    throw err;
   }
 }
 
@@ -144,8 +143,7 @@ export async function deleteLessonFromFirestore(lessonId: string): Promise<boole
     return true;
   } catch (err: any) {
     console.error('Error deleting lesson from Firestore:', err);
-    if (isAuthFailure(err)) throw err;
-    return false;
+    throw err;
   }
 }
 
