@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const VIDEO_SRC = "/video/hero.mp4";
 
@@ -18,6 +18,14 @@ export default function ScrollCanvas({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch(
+      window.matchMedia("(hover: none) and (pointer: coarse)").matches
+    );
+  }, []);
+
   useEffect(() => {
     const section = sectionRef.current;
     const overlay = overlayRef.current;
@@ -25,6 +33,8 @@ export default function ScrollCanvas({
     const video = videoRef.current;
     if (!section || !overlay || !content || !video) return;
 
+    const touchDevice =
+      window.matchMedia("(hover: none) and (pointer: coarse)").matches;
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -61,17 +71,43 @@ export default function ScrollCanvas({
       }
     };
 
+    video.addEventListener("loadedmetadata", () => {
+      if (touchDevice && !reduceMotion) {
+        video.loop = true;
+        video.play().catch(() => {
+          /* ignore */
+        });
+      } else if (!touchDevice) {
+        try {
+          video.currentTime = 0;
+        } catch {
+          /* ignore */
+        }
+      }
+    });
+
     const frame = () => {
       const p = scrollProgress();
       const isHeroDone = p >= 0.999;
       overlay.style.opacity = visible && !isHeroDone ? "1" : "0";
-      if (visible && !isHeroDone) update(p);
-      if (content && !reduceMotion) {
-        const fade = Math.max(0, Math.min(1, 1 - Math.pow(p, 1.5)));
-        const rise = p * -50;
-        content.style.opacity = String(fade);
-        content.style.transform = `translateY(${rise}px)`;
-        content.style.willChange = "opacity, transform";
+
+      if (touchDevice) {
+        if (visible && !isHeroDone && !reduceMotion && video.paused) {
+          video.play().catch(() => {
+            /* ignore */
+          });
+        } else if ((!visible || isHeroDone || reduceMotion) && !video.paused) {
+          video.pause();
+        }
+      } else {
+        if (visible && !isHeroDone) update(p);
+        if (content && !reduceMotion) {
+          const fade = Math.max(0, Math.min(1, 1 - Math.pow(p, 1.5)));
+          const rise = p * -50;
+          content.style.opacity = String(fade);
+          content.style.transform = `translateY(${rise}px)`;
+          content.style.willChange = "opacity, transform";
+        }
       }
       requestAnimationFrame(frame);
     };
@@ -93,10 +129,12 @@ export default function ScrollCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const scrollHeight = isTouch ? "h-dvh" : heightClass;
+
   return (
     <section
       ref={sectionRef as React.RefObject<HTMLElement>}
-      className={`relative bg-black ${heightClass}`}
+      className={`relative bg-black ${scrollHeight}`}
     >
       <div
         ref={overlayRef}
