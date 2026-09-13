@@ -36,6 +36,10 @@ export default function ScrollCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    if ("filter" in ctx) {
+      ctx.filter = "brightness(1.5) contrast(1.3) saturate(1.15)";
+    }
+
     const urls = buildFrameUrls();
     const images = urls.map(() => {
       const img = new Image();
@@ -44,7 +48,6 @@ export default function ScrollCanvas({
     });
     const loaded = new Array<boolean>(urls.length).fill(false);
     const inFlight = new Array<boolean>(urls.length).fill(false);
-    let ready = false;
 
     const load = (i: number) => {
       if (i < 0 || i >= urls.length || inFlight[i]) return;
@@ -52,7 +55,9 @@ export default function ScrollCanvas({
       images[i].src = urls[i];
       images[i].onload = () => {
         loaded[i] = true;
-        if (i === 0) ready = true;
+      };
+      images[i].onerror = () => {
+        loaded[i] = true;
       };
     };
 
@@ -90,19 +95,18 @@ export default function ScrollCanvas({
     };
 
     let currentIdx = 0;
-    let drawnIdx = -1;
+    let drawnFrame = -1;
     let wall = 0;
 
     const draw = (idx: number) => {
       const clamped = Math.max(0, Math.min(urls.length - 1, idx));
-      if (clamped === drawnIdx && ready) return;
       let i = clamped;
-      while (i >= 0 && !loaded[i]) i--;
-      if (i < 0) return;
+      while (i >= 0 && (!loaded[i] || !images[i].naturalWidth)) i--;
+      if (i < 0 || i === drawnFrame) return;
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, W, H);
       drawImage(images[i]);
-      drawnIdx = clamped;
+      drawnFrame = i;
     };
 
     const scrollProgress = () => {
@@ -121,8 +125,8 @@ export default function ScrollCanvas({
         currentIdx = target;
       } else {
         const diff = target - currentIdx;
-        currentIdx += diff * 0.1;
-        if (Math.abs(diff) < 0.005) currentIdx = target;
+        currentIdx += diff * 0.18;
+        if (Math.abs(diff) < 0.01) currentIdx = target;
       }
 
       const ci = Math.round(currentIdx);
@@ -140,8 +144,8 @@ export default function ScrollCanvas({
       draw(ci);
 
       if (content && !reduceMotion) {
-        const fade = Math.max(0, Math.min(1, 1 - p * 1.6));
-        const rise = p * -70;
+        const fade = Math.max(0, Math.min(1, 1 - Math.pow(p, 1.5)));
+        const rise = p * -50;
         content.style.opacity = String(fade);
         content.style.transform = `translateY(${rise}px)`;
         content.style.willChange = "opacity, transform";
