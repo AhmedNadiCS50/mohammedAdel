@@ -122,7 +122,7 @@ export default function ScrollCanvas({
           aria-hidden="true"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 12%, rgba(0,0,0,0.16) 30%, rgba(0,0,0,0.30) 62%, rgba(0,0,0,0.55) 100%), radial-gradient(ellipse 80% 60% at 50% 32%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.30) 55%, rgba(0,0,0,0.55) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.44) 12%, rgba(0,0,0,0.24) 30%, rgba(0,0,0,0.40) 62%, rgba(0,0,0,0.62) 100%), radial-gradient(ellipse 80% 60% at 50% 32%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.36) 55%, rgba(0,0,0,0.6) 100%)",
           }}
         />
         <div
