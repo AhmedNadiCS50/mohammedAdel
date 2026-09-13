@@ -64,7 +64,7 @@ export default function Footer() {
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span dir="ltr">01091275990</span>
+<span dir="ltr">01030585226</span>
               </div>
               <p className="text-emerald-100/60 leading-relaxed text-[11px] pt-1">
                 لأي استفسار بخصوص تفعيل الاشتراكات أو حجز الكتب تواصل معنا مباشرة عبر الواتساب.
