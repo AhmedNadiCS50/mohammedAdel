@@ -2,18 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 
-const FRAME_FIRST = 1;
-const FRAME_LAST = 121;
-const SKIPPED = new Set<number>([108]);
-
-function buildFrameUrls(): string[] {
-  const urls: string[] = [];
-  for (let i = FRAME_FIRST; i <= FRAME_LAST; i++) {
-    if (SKIPPED.has(i)) continue;
-    urls.push(`/images/frames/frame_${String(i).padStart(3, "0")}.png`);
-  }
-  return urls;
-}
+const VIDEO_SRC = "/video/hero.mp4";
 
 interface ScrollCanvasProps {
   children?: React.ReactNode;
@@ -42,33 +31,40 @@ export default function ScrollCanvas({
       ctx.filter = "brightness(1.5) contrast(1.3) saturate(1.15)";
     }
 
-    const urls = buildFrameUrls();
-    const images = urls.map(() => {
-      const img = new Image();
-      img.decoding = "async";
-      return img;
-    });
-    const loaded = new Array<boolean>(urls.length).fill(false);
-    const inFlight = new Array<boolean>(urls.length).fill(false);
-
-    const load = (i: number) => {
-      if (i < 0 || i >= urls.length || inFlight[i]) return;
-      inFlight[i] = true;
-      images[i].src = urls[i];
-      images[i].onload = () => {
-        loaded[i] = true;
-      };
-      images[i].onerror = () => {
-        loaded[i] = true;
-      };
-    };
-
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
+    const video = document.createElement("video");
+    video.src = VIDEO_SRC;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.disableRemotePlayback = true;
+    video.loop = false;
+    video.pause();
+
     let W = 0;
     let H = 0;
+
+    const videoReady = () =>
+      video.videoWidth > 0 &&
+      video.videoHeight > 0 &&
+      video.currentTime >= 0;
+
+    const drawVideo = () => {
+      if (!videoReady()) return;
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, W, H);
+      const s = Math.max(W / video.videoWidth, H / video.videoHeight);
+      const dw = video.videoWidth * s;
+      const dh = video.videoHeight * s;
+      ctx.imageSmoothingEnabled = true;
+      if ("imageSmoothingQuality" in ctx) {
+        ctx.imageSmoothingQuality = "high";
+      }
+      ctx.drawImage(video, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    };
 
     const resize = () => {
       W = window.innerWidth;
@@ -77,38 +73,7 @@ export default function ScrollCanvas({
       canvas.width = Math.max(1, Math.round(W * scale));
       canvas.height = Math.max(1, Math.round(H * scale));
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      draw(Math.round(currentIdx));
-    };
-
-    const drawImage = (img: HTMLImageElement) => {
-      ctx.imageSmoothingEnabled = true;
-      if ("imageSmoothingQuality" in ctx) {
-        ctx.imageSmoothingQuality = "high";
-      }
-      const iw = img.naturalWidth;
-      const ih = img.naturalHeight;
-      if (!iw || !ih) return;
-      const s = Math.max(W / iw, H / ih);
-      const dw = iw * s;
-      const dh = ih * s;
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, W, H);
-      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
-    };
-
-    let currentIdx = 0;
-    let drawnFrame = -1;
-    let wall = 0;
-
-    const draw = (idx: number) => {
-      const clamped = Math.max(0, Math.min(urls.length - 1, idx));
-      let i = clamped;
-      while (i >= 0 && (!loaded[i] || !images[i].naturalWidth)) i--;
-      if (i < 0 || i === drawnFrame) return;
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, W, H);
-      drawImage(images[i]);
-      drawnFrame = i;
+      drawVideo();
     };
 
     const scrollProgress = () => {
@@ -119,40 +84,54 @@ export default function ScrollCanvas({
     };
 
     let visible = true;
+    let lastTarget = -1;
+    let requested = false;
+
+    const requestDraw = () => {
+      if (requested) return;
+      requested = true;
+      requestAnimationFrame(() => {
+        requested = false;
+        if (visible) drawVideo();
+      });
+    };
 
     const update = (p: number) => {
-      const target = p * (urls.length - 1);
-
+      if (!video.duration || !videoReady()) {
+        lastTarget = -1;
+        return;
+      }
       if (reduceMotion) {
-        currentIdx = target;
-      } else {
-        const diff = target - currentIdx;
-        currentIdx += diff * 0.18;
-        if (Math.abs(diff) < 0.01) currentIdx = target;
-      }
-
-      const ci = Math.round(currentIdx);
-      for (let k = 0; k < 8; k++) {
-        load(ci + k);
-        load(ci - k);
-      }
-      for (let k = 0; k < 2; k++) {
-        if (wall < urls.length) {
-          load(wall);
-          wall++;
+        if (lastTarget !== 0) {
+          lastTarget = 0;
+          video.currentTime = 0;
         }
+        return;
       }
-
-      draw(ci);
-
-      if (content && !reduceMotion) {
-        const fade = Math.max(0, Math.min(1, 1 - Math.pow(p, 1.5)));
-        const rise = p * -50;
-        content.style.opacity = String(fade);
-        content.style.transform = `translateY(${rise}px)`;
-        content.style.willChange = "opacity, transform";
-      }
+      const t = Math.min(
+        Math.max(0, video.duration - 0.02),
+        p * video.duration
+      );
+      if (Math.abs(t - lastTarget) < 0.02) return;
+      lastTarget = t;
+      video.currentTime = t;
+      requestDraw();
     };
+
+    video.addEventListener("loadedmetadata", () => {
+      try {
+        video.currentTime = 0;
+      } catch {
+        /* ignore */
+      }
+      requestDraw();
+    });
+    video.addEventListener("seeked", () => {
+      if (visible) drawVideo();
+    });
+    video.addEventListener("loadeddata", () => {
+      if (visible) drawVideo();
+    });
 
     const frame = () => {
       const p = scrollProgress();
@@ -170,10 +149,10 @@ export default function ScrollCanvas({
     );
     io.observe(section);
 
-    for (let i = 0; i < 4; i++) load(i);
     window.addEventListener("resize", resize);
     window.addEventListener("orientationchange", resize);
     resize();
+    video.load();
     const raf = requestAnimationFrame(frame);
 
     return () => {
@@ -181,6 +160,8 @@ export default function ScrollCanvas({
       io.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("orientationchange", resize);
+      video.removeAttribute("src");
+      video.load();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -195,10 +176,7 @@ export default function ScrollCanvas({
         className="fixed inset-0 z-0 pointer-events-none"
         aria-hidden="true"
       >
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full"
-        />
+        <canvas ref={canvasRef} className="w-full h-full" />
       </div>
 
       <div className="sticky top-0 h-screen overflow-hidden">
