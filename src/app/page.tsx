@@ -119,7 +119,7 @@ export default function Home() {
           <div>
             <Reveal>
               <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs tracking-[0.3em] font-bold text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#F3D879] shadow-[0_0_10px_#F3D879]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_10px_#4ADE80]" />
                 المنصة الرسمية المعتمدة • دفعة 2027
               </span>
             </Reveal>
@@ -143,16 +143,16 @@ export default function Home() {
               <div className="mt-9 flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3">
                 <Link
                   href="/register"
-                  className="btn-hero btn-hero--gold w-full sm:w-auto px-7 py-3 text-sm sm:text-base"
+                  className="btn-hero btn-hero--green w-full sm:w-auto px-7 py-3 text-sm sm:text-base"
                 >
                   <GraduationCap className="w-4 h-4 shrink-0" />
                   أنشئ حسابك وابدأ المذاكرة
                 </Link>
                 <Link
-                  href="/dashboard/subscription"
-                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
-                >
-                  <Zap className="w-4 h-4 text-[#F3D879] shrink-0" />
+href="/dashboard/subscription"
+  className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+>
+  <Zap className="w-4 h-4 text-[#4ADE80] shrink-0" />
                   تفعيل كود الاشتراك
                 </Link>
                 <Link
@@ -178,7 +178,7 @@ export default function Home() {
 
           <Reveal delay={150}>
             <div className="relative w-52 h-52 sm:w-64 sm:h-64 lg:w-80 lg:h-80 mx-auto lg:mr-auto">
-              <div className="absolute -inset-3 rounded-[2.2rem] bg-gradient-to-br from-[#F3D879]/30 via-transparent to-[#C9C2FF]/25 blur-xl" />
+              <div className="absolute -inset-3 rounded-[2.2rem] bg-gradient-to-br from-[#4ADE80]/25 via-transparent to-[#C9C2FF]/25 blur-xl" />
               <Image
                 src="/images/teacher.png"
                 alt="مستر محمد عادل"
