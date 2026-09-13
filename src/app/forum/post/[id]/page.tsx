@@ -29,7 +29,7 @@ import {
   GraduationCap,
   AlertCircle
 } from 'lucide-react';
-import { formatTimeAgo } from '@/lib/forumUtils';
+import { formatTimeAgo, forumErrorMessage } from '@/lib/forumUtils';
 
 export default function ForumPostPage() {
   const router = useRouter();
@@ -76,9 +76,13 @@ export default function ForumPostPage() {
         setLoading(false);
         if (!p) setNotFound(true);
       },
-      () => {
+      (err) => {
+        if ((err?.code || '').includes('permission-denied')) {
+          ensureForumAuth().finally(() => setError(forumErrorMessage(err)));
+        } else {
+          setNotFound(true);
+        }
         setLoading(false);
-        setNotFound(true);
       }
     );
     return () => unsub();
@@ -120,6 +124,25 @@ export default function ForumPostPage() {
         <div className="text-center">
           <Loader2 className="w-10 h-10 text-green-600 animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-500 font-medium">جاري تحميل السؤال…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="text-center max-w-md bg-white border border-red-200 rounded-2xl p-10">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-gray-800">تعذر الاتصال بالسؤال</h3>
+          <p className="text-xs text-gray-500 mt-2 leading-relaxed">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm"
+            style={{ background: '#1B4332' }}
+          >
+            إعادة المحاولة
+          </button>
         </div>
       </div>
     );

@@ -16,7 +16,7 @@ import {
   ensureForumAuth
 } from '@/lib/forumService';
 import { isFirebaseConfigured } from '@/lib/firebase';
-import { formatTimeAgo } from '@/lib/forumUtils';
+import { formatTimeAgo, forumErrorMessage } from '@/lib/forumUtils';
 import {
   MessagesSquare,
   MessageCircleQuestion,
@@ -114,8 +114,15 @@ export default function StudentForumPage() {
         setLoading(false);
       },
       (err) => {
-        setError(err?.message || 'تعذر الاتصال بالمنتدى.');
-        setLoading(false);
+        if ((err?.code || '').includes('permission-denied')) {
+          ensureForumAuth().finally(() => {
+            setError(forumErrorMessage(err));
+            setLoading(false);
+          });
+        } else {
+          setError(forumErrorMessage(err));
+          setLoading(false);
+        }
       }
     );
     return () => unsub();
@@ -337,7 +344,14 @@ export default function StudentForumPage() {
           <div className="bg-white border border-red-200 rounded-2xl p-10 text-center">
             <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
             <h3 className="text-sm font-bold text-gray-700">تعذر الاتصال بالمنتدى</h3>
-            <p className="text-xs text-gray-500 mt-1">{error}</p>
+            <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto leading-relaxed">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm"
+              style={{ background: '#1B4332' }}
+            >
+              إعادة المحاولة
+            </button>
           </div>
         ) : tab === 'forum' ? (
           filteredPublished.length === 0 ? (

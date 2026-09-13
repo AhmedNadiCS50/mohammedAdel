@@ -16,7 +16,7 @@ import {
 import { GRADE_LABELS } from '@/lib/storage';
 import { ForumPost, ForumReply } from '@/lib/types';
 import { isFirebaseConfigured } from '@/lib/firebase';
-import { formatTimeAgo } from '@/lib/forumUtils';
+import { formatTimeAgo, forumErrorMessage } from '@/lib/forumUtils';
 import {
   MessagesSquare,
   CheckCircle2,
@@ -58,7 +58,7 @@ export default function AdminForumPage() {
         setLoading(false);
       },
       (err) => {
-        setError(err?.message || 'تعذر تحميل منشورات المنتدى.');
+        setError(forumErrorMessage(err));
         setLoading(false);
       }
     );
@@ -196,10 +196,18 @@ export default function AdminForumPage() {
         </div>
       )}
 
-      {!isFirebaseConfigured() && (
-        <div className="bg-amber-50 border border-amber-300 p-4 rounded-2xl flex items-center gap-3 text-xs text-amber-800">
-          <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
-          {error}
+      {error && (
+        <div className="bg-amber-50 border border-amber-300 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3 text-xs text-amber-800">
+          <div className="flex items-center gap-3 flex-1">
+            <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="shrink-0 px-4 py-2 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold hover:bg-amber-100 transition-colors"
+          >
+            إعادة المحاولة
+          </button>
         </div>
       )}
 

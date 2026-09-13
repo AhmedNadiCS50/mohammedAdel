@@ -1,117 +1,127 @@
 rules_version = '2';
-
-// ═══════════════════════════════════════════════════════════════
-// قواعد أمان Firestore — منصة مستر محمد عادل
-// كنشر القواعد: firebase deploy --only firestore:rules
-//
-// البنية الأمنية:
-//  - admin@adel-tech.local  = المدرس (إدارة كاملة: موافقة/رفض/تثبيت/حذف)
-//  - أي مستخدم مُصادق (request.auth != null)  = طالب أو زائر
-//    يستطيع قراءة المنشورات المنشورة فقط، وإنشاء محتوى بحالة "قيد المراجعة".
-//  - لا يمكن لأي مستخدم تغيير حالة محتوى (status) إلا المدرس، لذا تمام التعديل
-//    وقع على إنشاء المحتوى فقط والقراءة.
-// ═══════════════════════════════════════════════════════════════
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─────────────────────────────────────────────────────────────
-    // قاعدة عامة: كل شيء مرفوض افتراضياً ما لم يُسمح صراحةً
-    // ─────────────────────────────────────────────────────────────
-    match /{document=**} {
-      allow read, write: if false;
-    }
 
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'admin@adel-tech.local';
+      return request.auth != null &&
+             request.auth.token.email == 'admin@adel-tech.local';
     }
 
-    function isSignedIn() {
+
+    function isAuthenticated() {
       return request.auth != null;
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // بيانات الطلاب — يقرأها المستخدمون المصادقون، لا يعدلها إلا المدرس
-    // ─────────────────────────────────────────────────────────────
+
+    // محاضرات: أي حد يقرأ، الأدمن بس يكتب
+    match /lessons/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+
+    // امتحانات: الطلاب المسجلين يقرأوا، الأدمن يكتب
+    match /exams/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+
+    // الطلاب: الأدمن كل شيء - الطالب يقرأ/يعدّل ملفه هو بس
     match /students/{studentId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // منشورات المنتدى
-    // ─────────────────────────────────────────────────────────────
-    match /forum_posts/{postId} {
-      // القراءة: أي مستخدم مصادق يقرأ، لكن التطبيق يعرض "المنشورة" فقط للطلاب
-      allow read: if isSignedIn();
-
-      // إنشاء: أي مستخدم مصادق يكتب منشوراً بحالة "قيد المراجعة" دائماً.
-      // لا يمكن لأحد رفع منشور منشور مباشرة إلا المدرس (يغيّر الحالة).
-      allow create: if isSignedIn()
-        && request.resource.data.status == 'pending'
-        && request.resource.data.authorStudentId is string
-        && request.resource.data.grade is string
-        && request.resource.data.title is string
-        && request.resource.data.content.size() <= 2000;
-
-      // تعديل/حذف: للمدرس فقط (موافقة/رفض/تثبيت/حذف/تحديث ردود)
-      allow update, delete: if isAdmin();
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // ردود المنتدى (collection علوي للسماح بالمراجعة المجمّعة)
-    // ─────────────────────────────────────────────────────────────
-    match /forum_replies/{replyId} {
-      // القراءة: أي مستخدم مصادق، والتطبيق يعرض المنشورة فقط للطلاب
-      allow read: if isSignedIn();
-
-      // إنشاء: أي مستخدم مصادق يكتب رداً بحالة "قيد المراجعة".
-      // المدرس يكتب ردوداً منشورة مباشرة عبر تغيير الحالة بعد الإنشاء.
-      allow create: if isSignedIn()
-        && request.resource.data.status == 'pending'
-        && request.resource.data.postId is string
-        && request.resource.data.content.size() <= 1000;
-
-      // تعديل/حذف: للمدرس فقط
-      allow update, delete: if isAdmin();
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // باقي مجموعات المنصة (للتوافق مع التطبيق الحالي)
-    // ─────────────────────────────────────────────────────────────
-    match /lessons/{lessonId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-
-    match /exams/{examId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-
-    match /submissions/{submissionId} {
-      allow read, create: if isSignedIn();
-      allow update, delete: if isAdmin();
-    }
-
-    match /progress/{docId} {
-      allow read, create, update: if isSignedIn();
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.phone + '@adel-tech.local' == request.auth.token.email);
+      allow create: if isAdmin();
+      allow update: if isAdmin() ||
+        (isAuthenticated() && resource.data.phone + '@adel-tech.local' == request.auth.token.email);
       allow delete: if isAdmin();
     }
 
+
+    // الإجابات: الأدمن يقرأ كل شيء - الطالب يقرأ/يكتب إجاباته بس
+    match /submissions/{id} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.studentPhone + '@adel-tech.local' == request.auth.token.email);
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentPhone + '@adel-tech.local' == request.auth.token.email;
+      allow update, delete: if isAdmin();
+    }
+
+
+    // التقدم في المحاضرات: أي مسجل يقرأ ويكتب
+    match /progress/{id} {
+      allow read, write: if isAuthenticated();
+    }
+
+
+    // أكواد التفعيل: الأدمن ينشئ - الطالب يقدر يستخدم كود غير مستخدم فقط
     match /access_codes/{codeId} {
-      allow read: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow read: if isAuthenticated();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.code == resource.data.code &&
+        request.resource.data.grade == resource.data.grade &&
+        request.resource.data.month == resource.data.month &&
+        request.resource.data.durationDays == resource.data.durationDays &&
+        request.resource.data.isUsed == true &&
+        resource.data.isUsed == false
+      );
     }
 
-    match /activation_logs/{logId} {
-      allow read: if isAdmin();
+
+    // الإعدادات: عامة للقراءة، الأدمن فقط للكتابة
+    match /settings/{id} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    match /settings/{docId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+
+    // سجلات التفعيل: الأدمن فقط
+    match /activation_logs/{id} {
+      allow read, write: if isAdmin();
     }
+
+
+    // ══════════════════════════════════════════════════════════
+    // منتدى الأسئلة والنقاش (جديد)
+    // ══════════════════════════════════════════════════════════
+    // القراءة: أي مستخدم مصادق يقرأ، لكن التطبيق يعرض "المنشورة"
+    // فقط في صفحة المنتدى، ويرى الطالب أسئلته المعلقة في "أسئلتي".
+    // الكتابة: المستخدم العادي (الطالب) ينشئ فقط بحالة "قيد المراجعة"
+    // ولا يستطيع النشر أو تغيير الحالة. المدرس (admin) يغيّر الحالة
+    // (قبول/رفض/تثبيت) ويردّ بنفسه وينشر مباشرة.
+    match /forum_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() && request.resource.data.status in ['pending', 'published'] &&
+        request.resource.data.title is string && request.resource.data.content.size() <= 2000) ||
+        (isAuthenticated() && request.resource.data.status == 'pending' &&
+        request.resource.data.authorStudentId is string &&
+        request.resource.data.grade is string &&
+        request.resource.data.title is string &&
+        request.resource.data.content.size() <= 2000);
+      allow update, delete: if isAdmin();
+    }
+
+
+    // ردود المنتدى: نفس سياسة المنشورات - الطالب يرد بقيد المراجعة،
+    // والمدرس يردّ منشوراً مباشرة ويقبل/يرفض/يحذف ردود الطلاب.
+    match /forum_replies/{replyId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() && request.resource.data.status in ['pending', 'published'] &&
+        request.resource.data.postId is string && request.resource.data.content.size() <= 1000) ||
+        (isAuthenticated() && request.resource.data.status == 'pending' &&
+        request.resource.data.postId is string &&
+        request.resource.data.content.size() <= 1000);
+      allow update, delete: if isAdmin();
+    }
+
+
+    // ==========================================================
+    // ملاحظة: لحذف منشور، التطبيق يمسح ردوده أولاً ثم المنشور،
+    // وبيزود/ينقص العداد replyCount على المنشور. كل دا يقع تحت
+    // صلاحية isAdmin فقط (update)، فالعداد لا يمكن العبث به.
+    // ==========================================================
   }
 }
