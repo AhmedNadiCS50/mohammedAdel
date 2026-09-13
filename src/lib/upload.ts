@@ -19,6 +19,17 @@ export async function uploadSubmissionImage(
   submissionId: string,
   file: File
 ): Promise<SubmissionAttachment> {
+  return uploadImage('submissions', submissionId, file);
+}
+
+export async function uploadAssignmentImage(
+  submissionId: string,
+  file: File
+): Promise<SubmissionAttachment> {
+  return uploadImage('assignment_submissions', submissionId, file);
+}
+
+async function uploadImage(folder: string, submissionId: string, file: File): Promise<SubmissionAttachment> {
   if (!isStorageConfigured() || !storage) {
     throw new Error('Firebase Storage غير مفعل على جهازك.');
   }
@@ -28,7 +39,7 @@ export async function uploadSubmissionImage(
   }
 
   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-  const storagePath = `submissions/${submissionId}/${Date.now()}-${safeName}`;
+  const storagePath = `${folder}/${submissionId}/${Date.now()}-${safeName}`;
   const fileRef = ref(storage, storagePath);
 
   const snapshot = await uploadBytes(fileRef, file, {

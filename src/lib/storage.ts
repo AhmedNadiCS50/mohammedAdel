@@ -1,5 +1,5 @@
-import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment } from './types';
-export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment };
+import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission } from './types';
+export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission };
 import { STATIC_LESSONS } from '@/data/lessons';
 import { isFirebaseConfigured } from './firebase';
 import {
@@ -20,7 +20,12 @@ import {
   saveAccessCodeToFirestore,
   getSettingsFromFirestore,
   saveSettingsToFirestore,
-  migrateLocalStorageToFirestore
+  migrateLocalStorageToFirestore,
+  getAssignmentsFromFirestore,
+  saveAssignmentToFirestore,
+  deleteAssignmentFromFirestore,
+  getAssignmentSubmissionsFromFirestore,
+  saveAssignmentSubmissionToFirestore
 } from './firestoreService';
 import { normalizePhone } from './phone';
 
@@ -41,6 +46,8 @@ const KEYS = {
   LESSONS: 'tech_adel_lessons',
   EXAMS: 'tech_adel_exams',
   SUBMISSIONS: 'tech_adel_submissions',
+  ASSIGNMENTS: 'tech_adel_assignments',
+  ASSIGNMENT_SUBMISSIONS: 'tech_adel_assignment_submissions',
   CODES: 'tech_adel_codes',
   LOGS: 'tech_adel_logs',
   SETTINGS: 'tech_adel_settings',
@@ -850,6 +857,112 @@ export function deleteExam(id: string): boolean {
     deleteExamFromFirestore(id).catch(err => console.error('Firestore deleteExam error:', err));
   }
   return true;
+}
+
+// ---------------------------
+// ASSIGNMENTS (الواجبات)
+// ---------------------------
+export function getAssignments(grade?: GradeLevel): Assignment[] {
+  let list = getLocal<Assignment[]>(KEYS.ASSIGNMENTS, []);
+  if (grade) list = list.filter(a => a.grade === grade);
+  return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function getAssignmentById(id: string): Assignment | null {
+  return getAssignments().find(a => a.id === id) || null;
+}
+
+export function saveAssignment(data: Omit<Assignment, 'id' | 'createdAt'>): Assignment {
+  const assignment: Assignment = {
+    ...data,
+    id: 'asg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    createdAt: new Date().toISOString(),
+  };
+  const list = getAssignments();
+  list.unshift(assignment);
+  setLocal(KEYS.ASSIGNMENTS, list);
+
+  if (isFirebaseConfigured()) {
+    saveAssignmentToFirestore(assignment).catch(err => console.error('Firestore saveAssignment error:', err));
+  }
+  return assignment;
+}
+
+export function deleteAssignment(id: string): boolean {
+  const list = getAssignments();
+  const next = list.filter(a => a.id !== id);
+  if (next.length === list.length) return false;
+  setLocal(KEYS.ASSIGNMENTS, next);
+
+  if (isFirebaseConfigured()) {
+    deleteAssignmentFromFirestore(id).catch(err => console.error('Firestore deleteAssignment error:', err));
+  }
+  return true;
+}
+
+export function getAssignmentSubmissions(assignmentId?: string, studentId?: string): AssignmentSubmission[] {
+  let list = getLocal<AssignmentSubmission[]>(KEYS.ASSIGNMENT_SUBMISSIONS, []);
+  if (assignmentId) list = list.filter(s => s.assignmentId === assignmentId);
+  if (studentId) list = list.filter(s => s.studentId === studentId);
+  return list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+}
+
+export function submitAssignment(params: {
+  assignment: Assignment;
+  student: Student;
+  answerText: string;
+  attachments?: SubmissionAttachment[];
+}): AssignmentSubmission {
+  const { assignment, student, answerText, attachments } = params;
+  const submission: AssignmentSubmission = {
+    id: 'asu_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    assignmentId: assignment.id,
+    assignmentTitle: assignment.title,
+    studentId: student.id,
+    studentName: student.name,
+    studentPhone: student.phone,
+    answerText: answerText.trim(),
+    attachments: attachments && attachments.length > 0 ? attachments : undefined,
+    status: 'submitted',
+    maxScore: assignment.maxScore,
+    passed: false,
+    submittedAt: new Date().toISOString(),
+  };
+  const list = getAssignmentSubmissions();
+  list.unshift(submission);
+  setLocal(KEYS.ASSIGNMENT_SUBMISSIONS, list);
+
+  if (isFirebaseConfigured()) {
+    saveAssignmentSubmissionToFirestore(submission).catch(err => console.error('Firestore saveAssignmentSubmission error:', err));
+  }
+  return submission;
+}
+
+export function gradeAssignmentSubmission(submissionId: string, score: number, comment?: string, seed?: AssignmentSubmission): AssignmentSubmission | null {
+  const list = getLocal<AssignmentSubmission[]>(KEYS.ASSIGNMENT_SUBMISSIONS, []);
+  let index = list.findIndex(s => s.id === submissionId);
+  if (index === -1) {
+    if (!seed) return null;
+    list.unshift(seed); // submission created on another device
+    index = 0;
+  }
+
+  const current = list[index];
+  const updated: AssignmentSubmission = {
+    ...current,
+    status: 'graded',
+    score,
+    passed: score >= current.maxScore * 0.5,
+    teacherComment: comment && comment.trim() ? comment.trim() : undefined,
+    gradedAt: new Date().toISOString(),
+  };
+  list[index] = updated;
+  setLocal(KEYS.ASSIGNMENT_SUBMISSIONS, list);
+
+  if (isFirebaseConfigured()) {
+    saveAssignmentSubmissionToFirestore(updated).catch(err => console.error('Firestore gradeAssignmentSubmission error:', err));
+  }
+  return updated;
 }
 
 // ---------------------------

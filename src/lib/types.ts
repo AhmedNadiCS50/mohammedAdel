@@ -104,6 +104,35 @@ export interface SubmissionAttachment {
   url: string;
 }
 
+export interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  grade: GradeLevel;
+  month: string;
+  maxScore: number;
+  dueDate?: string;
+  createdAt: string;
+}
+
+export interface AssignmentSubmission {
+  id: string;
+  assignmentId: string;
+  assignmentTitle: string;
+  studentId: string;
+  studentName: string;
+  studentPhone: string;
+  answerText: string;
+  attachments?: SubmissionAttachment[];
+  status: 'submitted' | 'graded';
+  score?: number;
+  maxScore: number;
+  passed: boolean;
+  teacherComment?: string;
+  submittedAt: string;
+  gradedAt?: string;
+}
+
 export interface AccessCode {
   code: string;
   grade: GradeLevel;

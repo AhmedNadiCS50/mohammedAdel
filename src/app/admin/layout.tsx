@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { isAdminLoggedIn, setAdminLoggedIn, getPendingEssaySubmissions } from '@/lib/storage';
+import { isAdminLoggedIn, setAdminLoggedIn, getPendingEssaySubmissions, getAssignmentSubmissions } from '@/lib/storage';
+import { getAssignmentSubmissionsFromFirestore } from '@/lib/firestoreService';
 import { ensureAdminFirebaseAuth } from '@/lib/firebaseAuth';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { subscribePendingPostsCount, subscribePendingReplies } from '@/lib/forumService';
@@ -20,7 +21,8 @@ import {
   Sparkles,
   ArrowRight,
   FileCheck,
-  MessagesSquare
+  MessagesSquare,
+  ClipboardList
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [pendingEssays, setPendingEssays] = useState(0);
   const [forumPending, setForumPending] = useState(0);
+  const [pendingAssignments, setPendingAssignments] = useState(0);
 
   // Let the mouse wheel scroll the horizontal nav pill bar.
   const handleNavWheel = (e: React.WheelEvent<HTMLElement>) => {
@@ -57,8 +60,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
     refreshEssays();
 
+    const refreshAssignments = () => {
+      const localPending = getAssignmentSubmissions().filter(s => s.status === 'submitted').length;
+      setPendingAssignments(localPending);
+      if (isFirebaseConfigured()) {
+        getAssignmentSubmissionsFromFirestore()
+          .then(list => setPendingAssignments(prev => Math.max(prev, list.filter(s => s.status === 'submitted').length)))
+          .catch(() => {});
+      }
+    };
+    refreshAssignments();
+
     const handleDataChange = () => {
       refreshEssays();
+      refreshAssignments();
     };
     window.addEventListener('platform-data-changed', handleDataChange);
 
@@ -104,6 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'منتدى الأسئلة والمراجعة', href: '/admin/forum', icon: MessagesSquare, badge: forumPending > 0 ? forumPending : undefined },
     { name: 'إدارة المحاضرات (YouTube)', href: '/admin/lessons', icon: Video },
     { name: 'بنك الأسئلة والامتحانات', href: '/admin/exams', icon: HelpCircle },
+    { name: 'الواجبات', href: '/admin/assignments', icon: ClipboardList, badge: pendingAssignments > 0 ? pendingAssignments : undefined },
     { name: 'توليد أكواد التفعيل', href: '/admin/codes', icon: KeyRound },
     { name: 'إعدادات الدفع والمنصة', href: '/admin/settings', icon: Settings },
   ];

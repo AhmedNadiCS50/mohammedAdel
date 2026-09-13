@@ -34,7 +34,9 @@ import {
   AccessCode,
   PlatformSettings,
   GradeLevel,
-  ActivationLog
+  ActivationLog,
+  Assignment,
+  AssignmentSubmission
 } from './types';
 
 // Collection Names
@@ -43,6 +45,8 @@ export const COLLECTIONS = {
   LESSONS: 'lessons',
   EXAMS: 'exams',
   SUBMISSIONS: 'submissions',
+  ASSIGNMENTS: 'assignments',
+  ASSIGNMENT_SUBMISSIONS: 'assignment_submissions',
   PROGRESS: 'progress',
   ACCESS_CODES: 'access_codes',
   ACTIVATION_LOGS: 'activation_logs',
@@ -261,6 +265,79 @@ export async function saveSubmissionToFirestore(sub: ExamSubmission): Promise<bo
     return true;
   } catch (err) {
     console.error('Error saving submission to Firestore:', err);
+    return false;
+  }
+}
+
+// -------------------------------------------------------------
+// ASSIGNMENTS (الواجبات)
+// -------------------------------------------------------------
+export async function getAssignmentsFromFirestore(grade?: GradeLevel): Promise<Assignment[]> {
+  if (!isFirebaseConfigured() || !db) return [];
+  try {
+    const colRef = collection(db, COLLECTIONS.ASSIGNMENTS);
+    const q = grade ? query(colRef, where('grade', '==', grade)) : colRef;
+    const snap = await getDocs(q);
+    return snap.docs
+      .map((d) => d.data() as Assignment)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (err) {
+    console.error('Error fetching assignments from Firestore:', err);
+    return [];
+  }
+}
+
+export async function saveAssignmentToFirestore(assignment: Assignment): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) return false;
+  try {
+    await setDoc(doc(db, COLLECTIONS.ASSIGNMENTS, assignment.id), assignment, { merge: true });
+    return true;
+  } catch (err) {
+    console.error('Error saving assignment to Firestore:', err);
+    return false;
+  }
+}
+
+export async function deleteAssignmentFromFirestore(assignmentId: string): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) return false;
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.ASSIGNMENTS, assignmentId));
+    return true;
+  } catch (err) {
+    console.error('Error deleting assignment from Firestore:', err);
+    return false;
+  }
+}
+
+export async function getAssignmentSubmissionsFromFirestore(assignmentId?: string, studentId?: string): Promise<AssignmentSubmission[]> {
+  if (!isFirebaseConfigured() || !db) return [];
+  try {
+    const colRef = collection(db, COLLECTIONS.ASSIGNMENT_SUBMISSIONS);
+    let q = query(colRef);
+    if (assignmentId && studentId) {
+      q = query(colRef, where('assignmentId', '==', assignmentId), where('studentId', '==', studentId));
+    } else if (assignmentId) {
+      q = query(colRef, where('assignmentId', '==', assignmentId));
+    } else if (studentId) {
+      q = query(colRef, where('studentId', '==', studentId));
+    }
+    const snap = await getDocs(q);
+    return snap.docs
+      .map((d) => d.data() as AssignmentSubmission)
+      .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+  } catch (err) {
+    console.error('Error fetching assignment submissions from Firestore:', err);
+    return [];
+  }
+}
+
+export async function saveAssignmentSubmissionToFirestore(sub: AssignmentSubmission): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) return false;
+  try {
+    await setDoc(doc(db, COLLECTIONS.ASSIGNMENT_SUBMISSIONS, sub.id), sub, { merge: true });
+    return true;
+  } catch (err) {
+    console.error('Error saving assignment submission to Firestore:', err);
     return false;
   }
 }
