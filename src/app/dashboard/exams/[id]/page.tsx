@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getCurrentStudent, getExamById, GRADE_LABELS } from '@/lib/storage';
+import { getExamByIdFromFirestore } from '@/lib/firestoreService';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { Student, Exam } from '@/lib/types';
 import ExamRunner from '@/components/ExamRunner';
 import { ArrowRight, Lock, AlertCircle } from 'lucide-react';
@@ -25,9 +27,22 @@ export default function TakeExamPage() {
     }
     setStudent(s);
 
-    const e = getExamById(examId);
-    setExam(e);
-    setIsLoading(false);
+    const loadExam = async () => {
+      let e = getExamById(examId);
+
+      // New exams are stored in Firestore, not localStorage — fetch as fallback.
+      if (!e && isFirebaseConfigured()) {
+        const remote = await getExamByIdFromFirestore(examId);
+        if (remote && remote.grade === s.grade) {
+          e = remote;
+        }
+      }
+
+      setExam(e);
+      setIsLoading(false);
+    };
+
+    loadExam();
   }, [examId, router]);
 
   if (isLoading) {

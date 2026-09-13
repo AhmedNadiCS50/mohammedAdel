@@ -77,6 +77,18 @@ export async function getStudentByIdFromFirestore(studentId: string): Promise<St
   }
 }
 
+export async function getLessonByIdFromFirestore(lessonId: string): Promise<Lesson | null> {
+  if (!isFirebaseConfigured() || !db) return null;
+  try {
+    const docRef = doc(db, COLLECTIONS.LESSONS, lessonId);
+    const snap = await getDoc(docRef);
+    return snap.exists() ? (snap.data() as Lesson) : null;
+  } catch (err) {
+    console.error('Error fetching lesson by ID:', err);
+    return null;
+  }
+}
+
 export async function saveStudentToFirestore(student: Student): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
   try {
@@ -160,6 +172,18 @@ export async function getExamsFromFirestore(grade?: GradeLevel): Promise<Exam[]>
   } catch (err) {
     console.error('Error fetching exams from Firestore:', err);
     return [];
+  }
+}
+
+export async function getExamByIdFromFirestore(examId: string): Promise<Exam | null> {
+  if (!isFirebaseConfigured() || !db) return null;
+  try {
+    const docRef = doc(db, COLLECTIONS.EXAMS, examId);
+    const snap = await getDoc(docRef);
+    return snap.exists() ? (snap.data() as Exam) : null;
+  } catch (err) {
+    console.error('Error fetching exam by ID:', err);
+    return null;
   }
 }
 

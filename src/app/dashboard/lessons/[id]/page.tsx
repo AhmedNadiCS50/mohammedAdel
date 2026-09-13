@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  getCurrentStudent, 
-  getLessonById, 
+import {
+  getCurrentStudent,
+  getLessonById,
   getLessons,
-  canStudentAccessLessonSequential, 
+  canStudentAccessLessonSequential,
   getExams,
   GRADE_LABELS
 } from '@/lib/storage';
+import { getLessonByIdFromFirestore } from '@/lib/firestoreService';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { Student, Lesson, Exam } from '@/lib/types';
 import VideoPlayer from '@/components/VideoPlayer';
 import { 
@@ -44,19 +46,39 @@ export default function WatchLessonPage() {
     }
     setStudent(s);
 
-    const l = getLessonById(lessonId);
-    setLesson(l);
-
     const list = getLessons(s.grade);
     setAllLessons(list);
 
-    if (l) {
-      const exams = getExams(l.grade);
-      const matched = exams.find(e => e.lessonId === l.id || e.month === l.month);
-      setRelatedExam(matched || null);
-    }
+    const loadLesson = async () => {
+      let resolved: Lesson | null = getLessonById(lessonId);
 
-    setIsLoading(false);
+      // New lessons are stored in Firestore, not localStorage — fetch as fallback.
+      if (!resolved && isFirebaseConfigured()) {
+        const remote = await getLessonByIdFromFirestore(lessonId);
+        if (remote && remote.grade === s.grade) {
+          resolved = remote;
+          setAllLessons(prev => {
+            if (!prev.some(p => p.id === remote.id)) {
+              return [...prev, remote].sort((a, b) => a.orderIndex - b.orderIndex);
+            }
+            return prev;
+          });
+        }
+      }
+
+      setLesson(resolved);
+
+      if (resolved) {
+        const lr = resolved;
+        const exams = getExams(lr.grade);
+        const matched = exams.find(e => e.lessonId === lr.id || e.month === lr.month);
+        setRelatedExam(matched || null);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadLesson();
   }, [lessonId, router]);
 
   if (isLoading) {
