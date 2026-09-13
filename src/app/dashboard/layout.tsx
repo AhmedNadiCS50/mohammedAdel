@@ -49,14 +49,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const navItems = [
-    { name: 'الملف الشخصي', href: '/dashboard', icon: User },
-    { name: 'المحفظة', href: '/dashboard/subscription', icon: Wallet },
-    { name: 'الكورسات', href: '/dashboard', icon: BookOpen },
-    { name: 'الدروس', href: '/dashboard', icon: Video },
-    { name: 'الترم', href: '/dashboard', icon: CalendarDays },
+    { name: 'الملف الشخصي', href: '/dashboard/profile', icon: User },
+    { name: 'المحفظة', href: '/dashboard/wallet', icon: Wallet },
+    { name: 'الكورسات', href: '/dashboard/courses', icon: BookOpen },
+    { name: 'الدروس', href: '/dashboard/lessons', icon: Video },
+    { name: 'الترم', href: '/dashboard/term', icon: CalendarDays },
     { name: 'الكتب', href: '/products', icon: Library },
-    { name: 'الامتحانات', href: '/dashboard', icon: HelpCircle },
-    { name: 'الواجبات', href: '/dashboard', icon: ClipboardList },
+    { name: 'الامتحانات', href: '/dashboard/exams', icon: HelpCircle },
+    { name: 'الواجبات', href: '/dashboard/assignments', icon: ClipboardList },
   ];
 
   if (!student) return null;
