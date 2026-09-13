@@ -11,7 +11,7 @@ interface ScrollCanvasProps {
 
 export default function ScrollCanvas({
   children,
-  heightClass = "h-[400vh]",
+  heightClass = "h-[170vh] sm:h-[260vh] lg:h-[400vh]",
 }: ScrollCanvasProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
