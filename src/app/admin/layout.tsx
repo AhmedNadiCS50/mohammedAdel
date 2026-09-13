@@ -146,10 +146,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 ${
+                    className={`group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors duration-200 ${
                       isActive
                         ? 'bg-white text-emerald-950 shadow-md shadow-black/25 ring-1 ring-white/70'
-                        : 'text-green-100/90 hover:text-white hover:bg-white/10 hover:-translate-y-0.5'
+                        : 'text-green-100/90 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <span
@@ -176,7 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/"
-                className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/45 backdrop-blur-sm shadow-md shadow-black/20 whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5"
+                className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/45 backdrop-blur-sm shadow-md shadow-black/20 whitespace-nowrap transition-colors duration-200 cursor-pointer"
               >
                 <span className="flex items-center justify-center w-5 h-5 rounded-md bg-white/15 group-hover:bg-white/25 transition-colors">
                   <ArrowRight className="w-3 h-3 rotate-180" />
@@ -207,7 +207,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 ${
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors duration-200 ${
                     isActive
                       ? 'bg-white text-emerald-950 shadow-md shadow-black/25 font-black'
                       : 'text-green-100/90 bg-white/10 hover:bg-white/20 hover:text-white border border-white/10'

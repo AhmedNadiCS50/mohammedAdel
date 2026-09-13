@@ -109,7 +109,7 @@ export default function AdminOverviewPage() {
 <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin/lessons"
-                className="group inline-flex items-center gap-2 px-4 py-2.5 text-white text-xs font-black rounded-xl transition-all duration-200 shadow-lg shadow-emerald-950/30 hover:-translate-y-0.5 hover:brightness-110"
+                className="group inline-flex items-center gap-2 px-4 py-2.5 text-white text-xs font-black rounded-xl transition-colors duration-200 shadow-lg shadow-emerald-950/30 hover:brightness-110 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #2D6A4F, #52B788)' }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
@@ -119,7 +119,7 @@ export default function AdminOverviewPage() {
               </Link>
               <Link
                 href="/admin/codes"
-                className="group inline-flex items-center gap-2 px-4 py-2.5 text-amber-950 text-xs font-black rounded-xl transition-all duration-200 shadow-lg shadow-amber-900/30 hover:-translate-y-0.5 hover:brightness-110 border border-amber-200/70"
+                className="group inline-flex items-center gap-2 px-4 py-2.5 text-amber-950 text-xs font-black rounded-xl transition-colors duration-200 shadow-lg shadow-amber-900/30 hover:brightness-110 border border-amber-200/70 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #FCD34D, #F59E0B)' }}
               >
                 <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-950/15 group-hover:bg-amber-950/25 transition-colors">
