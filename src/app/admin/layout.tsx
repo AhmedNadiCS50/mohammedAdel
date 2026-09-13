@@ -119,8 +119,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             </div>
 
-            {/* Desktop Navigation Tabs (Laptops & Desktops) */}
-            <nav className="hidden lg:flex items-center gap-1">
+            {/* Desktop Navigation Tabs (wide screens only - small laptops use the scrollable bar below) */}
+            <nav className="hidden xl:flex items-center gap-1 overflow-x-auto scrollbar-none">
               {adminNav.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -128,7 +128,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
                       isActive
                         ? 'bg-white text-green-900 shadow-sm'
                         : 'text-green-100 hover:text-white hover:bg-green-800/60'
@@ -170,8 +170,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          {/* Mobile & Tablet Admin Navigation Bar */}
-          <div className="flex lg:hidden overflow-x-auto py-2.5 gap-2 scrollbar-none border-t border-green-800/80 -mx-4 px-4 sm:-mx-6 sm:px-6">
+          {/* Mobile, Tablet & Small-Laptop Admin Navigation Bar */}
+          <div className="flex xl:hidden overflow-x-auto py-2.5 gap-2 scrollbar-none border-t border-green-800/80 -mx-4 px-4 sm:-mx-6 sm:px-6">
             {adminNav.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;

@@ -149,7 +149,7 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+          <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
             <button
               onClick={() => {
                 syncFromFirestore().then(() => {

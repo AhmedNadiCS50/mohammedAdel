@@ -83,7 +83,7 @@ export default function AdminStudentsPage() {
             اضغط على أي طالب لعرض سجله وتفعيل اشتراكه الشهري أو منحه وصولاً جزئياً لكورسات محددة.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleSyncNow}
             disabled={isSyncing}
