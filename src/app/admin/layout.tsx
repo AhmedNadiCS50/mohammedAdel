@@ -30,19 +30,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [pendingEssays, setPendingEssays] = useState(0);
   const [forumPending, setForumPending] = useState(0);
 
-  // Let the mouse wheel scroll the horizontal nav pill bar smoothly.
-  // When the bar is fully scrolled (or doesn't overflow), let the page scroll normally.
+  // Let the mouse wheel scroll the horizontal nav pill bar.
   const handleNavWheel = (e: React.WheelEvent<HTMLElement>) => {
     const el = e.currentTarget;
     const vertical = Math.abs(e.deltaY) > Math.abs(e.deltaX);
     const maxScroll = el.scrollWidth - el.clientWidth;
     if (maxScroll <= 0 || !vertical) return;
-    const atStart = el.scrollLeft <= 1 && e.deltaY < 0;
-    const atEnd = el.scrollLeft >= maxScroll - 1 && e.deltaY > 0;
-    if (atStart || atEnd) return; // let the page scroll
     e.preventDefault();
-    const next = Math.min(Math.max(el.scrollLeft + e.deltaY, 0), maxScroll);
-    el.scrollTo({ left: next, behavior: 'smooth' });
+    el.scrollLeft = Math.min(
+      Math.max(el.scrollLeft + e.deltaY * 0.7, 0),
+      maxScroll
+    );
   };
 
   useEffect(() => {
