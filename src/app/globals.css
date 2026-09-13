@@ -75,6 +75,10 @@ p {
 ::-webkit-scrollbar-track  { background: #f0f0f0; }
 ::-webkit-scrollbar-thumb  { background: var(--green-mid); border-radius: 99px; }
 
+/* Hide horizontal scrollbars for pill nav bars */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+
 /* ═══════════════════════════════════════
    CARD — clean white card with shadow
 ═══════════════════════════════════════ */
