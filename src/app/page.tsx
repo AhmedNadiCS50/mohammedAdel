@@ -3,14 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import {
   GraduationCap,
   Zap,
   ShoppingBag,
   Star,
   ChevronLeft,
-  Sparkles,
   Award,
   Video,
   FileCheck,
@@ -19,12 +17,6 @@ import {
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import Tilt from "@/components/Tilt";
-import Parallax from "@/components/Parallax";
-
-const HeroScene = dynamic(() => import("@/components/HeroScene"), {
-  ssr: false,
-  loading: () => null,
-});
 
 export default function Home() {
   const grades = [
@@ -121,160 +113,67 @@ export default function Home() {
       {/* ═════════════════════════════════════════════
           1. HERO — dark premium
       ════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-[#0B1F16] border-b border-[#1F3A2C]">
-        {/* ambient blobs */}
-        <div className="absolute -top-40 -right-40 w-[560px] h-[560px] rounded-full bg-[#2D6A4F]/40 blur-3xl animate-blob pointer-events-none" />
-        <div
-          className="absolute -bottom-48 -left-32 w-[520px] h-[520px] rounded-full bg-[#D4AF37]/15 blur-3xl animate-blob pointer-events-none"
-          style={{ animationDelay: "-5s" }}
-        />
-        <div className="absolute top-1/3 left-1/3 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl animate-blob pointer-events-none" style={{ animationDelay: "-2s" }} />
+      <section className="relative bg-black">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-14 sm:pb-20 text-center">
+          <Reveal>
+            <span className="text-[11px] sm:text-xs tracking-[0.3em] text-white/40">
+              المنصة الرسمية المعتمدة • دفعة 2027
+            </span>
+          </Reveal>
 
-        {/* live 3D particles + shapes */}
-        <Parallax speed={0.12}>
-          <HeroScene />
-        </Parallax>
+          <Reveal delay={100}>
+            <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.2rem] sm:leading-[1.25] font-semibold text-white tracking-tight">
+              مادة التكنولوجيا مع
+              <span className="block mt-2 bg-gradient-to-l from-[#F3D879] via-[#E8C666] to-[#D4AF37] bg-clip-text text-transparent">
+                الخبير مستر محمد عادل
+              </span>
+            </h1>
+          </Reveal>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-14 sm:pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          <Reveal delay={180}>
+            <p className="mt-6 text-white/50 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto">
+              المنصة التعليمية الأولى المتخصصة في شرح وتدريس مناهج الحاسب الآلي وتكنولوجيا المعلومات والبرمجة لطلاب المرحلة الثانوية، من أول المفاهيم وحتى الدرجة النهائية.
+            </p>
+          </Reveal>
 
-            {/* Text side */}
-            <div className="lg:col-span-7 text-center lg:text-right space-y-6">
-              <Reveal>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/15 backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-[#F3D879] animate-pulse shrink-0" />
-                  <span className="text-xs font-bold text-[#F3E9C0]">المنصة الرسمية المعتمدة • دفعة 2027</span>
-                  <Sparkles className="w-3.5 h-3.5 text-[#F3D879] shrink-0" />
-                </div>
-              </Reveal>
-
-              <Reveal delay={100}>
-                <h1 className="text-[1.65rem] leading-[1.4] sm:text-5xl lg:text-[3.4rem] sm:leading-[1.25] font-black text-white tracking-tight">
-                  مادة التكنولوجيا مع
-                  <span className="block mt-1 sm:mt-2 bg-gradient-to-l from-[#F3D879] via-[#E8C666] to-[#D4AF37] bg-clip-text text-transparent">
-                    الخبير مستر محمد عادل
-                  </span>
-                </h1>
-              </Reveal>
-
-              <Reveal delay={180}>
-                <p className="text-emerald-100/80 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                  المنصة التعليمية الأولى المتخصصة في شرح وتدريس مناهج الحاسب الآلي وتكنولوجيا المعلومات والبرمجة لطلاب المرحلة الثانوية (عام وتخصصي بكالوريا). من أول المفاهيم وحتى الدرجة النهائية.
-                </p>
-              </Reveal>
-
-              <Reveal delay={260}>
-                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 pt-1">
-                  <Link
-                    href="/register"
-                    className="btn-hero btn-hero--gold w-full sm:w-auto px-7 py-3.5 text-sm sm:text-base"
-                  >
-                    <GraduationCap className="w-5 h-5 shrink-0" />
-                    أنشئ حسابك وابدأ المذاكرة
-                  </Link>
-                  <Link
-                    href="/dashboard/subscription"
-                    className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3.5 text-xs sm:text-sm"
-                  >
-                    <Zap className="w-4 h-4 text-[#F3D879] shrink-0" />
-                    تفعيل كود الاشتراك
-                  </Link>
-                  <Link
-                    href="/products"
-                    className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3.5 text-xs sm:text-sm"
-                  >
-                    <ShoppingBag className="w-4 h-4 shrink-0" />
-                    كتاب البكالوريا الورقي
-                  </Link>
-                </div>
-              </Reveal>
-
-              <Reveal delay={340}>
-                <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl mx-auto lg:mx-0">
-                  {[
-                    { val: "4 صفوف", label: "عام وبكالوريا" },
-                    { val: "100%", label: "تغطية المنهج" },
-                    { val: "تصحيح فوري", label: "للواجبات والامتحانات" },
-                    { val: "دفعة 2027", label: "الدفعة المعتمدة" },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-2xl bg-white/[0.06] border border-white/10 px-3 py-3 text-center hover:bg-white/[0.1] hover:border-white/20 transition-colors">
-                      <div className="font-black text-sm sm:text-base text-[#F3D879]">{s.val}</div>
-                      <div className="text-[10px] sm:text-[11px] text-emerald-100/70 mt-0.5">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </Reveal>
+          <Reveal delay={260}>
+            <div className="mt-9 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/register"
+                className="btn-hero btn-hero--gold w-full sm:w-auto px-7 py-3 text-sm sm:text-base"
+              >
+                <GraduationCap className="w-4 h-4 shrink-0" />
+                أنشئ حسابك وابدأ المذاكرة
+              </Link>
+              <Link
+                href="/dashboard/subscription"
+                className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+              >
+                <Zap className="w-4 h-4 text-[#F3D879] shrink-0" />
+                تفعيل كود الاشتراك
+              </Link>
+              <Link
+                href="/products"
+                className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+              >
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                كتاب البكالوريا الورقي
+              </Link>
             </div>
+          </Reveal>
 
-            {/* Teacher card side */}
-            <Reveal delay={200} className="lg:col-span-5">
-              <Parallax speed={0.3}>
-              <div className="relative flex justify-center">
-                {/* glow behind card */}
-                <div className="absolute inset-0 -m-6 rounded-[2.5rem] bg-gradient-to-b from-[#D4AF37]/25 to-transparent blur-2xl pointer-events-none" />
-
-                <Tilt max={10} scale={1.03}>
-                <div className="relative w-full max-w-[300px] sm:max-w-[330px] rounded-[1.8rem] p-[3px] bg-gradient-to-b from-[#F3D879] via-[#D4AF37]/40 to-[#1B4332] shadow-2xl shadow-black/40">
-                  <div className="rounded-[1.65rem] bg-white overflow-hidden">
-                    <div className="relative w-full aspect-[4/5] bg-gradient-to-b from-[#E7F3EA] to-[#D6EBDC] flex items-end justify-center">
-                      <Image
-                        src="/images/teacher.png"
-                        alt="الخبير مستر محمد عادل"
-                        fill
-                        priority
-                        className="object-contain object-bottom"
-                      />
-                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur border border-green-200 px-3 py-1 rounded-full text-[11px] font-bold text-green-800 shadow-sm flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        الخبير أونلاين
-                      </div>
-                      <div className="absolute top-3 left-3 bg-[#1B4332] text-[#F3D879] text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm">
-                        2027
-                      </div>
-                    </div>
-                    <div className="px-4 py-4 text-center bg-white">
-                      <h3 className="text-lg font-black text-gray-900">مستر محمد عادل</h3>
-                      <p className="text-[11px] font-bold text-green-800 mt-0.5 leading-normal">
-                        خبير مادة التكنولوجيا والبرمجة ومؤلف كتاب البكالوريا
-                      </p>
-                      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[10px] text-gray-500">
-                        <span className="px-2.5 py-0.5 rounded-full bg-gray-100 border border-gray-200">ثانوي عام وبكالوريا</span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold">مصر • أونلاين</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* floating chips */}
-                  <div className="absolute -top-4 -left-5 sm:-left-8 animate-float rounded-2xl bg-white/95 backdrop-blur border border-green-100 shadow-lg px-3.5 py-2.5 flex items-center gap-2">
-                    <span className="w-9 h-9 rounded-xl bg-emerald-100 text-green-800 flex items-center justify-center">
-                      <Video className="w-5 h-5" />
-                    </span>
-                    <div className="text-right">
-                      <div className="text-[13px] font-black text-gray-900 leading-none">مئات المحاضرات</div>
-                      <div className="text-[10px] text-gray-500 mt-1">شرح بالصوت والصورة</div>
-                    </div>
-                  </div>
-
-                  <div className="absolute -bottom-5 -right-3 sm:-right-9 animate-float rounded-2xl bg-white/95 backdrop-blur border border-amber-100 shadow-lg px-3.5 py-2.5 flex items-center gap-2" style={{ animationDelay: "-2.5s" }}>
-                    <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                      <PenLine className="w-5 h-5" />
-                    </span>
-<div className="text-right">
-                        <div className="text-[13px] font-black text-gray-900 leading-none">واجبات وتصحيح</div>
-                        <div className="text-[10px] text-gray-500 mt-1">بتعليق شخصي من المدرس</div>
-                      </div>
-                  </div>
-                </div>
-                </Tilt>
-              </div>
-              </Parallax>
-            </Reveal>
-
-          </div>
+          <Reveal delay={340}>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm text-white/35">
+              <span>4 صفوف · عام وبكالوريا</span>
+              <span className="w-px h-3 bg-white/15" />
+              <span>تغطية 100% للمنهج</span>
+              <span className="w-px h-3 bg-white/15" />
+              <span>تصحيح فوري</span>
+            </div>
+          </Reveal>
         </div>
 
-        {/* bottom curve fade */}
-        <div className="relative h-8 bg-gradient-to-b from-transparent to-[#FAFAF8]" />
+        <div className="h-px bg-white/10" />
       </section>
 
       {/* ═════════════════════════════════════════════
