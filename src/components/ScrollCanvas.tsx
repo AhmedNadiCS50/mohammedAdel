@@ -25,14 +25,16 @@ export default function ScrollCanvas({
   heightClass = "h-[400vh]",
 }: ScrollCanvasProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     const section = sectionRef.current;
+    const overlay = overlayRef.current;
     const content = contentRef.current;
     const canvas = canvasRef.current;
-    if (!section || !content || !canvas) return;
+    if (!section || !overlay || !content || !canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -153,7 +155,10 @@ export default function ScrollCanvas({
     };
 
     const frame = () => {
-      if (visible) update(scrollProgress());
+      const p = scrollProgress();
+      const isHeroDone = p >= 0.999;
+      overlay.style.opacity = visible && !isHeroDone ? "1" : "0";
+      if (visible) update(p);
       requestAnimationFrame(frame);
     };
 
@@ -185,12 +190,18 @@ export default function ScrollCanvas({
       ref={sectionRef as React.RefObject<HTMLElement>}
       className={`relative bg-black ${heightClass}`}
     >
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div
+        ref={overlayRef}
+        className="fixed inset-0 z-0 pointer-events-none"
+        aria-hidden="true"
+      >
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          aria-hidden="true"
+          className="w-full h-full"
         />
+      </div>
+
+      <div className="sticky top-0 h-screen overflow-hidden">
         <div
           ref={contentRef}
           className="relative z-10 px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-14 sm:pb-20 text-center"
