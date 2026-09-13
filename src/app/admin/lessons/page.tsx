@@ -132,9 +132,9 @@ export default function AdminLessonsPage() {
           grade,
           month: month.trim(),
           youtubeVideoId: videoId,
-          pdfAttachmentUrl: pdfUrl.trim() || undefined,
           orderIndex: existingLesson?.orderIndex ?? (lessons.length + 1),
           createdAt: existingLesson?.createdAt ?? new Date().toISOString(),
+          ...(pdfUrl.trim() ? { pdfAttachmentUrl: pdfUrl.trim() } : {}),
         };
 
         const success = await saveLessonToFirestore(lessonToSave);
@@ -151,8 +151,8 @@ export default function AdminLessonsPage() {
           grade,
           month: month.trim(),
           youtubeVideoId: videoId,
-          pdfAttachmentUrl: pdfUrl.trim() || undefined,
           orderIndex: lessons.length + 1,
+          ...(pdfUrl.trim() ? { pdfAttachmentUrl: pdfUrl.trim() } : {}),
         }, editingId || undefined);
       }
 
