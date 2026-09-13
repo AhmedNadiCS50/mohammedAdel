@@ -11,7 +11,7 @@ interface ScrollCanvasProps {
 
 export default function ScrollCanvas({
   children,
-  heightClass = "h-[170vh] sm:h-[260vh] lg:h-[400vh]",
+  heightClass = "h-[130vh] sm:h-[260vh] lg:h-[400vh]",
 }: ScrollCanvasProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -116,7 +116,7 @@ export default function ScrollCanvas({
         />
       </div>
 
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-dvh overflow-hidden">
         <div
           className="absolute inset-0 z-[5] pointer-events-none"
           aria-hidden="true"
