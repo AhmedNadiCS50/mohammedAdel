@@ -149,7 +149,7 @@ export default function Home() {
               </Reveal>
 
               <Reveal delay={100}>
-                <h1 className="text-3xl sm:text-5xl lg:text-[3.4rem] font-black text-white leading-[1.3] sm:leading-[1.25] tracking-tight">
+                <h1 className="text-[1.65rem] leading-[1.4] sm:text-5xl lg:text-[3.4rem] sm:leading-[1.25] font-black text-white tracking-tight">
                   مادة التكنولوجيا مع
                   <span className="block mt-1 sm:mt-2 bg-gradient-to-l from-[#F3D879] via-[#E8C666] to-[#D4AF37] bg-clip-text text-transparent">
                     الخبير مستر محمد عادل
@@ -255,7 +255,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="absolute -bottom-5 -right-4 sm:-right-9 animate-float rounded-2xl bg-white/95 backdrop-blur border border-amber-100 shadow-lg px-3.5 py-2.5 flex items-center gap-2" style={{ animationDelay: "-2.5s" }}>
+                  <div className="absolute -bottom-5 -right-3 sm:-right-9 animate-float rounded-2xl bg-white/95 backdrop-blur border border-amber-100 shadow-lg px-3.5 py-2.5 flex items-center gap-2" style={{ animationDelay: "-2.5s" }}>
                     <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
                       <PenLine className="w-5 h-5" />
                     </span>

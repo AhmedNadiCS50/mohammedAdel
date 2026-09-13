@@ -11,6 +11,7 @@ export default function HeroScene() {
     if (!container) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isMobile = window.innerWidth < 768;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -21,8 +22,12 @@ export default function HeroScene() {
     );
     camera.position.z = 14;
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: !isMobile,
+      powerPreference: "low-power",
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     const canvas = renderer.domElement;
     canvas.style.position = "absolute";
@@ -30,8 +35,8 @@ export default function HeroScene() {
     canvas.style.pointerEvents = "none";
     container.appendChild(canvas);
 
-    /* Gold particles field */
-    const count = 160;
+    /* Gold particles field (lighter on mobile) */
+    const count = isMobile ? 55 : 160;
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 30;
@@ -51,14 +56,14 @@ export default function HeroScene() {
     const points = new THREE.Points(particleGeo, particleMat);
     scene.add(points);
 
-    /* Floating geometric shapes */
+    /* Floating geometric shapes (fewer on mobile) */
     const shapes: { mesh: THREE.Mesh; speed: number; baseY: number; baseX: number }[] = [];
     const defs = [
       { geo: new THREE.TorusGeometry(1.5, 0.045, 12, 60), y: 3.4 },
       { geo: new THREE.IcosahedronGeometry(0.95, 0), y: -3.6 },
       { geo: new THREE.TorusKnotGeometry(0.72, 0.22, 70, 12), y: 0.5 },
       { geo: new THREE.OctahedronGeometry(0.62, 0), y: -1.7 },
-    ];
+    ].slice(0, isMobile ? 2 : 4);
     for (const def of defs) {
       const mat = new THREE.MeshStandardMaterial({
         color: 0xd4af37,
@@ -100,8 +105,10 @@ export default function HeroScene() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     let raf = 0;
+    let running = true;
     const clock = new THREE.Clock();
     const animate = () => {
+      if (!running) return;
       const t = clock.getElapsedTime();
       if (!reduced) {
         targetX += (mouseX - targetX) * 0.045;
@@ -129,6 +136,18 @@ export default function HeroScene() {
     };
     animate();
 
+    /* Pause rendering while the tab is hidden (battery friendly) */
+    const onVisibility = () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(raf);
+      } else {
+        running = true;
+        raf = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     const onResize = () => {
       if (!container) return;
       camera.aspect = container.clientWidth / container.clientHeight;
@@ -139,6 +158,7 @@ export default function HeroScene() {
 
     return () => {
       cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("mousemove", onMouse);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);

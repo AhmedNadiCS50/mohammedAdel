@@ -223,8 +223,8 @@ ${codeStr}
             لا توجد أكواد مسجلة مطابقة للبحث.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+          <div className="overflow-x-auto -mx-1 px-1">
+            <table className="w-full text-right text-xs min-w-[680px]">
               <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3.5">الكود</th>
