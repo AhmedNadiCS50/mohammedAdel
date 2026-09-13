@@ -136,7 +136,10 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
       // 4) Read outputs
       const m3u8Raw = (await ffmpeg.readFile('index.m3u8')) as any;
       const m3u8 = typeof m3u8Raw === 'string' ? m3u8Raw : new TextDecoder().decode(m3u8Raw);
-      if (!m3u8.includes('EXT-X-KEY') || !m3u8.includes('segs')) {
+      const hasAes = m3u8.includes('EXT-X-KEY:METHOD=AES-128');
+      const hasSegments = /#EXTINF/.test(m3u8);
+      if (!hasAes || !hasSegments) {
+        console.error('m3u8 output:', m3u8.slice(0, 500), m3u8Raw);
         throw new Error('الناتج لا يحتوي على تشفير AES — تأكد من أن الفيديو قابل للمعالجة.');
       }
 
