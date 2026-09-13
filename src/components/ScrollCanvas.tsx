@@ -124,7 +124,7 @@ let lastT = -1;
     >
       <div
         ref={overlayRef}
-        className="fixed inset-0 z-0 pointer-events-none"
+        className={`${isTouch ? "absolute" : "fixed"} inset-0 z-0 pointer-events-none`}
         aria-hidden="true"
       >
         <video
