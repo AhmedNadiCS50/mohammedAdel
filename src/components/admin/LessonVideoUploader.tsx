@@ -26,6 +26,7 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
   const [donePath, setDonePath] = useState<string | null>(null);
   const [ffmpegNote, setFfmpegNote] = useState('');
   const ffmpegRef = useRef<FFmpeg | null>(null);
+  const ffmpegLogRef = useRef('');
 
   const loadFFmpeg = useCallback(async (): Promise<FFmpeg> => {
     if (ffmpegRef.current) return ffmpegRef.current;
@@ -36,6 +37,7 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
       setEncodePct(Math.round((progress || 0) * 100));
     });
     ffmpeg.on('log', ({ message }) => {
+      ffmpegLogRef.current = `${ffmpegLogRef.current}\n${message}`.slice(-12000);
       if (message.includes('frame=')) {
         setFfmpegNote(message.split('frame=')[1]?.trim().slice(0, 60) || '');
       }
@@ -143,19 +145,34 @@ export default function LessonVideoUploader({ lessonId, onReady }: LessonVideoUp
         throw new Error('الناتج لا يحتوي على تشفير AES — تأكد من أن الفيديو قابل للمعالجة.');
       }
 
+      const segNames = m3u8
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('#') && l.endsWith('.ts') && !l.includes('/'));
+
       const segments: { name: string; data: Uint8Array }[] = [];
-      for (let i = 1; i <= 5000; i++) {
-        const name = `seg${String(i).padStart(3, '0')}.ts`;
+      const missing: string[] = [];
+      for (const name of segNames) {
         try {
           const raw = (await ffmpeg.readFile(name)) as any;
           const data = typeof raw === 'string' ? new TextEncoder().encode(raw) : (raw as Uint8Array);
           segments.push({ name, data });
         } catch {
-          break;
+          missing.push(name);
         }
       }
       if (segments.length === 0) {
-        throw new Error('لم يتم إنتاج مقاطع فيديو من الملف.');
+        let dirList = '—';
+        try {
+          dirList = ((await ffmpeg.listDir('/')) as { name?: string }[])
+            .map((e) => e.name)
+            .filter(Boolean)
+            .join('، ');
+        } catch {}
+        const tail = ffmpegLogRef.current.split('\n').filter(Boolean).slice(-8).join('\n');
+        throw new Error(
+          `لم يتم إنتاج مقاطع فيديو من الملف. ${missing.length ? `المفقودة: ${missing.slice(0, 5).join('، ')}. ` : ''}الموجودة في الذاكرة: ${dirList}.${tail ? `\nأحدث لوجات ffmpeg:\n${tail}` : ''}`
+        );
       }
       const keyRaw = (await ffmpeg.readFile('lesson.key')) as any;
       const keyBin = typeof keyRaw === 'string' ? new TextEncoder().encode(keyRaw) : (keyRaw as Uint8Array);
