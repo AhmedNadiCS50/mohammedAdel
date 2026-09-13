@@ -64,7 +64,7 @@ export default function Footer() {
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-200">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-<span dir="ltr">01030585226</span>
+                <span dir="ltr">01091275990</span>
               </div>
               <p className="text-emerald-100/60 leading-relaxed text-[11px] pt-1">
                 لأي استفسار بخصوص تفعيل الاشتراكات أو حجز الكتب تواصل معنا مباشرة عبر الواتساب.
@@ -77,7 +77,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-emerald-900/60 text-center text-xs text-emerald-100/60">
           <p>© 2026 - 2027 منصة مادة التكنولوجيا مع الخبير مستر محمد عادل. جميع الحقوق محفوظة.</p>
-          <p className="mt-2 text-emerald-200/60">تم تطوير الموقع من قبل أحمد نادي · <span dir="ltr">01091275990</span></p>
+          <p className="mt-2 text-emerald-200/60">تم تطوير الموقع من قبل أحمد نادي · <span dir="ltr">01030585226</span></p>
         </div>
 
       </div>
