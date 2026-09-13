@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getLessons, saveLesson, deleteLesson, extractYoutubeId, GRADE_LABELS } from '@/lib/storage';
 import { getLessonsFromFirestore, saveLessonToFirestore, deleteLessonFromFirestore } from '@/lib/firestoreService';
 import { isFirebaseConfigured } from '@/lib/firebase';
+import { adminAuthErrorMessage } from '@/lib/firebaseAuth';
 import { Lesson, GradeLevel } from '@/lib/types';
 import { 
   Video, 
@@ -148,13 +149,17 @@ export default function AdminLessonsPage() {
         }, editingId || undefined);
       }
 
-      setIsAdding(false);
+setIsAdding(false);
       setEditingId(null);
       await loadLessons();
-      setNotice(editingId ? 'تم تعديل بيانات الدرس بنجاح. ✅' : 'تم إضافة المحاضرة بنجاح وحُفظت في قاعدة البيانات. ✅');
+      setNotice(editingId ? 'تم تعديل بيانات المحاضرة بنجاح. ✅' : 'تم إضافة المحاضرة بنجاح وحُفظت في قاعدة البيانات. ✅');
       setTimeout(() => setNotice(null), 5000);
-    } catch (err) {
-      setSaveError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+    } catch (err: any) {
+      if (typeof err?.message === 'string' && err.message.startsWith('auth/')) {
+        setSaveError(adminAuthErrorMessage(err.message));
+      } else {
+        setSaveError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+      }
     } finally {
       setSaving(false);
     }

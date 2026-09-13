@@ -62,35 +62,51 @@ export default function StudentDashboardPage() {
     setExams(staticExams);
     setDataLoading(false);
 
+    const mergeLessons = (base: Lesson[], remote: Lesson[]) => {
+      const map = new Map<string, Lesson>();
+      base.forEach(l => map.set(l.id, l));
+      remote.forEach(l => map.set(l.id, l));
+      return Array.from(map.values()).sort((a, b) => a.orderIndex - b.orderIndex);
+    };
+    const mergeExams = (base: Exam[], remote: Exam[]) => {
+      const map = new Map<string, Exam>();
+      base.forEach(e => map.set(e.id, e));
+      remote.forEach(e => map.set(e.id, e));
+      return Array.from(map.values());
+    };
+
     const loadData = async () => {
       try {
         if (isFirebaseConfigured()) {
-          const [remoteLessons, remoteExams] = await Promise.all([
+          const [remoteLessons, remoteExams, freshStudent] = await Promise.all([
             getLessonsFromFirestore(s.grade),
             getExamsFromFirestore(s.grade),
+            getStudentByIdFromFirestore(s.id),
           ]);
-          if (remoteLessons && remoteLessons.length > 0) {
-            const map = new Map<string, Lesson>();
-            staticLessons.forEach(l => map.set(l.id, l));
-            remoteLessons.forEach(l => map.set(l.id, l));
-            setLessons(Array.from(map.values()).sort((a, b) => a.orderIndex - b.orderIndex));
-          }
-          if (remoteExams && remoteExams.length > 0) {
-            const map = new Map<string, Exam>();
-            staticExams.forEach(e => map.set(e.id, e));
-            remoteExams.forEach(e => map.set(e.id, e));
-            setExams(Array.from(map.values()));
-          }
 
-          // Refresh student data from Firestore
-          const freshStudent = await getStudentByIdFromFirestore(s.id);
+          let activeGrade = s.grade;
           if (freshStudent) {
             if (freshStudent.grade && (freshStudent.grade as string).includes('baccalaureate')) {
               freshStudent.grade = (freshStudent.grade as string).includes('second') ? 'second_secondary_bac' : 'first_secondary_bac';
             }
+            activeGrade = freshStudent.grade;
             setStudent(freshStudent);
             setCurrentStudent(freshStudent);
-            setLessons(getLessons(freshStudent.grade));
+          }
+
+          // Merge cloud content — cloud always wins over static/local copies.
+          // (Previously setLessons(getLessons(...)) overwrote the fresh Firestore
+          // list with stale localStorage, so newly added lessons never appeared.)
+          if (activeGrade !== s.grade) {
+            const [gradeLessons, gradeExams] = await Promise.all([
+              getLessonsFromFirestore(activeGrade),
+              getExamsFromFirestore(activeGrade),
+            ]);
+            setLessons(mergeLessons(getLessons(activeGrade), gradeLessons));
+            setExams(mergeExams(getExams(activeGrade), gradeExams));
+          } else {
+            setLessons(mergeLessons(staticLessons, remoteLessons));
+            setExams(mergeExams(staticExams, remoteExams));
           }
         }
       } catch (err) {

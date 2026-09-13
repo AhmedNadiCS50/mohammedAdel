@@ -16,8 +16,15 @@ import { ensureAdminFirebaseAuth } from './firebaseAuth';
 
 async function makeSureAdminIsAuthenticated() {
   if (auth && (!auth.currentUser || auth.currentUser.email !== 'admin@adel-tech.local')) {
-    await ensureAdminFirebaseAuth();
+    const code = await ensureAdminFirebaseAuth();
+    if (code !== 'ok') {
+      throw new Error(code);
+    }
   }
+}
+
+function isAuthFailure(err: any): boolean {
+  return !!err && typeof err.message === 'string' && err.message.startsWith('auth/');
 }
 import {
   Student,
@@ -77,8 +84,9 @@ export async function saveStudentToFirestore(student: Student): Promise<boolean>
     const docRef = doc(db, COLLECTIONS.STUDENTS, student.id);
     await setDoc(docRef, student, { merge: true });
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error saving student to Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -90,8 +98,9 @@ export async function deleteStudentFromFirestore(studentId: string): Promise<boo
     const docRef = doc(db, COLLECTIONS.STUDENTS, studentId);
     await deleteDoc(docRef);
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error deleting student from Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -120,8 +129,9 @@ export async function saveLessonToFirestore(lesson: Lesson): Promise<boolean> {
     const docRef = doc(db, COLLECTIONS.LESSONS, lesson.id);
     await setDoc(docRef, lesson, { merge: true });
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error saving lesson to Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -132,8 +142,9 @@ export async function deleteLessonFromFirestore(lessonId: string): Promise<boole
     await makeSureAdminIsAuthenticated();
     await deleteDoc(doc(db, COLLECTIONS.LESSONS, lessonId));
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error deleting lesson from Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -160,8 +171,9 @@ export async function saveExamToFirestore(exam: Exam): Promise<boolean> {
     await makeSureAdminIsAuthenticated();
     await setDoc(doc(db, COLLECTIONS.EXAMS, exam.id), exam, { merge: true });
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error saving exam to Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -172,8 +184,9 @@ export async function deleteExamFromFirestore(examId: string): Promise<boolean> 
     await makeSureAdminIsAuthenticated();
     await deleteDoc(doc(db, COLLECTIONS.EXAMS, examId));
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error deleting exam from Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -276,8 +289,9 @@ export async function saveAccessCodeToFirestore(code: AccessCode): Promise<boole
     const docId = code.code.trim().toUpperCase();
     await setDoc(doc(db, COLLECTIONS.ACCESS_CODES, docId), code, { merge: true });
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error saving access code to Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
@@ -302,8 +316,9 @@ export async function saveSettingsToFirestore(settings: PlatformSettings): Promi
     await makeSureAdminIsAuthenticated();
     await setDoc(doc(db, COLLECTIONS.SETTINGS, 'platform_settings'), settings, { merge: true });
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error saving settings to Firestore:', err);
+    if (isAuthFailure(err)) throw err;
     return false;
   }
 }
