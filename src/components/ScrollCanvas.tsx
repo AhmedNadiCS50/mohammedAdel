@@ -179,7 +179,7 @@ export default function ScrollCanvas({
   return (
     <section
       ref={sectionRef as React.RefObject<HTMLElement>}
-      className={`relative overflow-hidden bg-black ${heightClass}`}
+      className={`relative bg-black ${heightClass}`}
     >
       <div className="sticky top-0 h-screen overflow-hidden">
         <canvas
