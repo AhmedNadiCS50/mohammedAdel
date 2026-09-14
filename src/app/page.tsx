@@ -18,6 +18,7 @@ import {
 import Reveal from "@/components/Reveal";
 import Tilt from "@/components/Tilt";
 import ScrollCanvas from "@/components/ScrollCanvas";
+import TestimonialsMarquee from "@/components/TestimonialsMarquee";
 
 export default function Home() {
   const grades = [
@@ -262,6 +263,11 @@ href="/dashboard/subscription"
           </div>
         </div>
       </section>
+
+      {/* ═════════════════════════════════════════════
+          3.5 TESTIMONIALS — moving marquee rows
+      ════════════════════════════════════════════════ */}
+      <TestimonialsMarquee />
 
       {/* ═════════════════════════════════════════════
           4. BOOK SHOWCASE

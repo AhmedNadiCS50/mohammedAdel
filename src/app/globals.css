@@ -430,3 +430,43 @@ p {
     transition: none;
   }
 }
+
+/* ═════════════════════════════════════════════
+   TESTIMONIALS MARQUEE — two counter-moving rows
+════════════════════════════════════════════════ */
+.marquee-shell {
+  direction: ltr;
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation-duration: 100s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.marquee-right { animation-name: marquee-right; }
+.marquee-left  { animation-name: marquee-left; }
+/* Hovering any message pauses the row; unhovering resumes it */
+.marquee-shell:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
