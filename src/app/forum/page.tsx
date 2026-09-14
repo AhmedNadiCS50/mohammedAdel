@@ -20,6 +20,7 @@ import { formatTimeAgo, forumErrorMessage, FORUM_TOPICS, forumTopicLabel } from 
 import { subscribeStudentMute, isStudentMuted, formatMuteUntil } from '@/lib/muteService';
 import ForumImageUploader from '@/components/ForumImageUploader';
 import StaffIdentityBadge from '@/components/StaffIdentityBadge';
+import StudentAvatar from '@/components/StudentAvatar';
 import {
   MessagesSquare,
   MessageCircleQuestion,
@@ -175,7 +176,7 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
       topic: postTopic,
       lessonId: postLessonId,
       imageUrls: postImages,
-      author: { studentId: student.id, name: student.name, phone: student.phone },
+      author: { studentId: student.id, name: student.name, phone: student.phone, photoUrl: student.photoUrl },
     });
     setSending(false);
     if (res.success) {
@@ -474,9 +475,11 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
                           {post.authorRole && post.authorRole !== 'student' ? (
                             <StaffIdentityBadge role={post.authorRole} name={post.authorName} />
                           ) : (
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                            <>
+                              <StudentAvatar name={post.authorName} photoUrl={post.authorPhotoUrl} className="w-5 h-5" textClass="text-[10px]" />
+                              <span>{post.authorName}</span>
+                            </>
                           )}
-                          {post.authorRole === 'student' && post.authorName}
                         </span>
                       )}
                       <span className="text-[11px] text-gray-400">{formatTimeAgo(post.createdAt)}</span>

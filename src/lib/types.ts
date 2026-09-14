@@ -27,6 +27,7 @@ export interface Student {
     unlockedLessons?: string[];       // manually unlocked lessons (sequential override)
   };
   notes?: string;
+  photoUrl?: string;
 }
 
 export type LessonVideoSource = 'youtube' | 'hls';
@@ -197,6 +198,7 @@ export interface ForumPost {
   authorName: string;
   authorPhone: string;
   authorRole: ForumAuthorRole;
+  authorPhotoUrl?: string;
   status: ForumPostStatus;
   pinned?: boolean;
   rejectionReason?: string;
@@ -217,6 +219,7 @@ export interface ForumReply {
   authorName: string;
   authorPhone: string;
   authorRole: ForumAuthorRole;
+  authorPhotoUrl?: string;
   status: ForumPostStatus;
   imageUrls?: string[];
   audioUrl?: string;

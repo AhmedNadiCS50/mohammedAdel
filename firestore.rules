@@ -35,13 +35,17 @@ service cloud.firestore {
     }
 
 
-    // الطلاب: الأدمن كل شيء - الطالب يقرأ/يعدّل ملفه هو بس
+    // الطلاب: الأدمن كل شيء - الطالب يعدّل ملفه، لكن فقط الحقول المتاحة
+    // له (رقم ولي الأمر، المحافظة، الصورة الشخصية) ولا يمكنه تغيير
+    // الاسم أو الهاتف أو الصف أو الاشتراك أو بيانات أخرى.
     match /students/{studentId} {
       allow read: if isAdmin() ||
         (isAuthenticated() && resource.data.phone + '@adel-tech.local' == request.auth.token.email);
       allow create: if isAdmin();
       allow update: if isAdmin() ||
-        (isAuthenticated() && resource.data.phone + '@adel-tech.local' == request.auth.token.email);
+        (isAuthenticated() &&
+         resource.data.phone + '@adel-tech.local' == request.auth.token.email &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parentPhone', 'governorate', 'photoUrl']));
       allow delete: if isAdmin();
     }
 

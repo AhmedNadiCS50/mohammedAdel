@@ -37,6 +37,7 @@ import { subscribeStudentMute, isStudentMuted, formatMuteUntil } from '@/lib/mut
 import ForumImageUploader from '@/components/ForumImageUploader';
 import VoiceRecorder from '@/components/VoiceRecorder';
 import StaffIdentityBadge from '@/components/StaffIdentityBadge';
+import StudentAvatar from '@/components/StudentAvatar';
 
 export default function ForumPostPage() {
   const router = useRouter();
@@ -129,7 +130,7 @@ export default function ForumPostPage() {
     const res = await addForumReply({
       postId: post.id,
       content: hasText ? replyText : 'رسالة صوتية',
-      author: { studentId: student.id, name: student.name, phone: student.phone },
+      author: { studentId: student.id, name: student.name, phone: student.phone, photoUrl: student.photoUrl },
       imageUrls: replyImages,
       audioUrl: replyAudio || undefined,
     });
@@ -249,8 +250,9 @@ export default function ForumPostPage() {
             {post.authorRole && post.authorRole !== 'student' ? (
               <StaffIdentityBadge role={post.authorRole} name={post.authorName} />
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200 text-[11px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-600" /> {post.authorName}
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-[11px] font-bold">
+                <StudentAvatar name={post.authorName} photoUrl={post.authorPhotoUrl} className="w-5 h-5" textClass="text-[10px]" />
+                {post.authorName}
               </span>
             )}
             {post.status === 'pending' && (
@@ -348,9 +350,15 @@ export default function ForumPostPage() {
                   >
                     <div className="flex items-center gap-2 mb-1.5">
                       {reply.authorRole !== 'student' ? (
-                        <StaffIdentityBadge role={reply.authorRole} name={reply.authorName} />
+                        <>
+                          <StudentAvatar name={reply.authorName} className="w-5 h-5" textClass="text-[10px]" />
+                          <StaffIdentityBadge role={reply.authorRole} name={reply.authorName} />
+                        </>
                       ) : (
-                        <span className="text-[11px] font-bold text-gray-700">{reply.authorName}</span>
+                        <>
+                          <StudentAvatar name={reply.authorName} photoUrl={reply.authorPhotoUrl} className="w-5 h-5" textClass="text-[10px]" />
+                          <span className="text-[11px] font-bold text-gray-700">{reply.authorName}</span>
+                        </>
                       )}
                       <span className="w-1 h-1 rounded-full bg-gray-300" />
                       <span className="text-[10px] text-gray-400">{formatTimeAgo(reply.createdAt)}</span>

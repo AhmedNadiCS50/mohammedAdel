@@ -161,7 +161,7 @@ export async function createForumPost(params: {
   title: string;
   content: string;
   grade: GradeLevel;
-  author: { studentId: string; name: string; phone: string };
+  author: { studentId: string; name: string; phone: string; photoUrl?: string };
   asTeacher?: boolean;
   asModerator?: boolean;
   topic?: ForumTopic;
@@ -181,6 +181,7 @@ export async function createForumPost(params: {
     authorStudentId: params.author.studentId,
     authorName: params.author.name,
     authorPhone: params.author.phone,
+    ...(params.author.photoUrl ? { authorPhotoUrl: params.author.photoUrl } : {}),
     authorRole: role,
     status: params.asTeacher || params.asModerator ? 'published' : 'pending',
     pinned: false,
@@ -405,7 +406,7 @@ export function subscribeAllPublishedReplies(
 export async function addForumReply(params: {
   postId: string;
   content: string;
-  author: { studentId: string; name: string; phone: string };
+  author: { studentId: string; name: string; phone: string; photoUrl?: string };
   asTeacher?: boolean;
   asModerator?: boolean;
   imageUrls?: string[];
@@ -423,6 +424,7 @@ export async function addForumReply(params: {
     authorStudentId: params.author.studentId,
     authorName: params.author.name,
     authorPhone: params.author.phone,
+    ...(params.author.photoUrl ? { authorPhotoUrl: params.author.photoUrl } : {}),
     authorRole: (params.asTeacher ? 'teacher' : params.asModerator ? 'moderator' : 'student') as ForumAuthorRole,
     // Student replies publish instantly (no moderation needed); posts still get reviewed.
     status: 'published',
