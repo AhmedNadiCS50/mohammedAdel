@@ -3,6 +3,7 @@
 import React from 'react';
 import { Quote, Star } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import Tilt from '@/components/Tilt';
 
 interface Testimonial {
   text: string;
@@ -51,28 +52,34 @@ function MarqueeRow({ items, reverse }: { items: Testimonial[]; reverse?: boolea
         {[0, 1].map((side) => (
           <ul key={side} className="flex items-stretch gap-4 pr-4 list-none m-0 p-0" aria-hidden={side === 1}>
             {half.map((t, i) => (
-              <li
-                key={`${side}-${i}`}
-                className="w-[19rem] sm:w-[22rem] shrink-0 bg-white/95 border border-[#D1E8D9] rounded-2xl p-5 shadow-[var(--shadow-sm)] cursor-pointer transition-all duration-300 ease-out hover:scale-[1.08] hover:bg-white hover:border-emerald-400 hover:shadow-xl hover:ring-4 hover:ring-emerald-200/50 hover:-translate-y-1"
-                style={{ direction: 'rtl', textAlign: 'right' }}
-              >
-                <span className="inline-flex w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 items-center justify-center mb-3">
-                  <Quote className="w-4 h-4 fill-current" />
-                </span>
-                <p className="text-[13px] leading-relaxed text-[#2D4A38] min-h-[5.5rem]">{t.text}</p>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#D1E8D9]">
-                  <div>
-                    <h4 className="text-sm font-black text-gray-900">{t.name}</h4>
-                    <span className="text-[11px] text-gray-500">{t.role}</span>
-                  </div>
-                  <div className="flex items-center gap-0.5 text-[#D4AF37]">
-                    {[...Array(5)].map((_, idx) => (
-                      <Star key={idx} className="w-3.5 h-3.5 fill-current" />
-                    ))}
-                  </div>
-                </div>
-              </li>
-            ))}
+                <li
+                  key={`${side}-${i}`}
+                  className="w-[19rem] sm:w-[22rem] shrink-0 list-none"
+                >
+                  <Tilt max={10} scale={1.06}>
+                    <div
+                      className="bg-white/95 border border-[#D1E8D9] rounded-2xl p-5 shadow-[var(--shadow-sm)] cursor-pointer transition-all duration-300 ease-out hover:bg-white hover:border-emerald-400 hover:shadow-xl hover:ring-4 hover:ring-emerald-200/50"
+                      style={{ direction: 'rtl', textAlign: 'right' }}
+                    >
+                      <span className="inline-flex w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 items-center justify-center mb-3">
+                        <Quote className="w-4 h-4 fill-current" />
+                      </span>
+                      <p className="text-[13px] leading-relaxed text-[#2D4A38] min-h-[5.5rem]">{t.text}</p>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#D1E8D9]">
+                        <div>
+                          <h4 className="text-sm font-black text-gray-900">{t.name}</h4>
+                          <span className="text-[11px] text-gray-500">{t.role}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 text-[#D4AF37]">
+                          {[...Array(5)].map((_, idx) => (
+                            <Star key={idx} className="w-3.5 h-3.5 fill-current" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </Tilt>
+                </li>
+              ))}
           </ul>
         ))}
       </div>
