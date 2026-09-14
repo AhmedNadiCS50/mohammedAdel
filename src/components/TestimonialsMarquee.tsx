@@ -53,7 +53,7 @@ function MarqueeRow({ items, reverse }: { items: Testimonial[]; reverse?: boolea
             {half.map((t, i) => (
               <li
                 key={`${side}-${i}`}
-                className="w-[19rem] sm:w-[22rem] shrink-0 bg-white/95 border border-[#D1E8D9] rounded-2xl p-5 shadow-[var(--shadow-sm)] transition-colors"
+                className="w-[19rem] sm:w-[22rem] shrink-0 bg-white/95 border border-[#D1E8D9] rounded-2xl p-5 shadow-[var(--shadow-sm)] cursor-pointer transition-all duration-300 ease-out hover:scale-[1.08] hover:bg-white hover:border-emerald-400 hover:shadow-xl hover:ring-4 hover:ring-emerald-200/50 hover:-translate-y-1"
                 style={{ direction: 'rtl', textAlign: 'right' }}
               >
                 <span className="inline-flex w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 items-center justify-center mb-3">
