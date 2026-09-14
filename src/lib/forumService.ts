@@ -174,8 +174,8 @@ export async function createForumPost(params: {
     title: params.title.trim(),
     content: params.content.trim(),
     grade: params.grade,
-    topic: params.topic,
-    lessonId: params.lessonId,
+    ...(params.topic ? { topic: params.topic } : {}),
+    ...(params.lessonId ? { lessonId: params.lessonId } : {}),
     authorStudentId: params.author.studentId,
     authorName: params.author.name,
     authorPhone: params.author.phone,
@@ -183,7 +183,7 @@ export async function createForumPost(params: {
     status: params.asTeacher ? 'published' : 'pending',
     pinned: false,
     replyCount: 0,
-    imageUrls: params.imageUrls?.length ? params.imageUrls.slice(0, 6) : undefined,
+    ...(params.imageUrls?.length ? { imageUrls: params.imageUrls.slice(0, 6) } : {}),
     createdAt: now,
     updatedAt: now,
   };
@@ -400,7 +400,7 @@ export async function addForumReply(params: {
     authorRole: (params.asTeacher ? 'teacher' : 'student') as ForumAuthorRole,
     // Student replies publish instantly (no moderation needed); posts still get reviewed.
     status: 'published',
-    imageUrls: params.imageUrls?.length ? params.imageUrls.slice(0, 6) : undefined,
+    ...(params.imageUrls?.length ? { imageUrls: params.imageUrls.slice(0, 6) } : {}),
     createdAt: now,
   };
 
