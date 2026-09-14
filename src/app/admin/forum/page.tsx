@@ -14,7 +14,8 @@ import {
   setPostResolved,
   ensureForumAuth
 } from '@/lib/forumService';
-import { GRADE_LABELS } from '@/lib/storage';
+import { GRADE_LABELS, isAdminLoggedIn, getCurrentModerator } from '@/lib/storage';
+import { logModeratorAction } from '@/lib/moderatorService';
 import { ForumPost, ForumReply } from '@/lib/types';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
@@ -79,10 +80,29 @@ export default function AdminForumPage() {
     setTimeout(() => setActionMsg(''), 4000);
   };
 
+  // Identity used for staff replies: the teacher when opened from /admin,
+  // the moderator (by their real name) when opened from /moderator/forum.
+  const staffIdentity = isAdminLoggedIn()
+    ? { studentId: 'teacher', name: 'المدرس', phone: '', asTeacher: true as const, asModerator: false as const }
+    : (() => {
+        const mod = getCurrentModerator();
+        return mod
+          ? { studentId: `mod_${mod.id}`, name: mod.name, phone: '', asTeacher: false as const, asModerator: true as const }
+          : { studentId: 'teacher', name: 'المدرس', phone: '', asTeacher: true as const, asModerator: false as const };
+      })();
+
+  const logModeratorActionIfAny = (action: string, targetType: string, targetId: string | undefined, detail: string) => {
+    const mod = getCurrentModerator();
+    if (mod) {
+      logModeratorAction({ actor: mod, action, targetType, targetId, detail }).catch(() => {});
+    }
+  };
+
   const handleApprovePost = async (post: ForumPost) => {
     setBusyId(post.id);
     const res = await setPostStatus(post.id, 'published');
     setBusyId('');
+    if (res.success) logModeratorActionIfAny('approve_post', 'forum_post', post.id, `وافق على نشر «${post.title.slice(0, 60)}»`);
     flash(res.success ? 'تم نشر السؤال في المنتدى.' : res.error || 'فشل النشر.');
   };
 
@@ -97,6 +117,7 @@ export default function AdminForumPage() {
     setBusyId(post.id);
     const res = await setPostStatus(post.id, 'rejected', reason);
     setBusyId('');
+    if (res.success) logModeratorActionIfAny('reject_post', 'forum_post', post.id, `رفض «${post.title.slice(0, 60)}» — السبب: ${reason.slice(0, 80)}`);
     setRejectingId(null);
     setRejectReason('');
     flash(res.success ? 'تم رفض السؤال وإرسال السبب للطالب.' : res.error || 'فشل الرفض.');
@@ -106,12 +127,14 @@ export default function AdminForumPage() {
     setBusyId(post.id);
     await togglePostPin(post.id, !post.pinned);
     setBusyId('');
+    logModeratorActionIfAny(post.pinned ? 'unpin_post' : 'pin_post', 'forum_post', post.id, `${post.pinned ? 'أزال تثبيت' : 'ثبّت'} «${post.title.slice(0, 60)}»`);
   };
 
   const handleResolveToggle = async (post: ForumPost) => {
     setBusyId(post.id);
     const res = await setPostResolved(post.id, !post.resolved, { asTeacher: true });
     setBusyId('');
+    if (res.success) logModeratorActionIfAny(post.resolved ? 'unresolve_post' : 'resolve_post', 'forum_post', post.id, `${post.resolved ? 'أزال' : 'وضع'} علامة تم الحل على «${post.title.slice(0, 60)}»`);
     if (!res.success) flash(res.error || 'فشل تحديث حالة السؤال.');
   };
 
@@ -120,20 +143,23 @@ export default function AdminForumPage() {
     setBusyId(post.id);
     const res = await deleteForumPost(post.id);
     setBusyId('');
+    if (res.success) logModeratorActionIfAny('delete_post', 'forum_post', post.id, `حذف «${post.title.slice(0, 60)}» نهائياً`);
     flash(res.success ? 'تم حذف السؤال.' : res.error || 'فشل الحذف.');
   };
 
   const handleApproveReply = async (reply: ForumReply) => {
     setBusyId(reply.id);
-    await setReplyStatus(reply.id, reply.postId, 'published');
+    const res = await setReplyStatus(reply.id, reply.postId, 'published');
     setBusyId('');
+    if (res.success) logModeratorActionIfAny('approve_reply', 'forum_reply', reply.id, 'وافق على نشر رد داخل موضوع منتدى');
   };
 
   const handleDeleteReply = async (reply: ForumReply) => {
     if (!confirm('حذف هذا الرد؟')) return;
     setBusyId(reply.id);
-    await deleteForumReply(reply.id, reply.postId, reply.status === 'published');
+    const res = await deleteForumReply(reply.id, reply.postId, reply.status === 'published');
     setBusyId('');
+    if (res.success) logModeratorActionIfAny('delete_reply', 'forum_reply', reply.id, 'حذف رد من موضوع منتدى');
   };
 
   const handleTeacherReply = async (post: ForumPost) => {
@@ -143,13 +169,15 @@ export default function AdminForumPage() {
     const res = await addForumReply({
       postId: post.id,
       content,
-      author: { studentId: 'teacher', name: 'المدرس', phone: '' },
-      asTeacher: true,
+      author: { studentId: staffIdentity.studentId, name: staffIdentity.name, phone: staffIdentity.phone },
+      asTeacher: staffIdentity.asTeacher,
+      asModerator: staffIdentity.asModerator,
     });
     setBusyId('');
     if (res.success) {
+      if (staffIdentity.asModerator) logModeratorActionIfAny('reply', 'forum_reply', res.id, `رد باسمه على «${post.title.slice(0, 60)}»`);
       setTeacherReply((prev) => ({ ...prev, [post.id]: '' }));
-      flash('تم نشر رد المدرس مباشرة.');
+      flash('تم نشر الرد مباشرة.');
     } else {
       flash(res.error || 'فشل إرسال الرد.');
     }
@@ -454,7 +482,7 @@ export default function AdminForumPage() {
                   <input
                     value={teacherReply[post.id] || ''}
                     onChange={(e) => setTeacherReply((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                    placeholder="اكتب إجابة المدرس وسيتم نشرها فوراً…"
+                    placeholder={staffIdentity.asModerator ? 'اكتب ردّك أنت (المشرف) وسيُنشر فوراً…' : 'اكتب إجابة المدرس وسيتم نشرها فوراً…'}
                     maxLength={1000}
                     className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
                   />
@@ -465,7 +493,7 @@ export default function AdminForumPage() {
                     style={{ background: '#1B4332' }}
                   >
                     {busyId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    ردّ المدرس
+                    {staffIdentity.asModerator ? `أرسل ردّك (${staffIdentity.name})` : 'ردّ المدرس'}
                   </button>
                 </div>
               </div>

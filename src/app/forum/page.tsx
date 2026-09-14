@@ -18,6 +18,7 @@ import {
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { formatTimeAgo, forumErrorMessage, FORUM_TOPICS, forumTopicLabel } from '@/lib/forumUtils';
 import ForumImageUploader from '@/components/ForumImageUploader';
+import StaffIdentityBadge from '@/components/StaffIdentityBadge';
 import {
   MessagesSquare,
   MessageCircleQuestion,
@@ -451,8 +452,12 @@ export default function StudentForumPage() {
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                          {post.authorRole === 'teacher' ? 'المدرس' : post.authorName}
+                          {post.authorRole && post.authorRole !== 'student' ? (
+                            <StaffIdentityBadge role={post.authorRole} name={post.authorName} />
+                          ) : (
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                          )}
+                          {post.authorRole === 'student' && post.authorName}
                         </span>
                       )}
                       <span className="text-[11px] text-gray-400">{formatTimeAgo(post.createdAt)}</span>
@@ -490,8 +495,8 @@ export default function StudentForumPage() {
                       <span className="inline-flex items-center gap-1">
                         <MessagesSquare className="w-3 h-3" /> {post.replyCount || 0} رد
                       </span>
-                      {post.authorRole === 'teacher' && (
-                        <span className="text-green-700 font-bold">إجابة المدرس</span>
+                      {post.authorRole && post.authorRole !== 'student' && (
+                        <StaffIdentityBadge role={post.authorRole} name={post.authorName} compact />
                       )}
                     </div>
                   </div>

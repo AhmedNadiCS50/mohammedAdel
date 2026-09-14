@@ -27,13 +27,13 @@ import {
   CheckCircle2,
   XCircle,
   Lock,
-  GraduationCap,
   AlertCircle,
   CheckCheck,
   BookOpen
 } from 'lucide-react';
 import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
 import ForumImageUploader from '@/components/ForumImageUploader';
+import StaffIdentityBadge from '@/components/StaffIdentityBadge';
 
 export default function ForumPostPage() {
   const router = useRouter();
@@ -230,10 +230,8 @@ export default function ForumPostPage() {
                 <BookOpen className="w-3 h-3" /> مرتبط بدرس
               </span>
             )}
-            {post.authorRole === 'teacher' ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-300 text-[11px] font-bold">
-                <GraduationCap className="w-3 h-3" /> منشور بواسطة المدرس
-              </span>
+            {post.authorRole && post.authorRole !== 'student' ? (
+              <StaffIdentityBadge role={post.authorRole} name={post.authorName} />
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200 text-[11px] font-bold">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-600" /> {post.authorName}
@@ -313,12 +311,12 @@ export default function ForumPostPage() {
           ) : (
             <div className="space-y-3">
               {replies.map((reply, idx) => {
-                const isTeacherReply = reply.authorRole === 'teacher';
+                const isStaffReply = reply.authorRole && reply.authorRole !== 'student';
                 return (
                   <div
                     key={reply.id}
                     className={`p-3.5 sm:p-4 rounded-xl border ${
-                      isTeacherReply
+                      isStaffReply
                         ? 'bg-green-50 border-green-300'
                         : idx % 2 === 0
                         ? 'bg-gray-50 border-gray-200'
@@ -326,10 +324,8 @@ export default function ForumPostPage() {
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1.5">
-                      {isTeacherReply ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-black text-green-800">
-                          <GraduationCap className="w-3.5 h-3.5" /> إجابة المدرس
-                        </span>
+                      {reply.authorRole !== 'student' ? (
+                        <StaffIdentityBadge role={reply.authorRole} name={reply.authorName} />
                       ) : (
                         <span className="text-[11px] font-bold text-gray-700">{reply.authorName}</span>
                       )}

@@ -1,5 +1,5 @@
-import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission } from './types';
-export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission };
+import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission, Moderator } from './types';
+export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission, Moderator };
 import { STATIC_LESSONS } from '@/data/lessons';
 import { isFirebaseConfigured } from './firebase';
 import {
@@ -53,6 +53,7 @@ const KEYS = {
   SETTINGS: 'tech_adel_settings',
   CURRENT_USER: 'tech_adel_session_user',
   ADMIN_AUTH: 'tech_adel_admin_logged_in',
+  MODERATOR_SESSION: 'tech_adel_moderator_session',
   PROGRESS: 'tech_adel_progress',
 };
 
@@ -117,6 +118,18 @@ export function setAdminLoggedIn(status: boolean): void {
     localStorage.removeItem(KEYS.ADMIN_AUTH);
   }
   window.dispatchEvent(new Event('platform-data-changed'));
+}
+
+export function getCurrentModerator(): Moderator | null {
+  return getLocal<Moderator | null>(KEYS.MODERATOR_SESSION, null);
+}
+
+export function setCurrentModerator(moderator: Moderator | null): void {
+  setLocal(KEYS.MODERATOR_SESSION, moderator);
+}
+
+export function isModeratorLoggedIn(): boolean {
+  return getCurrentModerator() !== null;
 }
 
 // -----------------------------------------------------------------
@@ -1037,21 +1050,25 @@ export function submitExamAnswers(params: {
 }
 
 // Teacher manually grades an essay answer
-export function gradeEssayAnswer(submissionId: string, questionId: string, grade: number): ExamSubmission | null {
+export function gradeEssayAnswer(submissionId: string, questionId: string, grade: number, seed?: ExamSubmission, exam?: Exam | null): ExamSubmission | null {
   const list = getLocal<ExamSubmission[]>(KEYS.SUBMISSIONS, []);
-  const subIndex = list.findIndex(s => s.id === submissionId);
-  if (subIndex === -1) return null;
+  let subIndex = list.findIndex(s => s.id === submissionId);
+  if (subIndex === -1) {
+    if (!seed) return null;
+    list.unshift(seed); // submission created on another device
+    subIndex = 0;
+  }
 
   const sub = list[subIndex];
-  const exam = getExamById(sub.examId);
+  const resolvedExam = exam ?? getExamById(sub.examId);
 
   // Update this question's grade
   const updatedGrades = { ...sub.essayGrades, [questionId]: grade };
 
   // Recalculate score
   let newEarnedScore = 0;
-  if (exam) {
-    exam.questions.forEach(q => {
+  if (resolvedExam) {
+    resolvedExam.questions.forEach(q => {
       if (q.type === 'essay') {
         const g = updatedGrades[q.id];
         if (typeof g === 'number') {
@@ -1072,7 +1089,7 @@ export function gradeEssayAnswer(submissionId: string, questionId: string, grade
   const stillHasPending = Object.values(updatedGrades).some(g => g === null);
 
   const newPercentage = sub.totalScore > 0 ? Math.round((newEarnedScore / sub.totalScore) * 100) : 0;
-  const passingThreshold = exam?.passingScore || 50;
+  const passingThreshold = resolvedExam?.passingScore || 50;
   const newPassed = stillHasPending ? false : newPercentage >= passingThreshold;
 
   const updatedSubmission: ExamSubmission = {
@@ -1095,10 +1112,14 @@ export function gradeEssayAnswer(submissionId: string, questionId: string, grade
 }
 
 // Teacher saves an overall feedback comment on a submission
-export function saveTeacherComment(submissionId: string, comment: string): ExamSubmission | null {
+export function saveTeacherComment(submissionId: string, comment: string, seed?: ExamSubmission): ExamSubmission | null {
   const list = getLocal<ExamSubmission[]>(KEYS.SUBMISSIONS, []);
-  const subIndex = list.findIndex(s => s.id === submissionId);
-  if (subIndex === -1) return null;
+  let subIndex = list.findIndex(s => s.id === submissionId);
+  if (subIndex === -1) {
+    if (!seed) return null;
+    list.unshift(seed);
+    subIndex = 0;
+  }
 
   const updatedSubmission: ExamSubmission = {
     ...list[subIndex],

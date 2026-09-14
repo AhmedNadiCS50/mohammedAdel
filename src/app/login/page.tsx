@@ -3,19 +3,22 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { studentLoginAsync, setAdminLoggedIn } from "@/lib/storage";
+import { studentLoginAsync, setAdminLoggedIn, setCurrentModerator } from "@/lib/storage";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { firebaseLoginUser, firebaseRegisterUser } from "@/lib/firebaseAuth";
-import { Phone, Lock, ShieldCheck, AlertCircle, GraduationCap } from "lucide-react";
+import { authenticateModerator } from "@/lib/moderatorService";
+import { Phone, Lock, ShieldCheck, AlertCircle, GraduationCap, UserCog } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<"student" | "admin">("student");
+  const [role, setRole] = useState<"student" | "admin" | "moderator">("student");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [adminUser, setAdminUser] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [modUser, setModUser] = useState("");
+  const [modPassword, setModPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -70,6 +73,39 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  const handleModeratorLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (!modUser.trim() || !modPassword.trim()) {
+      setError("أدخل اسم المستخدم وكلمة المرور كاملة.");
+      setLoading(false);
+      return;
+    }
+
+    if (isFirebaseConfigured()) {
+      // Establish the shared Firestore session before authenticating.
+      try {
+        const fb = await firebaseLoginUser("admin", "adel2027");
+        if (!fb.success) {
+          await firebaseRegisterUser("admin", "adel2027");
+        }
+      } catch {
+        // Authentication still proceeds; service will retry.
+      }
+    }
+
+    const result = await authenticateModerator(modUser, modPassword);
+    if (result.success && result.moderator) {
+      setCurrentModerator(result.moderator);
+      router.push("/moderator");
+    } else {
+      setError(result.error || "فشل تسجيل الدخول. حاول مرة أخرى.");
+    }
+    setLoading(false);
+  };
+
   return (
     <AuthShell
       title="تسجيل الدخول للمنصة"
@@ -84,7 +120,7 @@ export default function LoginPage() {
       }
     >
       {/* Role Tabs */}
-      <div className="grid grid-cols-2 gap-1 p-1 rounded-xl mb-6 bg-gray-100 border border-gray-200">
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-xl mb-6 bg-gray-100 border border-gray-200">
         <button
           type="button"
           onClick={() => { setRole("student"); setError(""); }}
@@ -105,7 +141,18 @@ export default function LoginPage() {
               : "text-gray-500 hover:text-gray-800"
           }`}
         >
-          بوابة المدرس (Admin)
+          بوابة المدرس
+        </button>
+        <button
+          type="button"
+          onClick={() => { setRole("moderator"); setError(""); }}
+          className={`py-2.5 text-xs font-bold rounded-lg transition-all ${
+            role === "moderator"
+              ? "bg-white text-[#1B4332] shadow-sm border border-gray-200"
+              : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          بوابة المشرفين
         </button>
       </div>
 
@@ -157,7 +204,7 @@ export default function LoginPage() {
             {loading ? "جاري التحقق..." : "دخول إلى حسابي"}
           </button>
         </form>
-      ) : (
+      ) : role === "admin" ? (
         <form onSubmit={handleAdminLogin} className="space-y-4">
           <div>
             <label className="block text-[13px] font-bold text-gray-700 mb-1.5">اسم المستخدم (المدرس)</label>
@@ -196,6 +243,47 @@ export default function LoginPage() {
           >
             <ShieldCheck className="w-4 h-4 shrink-0" />
             {loading ? "جاري التحقق..." : "دخول لوحة التحكم"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleModeratorLogin} className="space-y-4">
+          <div>
+            <label className="block text-[13px] font-bold text-gray-700 mb-1.5">اسم المستخدم (المشرف)</label>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                placeholder="مثال: mr_kareem"
+                value={modUser}
+                onChange={(e) => setModUser(e.target.value)}
+                className="prem-input pr-10"
+              />
+              <UserCog className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-bold text-gray-700 mb-1.5">كلمة مرور المشرف</label>
+            <div className="relative">
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={modPassword}
+                onChange={(e) => setModPassword(e.target.value)}
+                className="prem-input pr-10"
+              />
+              <Lock className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-hero btn-hero--green w-full py-3 text-sm mt-2"
+          >
+            <UserCog className="w-4 h-4 shrink-0" />
+            {loading ? "جاري التحقق..." : "دخول لوحة المشرفين"}
           </button>
         </form>
       )}

@@ -120,6 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'إدارة المحاضرات (YouTube)', href: '/admin/lessons', icon: Video },
     { name: 'بنك الأسئلة والامتحانات', href: '/admin/exams', icon: HelpCircle },
     { name: 'الواجبات', href: '/admin/assignments', icon: ClipboardList, badge: pendingAssignments > 0 ? pendingAssignments : undefined },
+    { name: 'المشرفون', href: '/admin/moderators', icon: ShieldCheck },
     { name: 'توليد أكواد التفعيل', href: '/admin/codes', icon: KeyRound },
     { name: 'إعدادات الدفع والمنصة', href: '/admin/settings', icon: Settings },
   ];

@@ -163,6 +163,7 @@ export async function createForumPost(params: {
   grade: GradeLevel;
   author: { studentId: string; name: string; phone: string };
   asTeacher?: boolean;
+  asModerator?: boolean;
   topic?: ForumTopic;
   lessonId?: string;
   imageUrls?: string[];
@@ -170,6 +171,7 @@ export async function createForumPost(params: {
   if (!isFirebaseConfigured() || !db) return { success: false, error: 'منصة الدردشة تتطلب تفعيل Firebase Cloud من إعدادات المدرس.' };
 
   const now = new Date().toISOString();
+  const role: ForumAuthorRole = params.asTeacher ? 'teacher' : params.asModerator ? 'moderator' : 'student';
   const post: Omit<ForumPost, 'id'> = {
     title: params.title.trim(),
     content: params.content.trim(),
@@ -179,8 +181,8 @@ export async function createForumPost(params: {
     authorStudentId: params.author.studentId,
     authorName: params.author.name,
     authorPhone: params.author.phone,
-    authorRole: params.asTeacher ? 'teacher' : 'student',
-    status: params.asTeacher ? 'published' : 'pending',
+    authorRole: role,
+    status: params.asTeacher || params.asModerator ? 'published' : 'pending',
     pinned: false,
     replyCount: 0,
     ...(params.imageUrls?.length ? { imageUrls: params.imageUrls.slice(0, 6) } : {}),
@@ -189,7 +191,7 @@ export async function createForumPost(params: {
   };
 
   try {
-    if (params.asTeacher && !(await requireAdminAuth())) {
+    if ((params.asTeacher || params.asModerator) && !(await requireAdminAuth())) {
       return { success: false, error: 'غير مصرح: فشل التحقق من جلسة المدرس.' };
     }
     const docRef = await addDoc(collection(db, POST_COLLECTION), post);
@@ -383,6 +385,7 @@ export async function addForumReply(params: {
   content: string;
   author: { studentId: string; name: string; phone: string };
   asTeacher?: boolean;
+  asModerator?: boolean;
   imageUrls?: string[];
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   if (!isFirebaseConfigured() || !db) return { success: false, error: 'منتدى النقاش يتطلب تفعيل Firebase Cloud.' };
@@ -397,7 +400,7 @@ export async function addForumReply(params: {
     authorStudentId: params.author.studentId,
     authorName: params.author.name,
     authorPhone: params.author.phone,
-    authorRole: (params.asTeacher ? 'teacher' : 'student') as ForumAuthorRole,
+    authorRole: (params.asTeacher ? 'teacher' : params.asModerator ? 'moderator' : 'student') as ForumAuthorRole,
     // Student replies publish instantly (no moderation needed); posts still get reviewed.
     status: 'published',
     ...(params.imageUrls?.length ? { imageUrls: params.imageUrls.slice(0, 6) } : {}),
@@ -405,7 +408,7 @@ export async function addForumReply(params: {
   };
 
   try {
-    if (params.asTeacher) {
+    if (params.asTeacher || params.asModerator) {
       if (!(await requireAdminAuth())) return { success: false, error: 'غير مصرح.' };
     }
     const docRef = await addDoc(collection(db, REPLY_COLLECTION), reply);

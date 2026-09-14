@@ -162,8 +162,29 @@ export interface ActivationLog {
 }
 
 export type ForumPostStatus = 'pending' | 'published' | 'rejected';
-export type ForumAuthorRole = 'student' | 'teacher';
+export type ForumAuthorRole = 'student' | 'teacher' | 'moderator';
 export type ForumTopic = 'lesson' | 'homework' | 'exam' | 'general';
+
+export interface Moderator {
+  id: string;
+  name: string;
+  username: string;
+  passwordHash: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface ModeratorAction {
+  id: string;
+  actorId: string;
+  actorName: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  detail?: string;
+  timestamp: string;
+}
 
 export interface ForumPost {
   id: string;

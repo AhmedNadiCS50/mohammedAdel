@@ -10,7 +10,9 @@ import {
   GRADE_LABELS,
   saveTeacherComment
 } from '@/lib/storage';
-import { getSubmissionsFromFirestore } from '@/lib/firestoreService';
+import { getSubmissionsFromFirestore, getExamsFromFirestore, getStudentsFromFirestore } from '@/lib/firestoreService';
+import { logModeratorAction } from '@/lib/moderatorService';
+import { getCurrentModerator, isAdminLoggedIn } from '@/lib/storage';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { ExamSubmission, Exam, Student, Question, GradeLevel } from '@/lib/types';
 import { 
@@ -86,10 +88,37 @@ export default function AdminSubmissionsPage() {
 
     const allExams = getExams();
     const allStudents = getStudents();
-
     setSubmissions(allSubs);
-    setExams(allExams);
-    setStudents(allStudents);
+
+    // On a fresh device (e.g. moderator) pull exams/students from the cloud
+    if (isFirebaseConfigured()) {
+      try {
+        const [remoteExams, remoteStudents] = await Promise.all([getExamsFromFirestore(), getStudentsFromFirestore()]);
+        if (remoteExams && remoteExams.length > 0) {
+          const examMap = new Map<string, Exam>();
+          allExams.forEach(e => examMap.set(e.id, e));
+          remoteExams.forEach(e => examMap.set(e.id, e));
+          setExams(Array.from(examMap.values()));
+        } else {
+          setExams(allExams);
+        }
+        if (remoteStudents && remoteStudents.length > 0) {
+          const studentMap = new Map<string, Student>();
+          allStudents.forEach(s => studentMap.set(s.id, s));
+          remoteStudents.forEach(s => studentMap.set(s.id, s));
+          setStudents(Array.from(studentMap.values()));
+        } else {
+          setStudents(allStudents);
+        }
+      } catch (err) {
+        console.error('Error merging Firestore exams/students:', err);
+        setExams(allExams);
+        setStudents(allStudents);
+      }
+    } else {
+      setExams(allExams);
+      setStudents(allStudents);
+    }
 
     // Prepopulate inputs with existing grades
     const initialInputs: Record<string, number> = {};
@@ -129,8 +158,18 @@ export default function AdminSubmissionsPage() {
       return;
     }
 
-    const updated = gradeEssayAnswer(submission.id, question.id, grade);
+    const updated = gradeEssayAnswer(submission.id, question.id, grade, submission, exams.find(e => e.id === submission.examId));
     if (updated) {
+      const moderator = getCurrentModerator();
+      if (moderator) {
+        logModeratorAction({
+          actor: moderator,
+          action: 'grade_essay',
+          targetType: 'exam_submission',
+          targetId: submission.id,
+          detail: `رصد درجة ${grade} من ${question.points} للسؤال «${question.text.slice(0, 60)}» للطالب ${submission.studentName}`,
+        });
+      }
       setNotice(`تم حفظ واعتماد درجة الطالب (${submission.studentName}) بنجاح: ${grade} من ${question.points}.`);
       loadData();
       setTimeout(() => setNotice(null), 3500);
@@ -139,8 +178,18 @@ export default function AdminSubmissionsPage() {
 
   const handleSaveComment = (submission: ExamSubmission) => {
     const comment = (commentInputs[submission.id] || '').trim();
-    const updated = saveTeacherComment(submission.id, comment);
+    const updated = saveTeacherComment(submission.id, comment, submission);
     if (updated) {
+      const moderator = getCurrentModerator();
+      if (moderator) {
+        logModeratorAction({
+          actor: moderator,
+          action: 'save_comment',
+          targetType: 'exam_submission',
+          targetId: submission.id,
+          detail: comment ? `أضاف تعليقاً للطالب ${submission.studentName}` : 'مسح تعليقه على تسليم الطالب',
+        });
+      }
       setNotice(`تم حفظ تعليقك للطالب (${submission.studentName}).`);
       loadData();
       setTimeout(() => setNotice(null), 3500);
@@ -243,13 +292,15 @@ export default function AdminSubmissionsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/admin/exams"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-emerald-800 text-xs font-bold rounded-xl shadow-xs transition-colors"
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span>بنك الأسئلة والامتحانات</span>
-          </Link>
+          {isAdminLoggedIn() && (
+            <Link
+              href="/admin/exams"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-emerald-800 text-xs font-bold rounded-xl shadow-xs transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span>بنك الأسئلة والامتحانات</span>
+            </Link>
+          )}
         </div>
       </div>
 
