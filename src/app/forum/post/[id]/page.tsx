@@ -310,7 +310,14 @@ export default function ForumPostPage() {
             </p>
           ) : (
             <div className="space-y-3">
-              {replies.map((reply, idx) => {
+              {[...replies]
+                .sort((a, b) => {
+                  const aStaff = a.authorRole && a.authorRole !== 'student' ? 1 : 0;
+                  const bStaff = b.authorRole && b.authorRole !== 'student' ? 1 : 0;
+                  if (aStaff !== bStaff) return bStaff - aStaff;
+                  return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
+                })
+                .map((reply, idx) => {
                 const isStaffReply = reply.authorRole && reply.authorRole !== 'student';
                 return (
                   <div
