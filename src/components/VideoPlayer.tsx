@@ -36,7 +36,12 @@ export default function VideoPlayer({
   onProgressUpdate
 }: VideoPlayerProps) {
   const [wmVisible, setWmVisible] = useState(true);
-  const [wmPos, setWmPos] = useState({ top: 85, left: 85 });
+  const [wmPos, setWmPos] = useState<{ top: number; left: number; usePx: boolean }>({
+    top: 20,
+    left: 20,
+    usePx: false,
+  });
+  const driftRef = useRef<() => void>(() => {});
   const [currentProgress, setCurrentProgress] = useState<LessonProgress | null>(null);
   const [threshold, setThreshold] = useState(90);
   const [isResumed, setIsResumed] = useState(false);
@@ -82,18 +87,52 @@ export default function VideoPlayer({
     }
   }, [student, lessonId]);
 
-  // Always-visible watermark: random drift every 5s (3s eased move + 2s rest)
+  // Always-visible watermark: random drift every 5s (3s eased move + 2s rest),
+// positioned INSIDE the actual rendered video frame (handles letterbox bars)
   useEffect(() => {
     if (!student) return;
     const drift = () => {
-      setWmPos({
-        top: Math.floor(Math.random() * 68) + 8,
-        left: Math.floor(Math.random() * 68) + 8,
-      });
+      const el = videoRef.current;
+      const elW = el?.clientWidth || 0;
+      const elH = el?.clientHeight || 0;
+      const vW = el?.videoWidth || 0;
+      const vH = el?.videoHeight || 0;
+      if (elW > 0 && elH > 0 && vW > 0 && vH > 0) {
+        const er = elW / elH;
+        const vr = vW / vH;
+        let offX = 0;
+        let offY = 0;
+        let w = elW;
+        let h = elH;
+        if (vr > er) {
+          w = elH * vr;
+          offX = (elW - w) / 2;
+        } else {
+          h = elW / vr;
+          offY = (elH - h) / 2;
+        }
+        const pad = 0.1;
+        setWmPos({
+          top: Math.round(offY + h * (pad + Math.random() * (1 - 2 * pad))),
+          left: Math.round(offX + w * (pad + Math.random() * (1 - 2 * pad))),
+          usePx: true,
+        });
+      } else {
+        setWmPos({
+          top: Math.floor(Math.random() * 68) + 8,
+          left: Math.floor(Math.random() * 68) + 8,
+          usePx: false,
+        });
+      }
     };
+    driftRef.current = drift;
     drift();
     const interval = setInterval(drift, WM_CYCLE_MS);
-    return () => clearInterval(interval);
+    window.addEventListener('resize', drift);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', drift);
+    };
   }, [student]);
 
   // ---------- HLS MODE ----------
@@ -332,6 +371,7 @@ export default function VideoPlayer({
               controls
               playsInline
               preload="auto"
+              onLoadedMetadata={() => driftRef.current()}
             />
           )
         ) : showEmptyState ? (
@@ -349,8 +389,8 @@ export default function VideoPlayer({
           <div
             className="video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-red-600/40 px-3 py-1 rounded-md backdrop-blur-[1px] border border-red-400/40 z-10 opacity-80"
             style={{
-              top: `${wmPos.top}%`,
-              left: `${wmPos.left}%`,
+              top: wmPos.usePx ? `${wmPos.top}px` : `${wmPos.top}%`,
+              left: wmPos.usePx ? `${wmPos.left}px` : `${wmPos.left}%`,
               transform: 'translate(-50%, -50%)',
               transition: 'top 3s ease-in-out, left 3s ease-in-out, opacity 300ms ease-in-out',
             }}
