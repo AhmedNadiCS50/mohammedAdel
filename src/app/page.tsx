@@ -128,7 +128,7 @@ export default function Home() {
               <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.4rem] sm:leading-[1.25] font-extrabold text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
                 مادة التكنولوجيا مع
                 <span className="block mt-2 bg-gradient-to-l from-white via-white to-[#D8D2FF] bg-clip-text text-transparent drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
-                  الخبير مستر محمد عادل
+                  الخبير مستر عمرو شاهين
                 </span>
               </h1>
             </Reveal>
@@ -181,7 +181,7 @@ href="/dashboard/subscription"
               <div className="absolute -inset-3 rounded-[2.2rem] bg-gradient-to-br from-[#4ADE80]/25 via-transparent to-[#C9C2FF]/25 blur-xl" />
               <Image
                 src="/images/teacher.png"
-                alt="مستر محمد عادل"
+                alt="مستر عمرو شاهين"
                 width={834}
                 height={1024}
                 priority
@@ -238,7 +238,7 @@ href="/dashboard/subscription"
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
             <span className="prem-chip prem-chip--gold">مميزات المنصة</span>
-            <h2 className="prem-h2 mt-4">لماذا يختار الطلاب منصة مستر محمد عادل؟</h2>
+            <h2 className="prem-h2 mt-4">لماذا يختار الطلاب منصة مستر عمرو شاهين؟</h2>
             <p className="text-sm sm:text-base text-gray-600 mt-3">
               منظومة متكاملة صُممت خصيصاً لتضمن لك التفوق والدرجة النهائية بأسهل طريقة ممكنة
             </p>
@@ -285,7 +285,7 @@ href="/dashboard/subscription"
                   كتاب الصف الثاني الثانوي البكالوريا (تكنولوجيا وبرمجة)
                 </h2>
                 <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                  المرجع الشامل والمتكامل لكل طالب في مادة التكنولوجيا. أعده مستر محمد عادل بأسلوب تفاعلي فريد يضم أسئلة الامتحانات الوزارية، بنوك الأسئلة الحديثة، والتدريبات العملية بالأكواد البرمجية.
+                  المرجع الشامل والمتكامل لكل طالب في مادة التكنولوجيا. أعده مستر عمرو شاهين بأسلوب تفاعلي فريد يضم أسئلة الامتحانات الوزارية، بنوك الأسئلة الحديثة، والتدريبات العملية بالأكواد البرمجية.
                 </p>
                 <div className="flex items-center gap-2 text-amber-600 justify-center lg:justify-start pt-1">
                   {[...Array(5)].map((_, idx) => (
@@ -352,7 +352,7 @@ href="/dashboard/subscription"
                 جاهز لتحقيق الدرجة النهائية في التكنولوجيا؟
               </h2>
               <p className="text-[#D8F3DC] text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-                انضم الآن لمئات الطلاب الذين يدرسون مادة التكنولوجيا بأحدث الأساليب التعليمية مع الخبير مستر محمد عادل.
+                انضم الآن لمئات الطلاب الذين يدرسون مادة التكنولوجيا بأحدث الأساليب التعليمية مع الخبير مستر عمرو شاهين.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 <Link href="/register" className="btn-hero btn-hero--gold w-full sm:w-auto px-9 py-3.5 text-sm sm:text-base">

@@ -69,7 +69,7 @@ export default function Navbar() {
             <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-green-200">
               <Image
                 src="/images/teacher.png"
-                alt="مستر محمد عادل"
+                alt="مستر عمرو شاهين"
                 fill
                 className="object-cover object-top"
                 priority
@@ -80,7 +80,7 @@ export default function Navbar() {
                 مادة التكنولوجيا
               </span>
               <span className="text-xs font-medium text-green-700">
-                مستر محمد عادل
+                مستر عمرو شاهين
               </span>
             </div>
           </Link>

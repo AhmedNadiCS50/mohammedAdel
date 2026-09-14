@@ -54,7 +54,7 @@ export default function ExamCard({ student, exam }: { student: Student; exam: Ex
               <div className="mt-2 p-2.5 bg-green-50/60 border border-green-200 rounded-lg rounded-r-none border-r-[3px] border-r-green-700 flex items-start gap-2 text-xs">
                 <MessageSquare className="w-3.5 h-3.5 text-green-700 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-[10px] font-black text-green-800 block mb-0.5">تعليق مستر محمد عادل:</span>
+                  <span className="text-[10px] font-black text-green-800 block mb-0.5">تعليق مستر عمرو شاهين:</span>
                   <p className="text-green-900 leading-relaxed font-medium whitespace-pre-line">{latestSub.teacherComment}</p>
                 </div>
               </div>

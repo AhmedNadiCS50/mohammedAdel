@@ -181,7 +181,7 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
       <div className="bg-white p-8 rounded-2xl border border-gray-200 text-center shadow-sm">
         <HelpCircle className="w-12 h-12 text-green-700 mx-auto mb-3" />
         <h3 className="text-lg font-bold text-gray-900">لا توجد أسئلة مضافة في هذا الامتحان بعد</h3>
-        <p className="text-gray-500 text-sm mt-1">يقوم مستر محمد عادل بإعداد وتحديث بنك الأسئلة.</p>
+        <p className="text-gray-500 text-sm mt-1">يقوم مستر عمرو شاهين بإعداد وتحديث بنك الأسئلة.</p>
       </div>
     );
   }
@@ -246,10 +246,10 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
             <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
             <div>
               <strong className="block text-amber-900 font-bold mb-0.5">
-                تنبيه: يتضمن هذا الامتحان أسئلة مقالية بانتظار مراجعة مستر محمد عادل!
+                تنبيه: يتضمن هذا الامتحان أسئلة مقالية بانتظار مراجعة مستر عمرو شاهين!
               </strong>
               <span className="text-amber-800 leading-relaxed">
-                تم تصحيح أسئلة الاختيار من متعدد فورياً. سيقوم مستر محمد عادل بقراءة إجابتك المقالية ورصد الدرجة المستحقة لك، وستظهر الدرجة في صفحتك فور اعتمادها.
+                تم تصحيح أسئلة الاختيار من متعدد فورياً. سيقوم مستر عمرو شاهين بقراءة إجابتك المقالية ورصد الدرجة المستحقة لك، وستظهر الدرجة في صفحتك فور اعتمادها.
               </span>
             </div>
           </div>
@@ -259,7 +259,7 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
           <div className="mx-6 p-4 bg-white border border-green-300 rounded-xl flex items-start gap-3 text-xs shadow-sm">
             <FileText className="w-5 h-5 text-green-700 shrink-0 mt-0.5" />
             <div>
-              <strong className="block text-green-900 font-black mb-0.5">تعليق مستر محمد عادل على واجبك:</strong>
+              <strong className="block text-green-900 font-black mb-0.5">تعليق مستر عمرو شاهين على واجبك:</strong>
               <p className="text-green-900 whitespace-pre-line leading-relaxed font-medium">{submissionResult.teacherComment}</p>
             </div>
           </div>
@@ -409,7 +409,7 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
 
                   {q.explanation && (
                     <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-700">
-                      <span className="font-bold text-green-800">توضيح مستر محمد عادل: </span>
+                      <span className="font-bold text-green-800">توضيح مستر عمرو شاهين: </span>
                       {q.explanation}
                     </div>
                   )}
@@ -498,7 +498,7 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
           <div className="space-y-4 mb-8">
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-xs font-bold text-amber-900">
               <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>اكتب إجابتك بالتفصيل أدناه وسيتم مراجعتها واعتماد درجتك بواسطة مستر محمد عادل.</span>
+              <span>اكتب إجابتك بالتفصيل أدناه وسيتم مراجعتها واعتماد درجتك بواسطة مستر عمرو شاهين.</span>
             </div>
 
             <textarea

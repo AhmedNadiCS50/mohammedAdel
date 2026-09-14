@@ -24,7 +24,7 @@ export default function ProductsPage() {
   }, []);
 
   const whatsappLink = `https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
-    'مرحباً مستر محمد عادل، أود حجز وشراء نسخة من "كتاب الصف الثاني البكالوريا برمجة". يرجى إفادتي بالسعر وتفاصيل الشحن والتوصيل.'
+    'مرحباً مستر عمرو شاهين، أود حجز وشراء نسخة من "كتاب الصف الثاني البكالوريا برمجة". يرجى إفادتي بالسعر وتفاصيل الشحن والتوصيل.'
   )}`;
 
   const bookFeatures = [
@@ -46,7 +46,7 @@ export default function ProductsPage() {
             <span>المطبوعات والمؤلفات الرسمية المعتمدة</span>
           </span>
           <h1 className="text-2xl sm:text-4xl font-black text-gray-900">
-            متجر كتب ومؤلفات الخبير مستر محمد عادل
+            متجر كتب ومؤلفات الخبير مستر عمرو شاهين
           </h1>
           <p className="text-sm text-gray-600 leading-relaxed">
             جميع الملازم والكتب متوفرة للطلب المباشر مع خدمة التوصيل والشحن لجميع محافظات مصر حتى باب المنزل.
@@ -62,7 +62,7 @@ export default function ProductsPage() {
               <div className="relative w-full max-w-[300px] aspect-[3/4] rounded-xl overflow-hidden shadow-md border border-gray-200">
                 <Image
                   src="/images/book-cover.jpg"
-                  alt="كتاب الصف الثاني البكالوريا برمجة - مستر محمد عادل"
+                  alt="كتاب الصف الثاني البكالوريا برمجة - مستر عمرو شاهين"
                   fill
                   className="object-cover hover:scale-105 transition-transform duration-300"
                   priority
@@ -84,7 +84,7 @@ export default function ProductsPage() {
                 </h2>
                 <p className="text-xs sm:text-sm text-green-800 font-bold mt-1.5 flex items-center gap-1.5">
                   <BadgeCheck className="w-4 h-4 text-green-700" />
-                  <span>تأليف وإعداد: الخبير مستر محمد عادل</span>
+                  <span>تأليف وإعداد: الخبير مستر عمرو شاهين</span>
                 </p>
               </div>
 

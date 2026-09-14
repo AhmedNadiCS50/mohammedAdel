@@ -439,7 +439,7 @@ export default function VideoPlayer({
 
         <div className="absolute top-3 right-3 pointer-events-none z-20 flex items-center gap-1.5 bg-emerald-950/85 backdrop-blur-sm border border-emerald-700/50 text-[11px] font-bold text-emerald-300 px-2.5 py-1 rounded-lg shadow-sm">
           <Shield className="w-3 h-3 text-gold-400" />
-          <span>منصة الخبير م. محمد عادل</span>
+          <span>منصة الخبير م. عمرو شاهين</span>
         </div>
       </div>
 

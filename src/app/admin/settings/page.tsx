@@ -34,7 +34,7 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="text-2xl font-black text-slate-900">إعدادات المنصة وطرق الدفع اليدوية</h1>
         <p className="text-xs text-slate-500 mt-1">
-          عدل بيانات السداد والتواصل مع مستر محمد عادل لتنعكس فوراً في صفحات الطلاب والفووتر.
+          عدل بيانات السداد والتواصل مع مستر عمرو شاهين لتنعكس فوراً في صفحات الطلاب والفووتر.
         </p>
       </div>
 

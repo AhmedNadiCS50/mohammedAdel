@@ -46,7 +46,7 @@ export default function AdminCodesPage() {
   };
 
   const handleCopyCode = (codeStr: string, monthName: string) => {
-    const textToCopy = `أهلاً بك يا بطل، تم استلام تحويل الاشتراك بنجاح. كود التفعيل الخاص بك لمنصة مستر محمد عادل لمادة التكنولوجيا هو:
+    const textToCopy = `أهلاً بك يا بطل، تم استلام تحويل الاشتراك بنجاح. كود التفعيل الخاص بك لمنصة مستر عمرو شاهين لمادة التكنولوجيا هو:
 ${codeStr}
 ادخل على صفحة "اشتراكي" وضع الكود لتفعيل شهر (${monthName}) فوراً. بالتوفيق دائماً!`;
 

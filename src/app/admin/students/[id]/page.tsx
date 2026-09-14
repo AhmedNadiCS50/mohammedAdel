@@ -432,7 +432,7 @@ export default function StudentRecordDetailPage() {
                 <div>
                   <span className="font-bold text-slate-800 block">{log.detail}</span>
                   <span className="text-[10px] text-slate-400">
-                    بواسطة: {log.activatedBy === 'teacher' ? 'مستر محمد عادل يدوياً' : 'كود تفعيل بواسطة الطالب'}
+                    بواسطة: {log.activatedBy === 'teacher' ? 'مستر عمرو شاهين يدوياً' : 'كود تفعيل بواسطة الطالب'}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-slate-500">

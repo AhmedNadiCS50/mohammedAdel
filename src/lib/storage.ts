@@ -31,8 +31,8 @@ import { normalizePhone } from './phone';
 
 // Default platform settings
 export const DEFAULT_SETTINGS: PlatformSettings = {
-  teacherName: 'مستر محمد عادل',
-  platformTitle: 'مادة التكنولوجيا مع الخبير مستر محمد عادل',
+  teacherName: 'مستر عمرو شاهين',
+  platformTitle: 'مادة التكنولوجيا مع الخبير مستر عمرو شاهين',
   vodafoneCashNumber: '01030585226', // قابل للتعديل فوراً من لوحة تحكم المدرس
   instapayUsername: 'mr-mohamed-adel@instapay',
   whatsappNumber: '201030585226',
@@ -348,7 +348,7 @@ export function deleteStudent(id: string): boolean {
       studentName: student.name,
       studentPhone: student.phone,
       type: 'full_month',
-      detail: `تم حذف الطالب (${student.name}) نهائياً من المنصة وقاعدة البيانات بواسطة مستر محمد عادل`,
+      detail: `تم حذف الطالب (${student.name}) نهائياً من المنصة وقاعدة البيانات بواسطة مستر عمرو شاهين`,
       activatedBy: 'teacher',
     });
   }
@@ -414,7 +414,7 @@ export function manuallyActivateStudentMonth(studentId: string, monthName: strin
     studentName: student.name,
     studentPhone: student.phone,
     type: 'full_month',
-    detail: `تفعيل اشتراك شهر كامل: ${monthName} لمدة ${durationDays} يوم (تفعيل يدوي بواسطة مستر محمد عادل)`,
+    detail: `تفعيل اشتراك شهر كامل: ${monthName} لمدة ${durationDays} يوم (تفعيل يدوي بواسطة مستر عمرو شاهين)`,
     activatedBy: 'teacher',
   });
 

@@ -184,12 +184,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
               <Image
                 src="/images/teacher.png"
-                alt="مستر محمد عادل"
+                alt="مستر عمرو شاهين"
                 width={20}
                 height={20}
                 className="rounded-full object-cover"
               />
-              <span>مادة التكنولوجيا مع مستر محمد عادل</span>
+              <span>مادة التكنولوجيا مع مستر عمرو شاهين</span>
             </div>
           </div>
 

@@ -118,7 +118,7 @@ export default function WatchLessonPage() {
           </div>
           <h2 className="text-2xl font-black text-gray-900">هذه المحاضرة مقفولة بالترتيب</h2>
           <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
-            حرصاً على الفهم الكامل والتسلسل التعليمي المعتمد من مستر محمد عادل، يجب إنهاء مشاهدة المحاضرة السابقة أولاً بنسبة 90% لتفتح لك هذه المحاضرة تلقائياً.
+            حرصاً على الفهم الكامل والتسلسل التعليمي المعتمد من مستر عمرو شاهين، يجب إنهاء مشاهدة المحاضرة السابقة أولاً بنسبة 90% لتفتح لك هذه المحاضرة تلقائياً.
           </p>
 
           {accessCheck.previousLesson && (
@@ -160,7 +160,7 @@ export default function WatchLessonPage() {
           </div>
           <h2 className="text-2xl font-black text-gray-900">هذه المحاضرة مقفولة</h2>
           <p className="text-sm text-gray-600 leading-relaxed max-w-md mx-auto">
-            عفواً يا {student?.name}، هذه المحاضرة مخصصة للطلاب المشتركين في مادة التكنولوجيا لشهر ({lesson.month}). لتفعيل المشاهدة يرجى تفعيل كود الاشتراك أو طلب فتح المحاضرة من مستر محمد عادل.
+            عفواً يا {student?.name}، هذه المحاضرة مخصصة للطلاب المشتركين في مادة التكنولوجيا لشهر ({lesson.month}). لتفعيل المشاهدة يرجى تفعيل كود الاشتراك أو طلب فتح المحاضرة من مستر عمرو شاهين.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
@@ -223,7 +223,7 @@ export default function WatchLessonPage() {
               </div>
               <h1 className="text-xl sm:text-2xl font-black text-gray-900">{lesson.title}</h1>
               <p className="text-xs text-gray-500 mt-1">
-                إعداد وشرح: الخبير مستر محمد عادل • مادة التكنولوجيا والبرمجة
+                إعداد وشرح: الخبير مستر عمرو شاهين • مادة التكنولوجيا والبرمجة
               </p>
             </div>
 
@@ -274,7 +274,7 @@ export default function WatchLessonPage() {
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-green-700 shrink-0" />
               <span>
-                جميع حقوق الملكية الفكرية محفوظة لمستر محمد عادل. تُعرض علامة مائية باسمك ورقم هاتفك على الفيديو لمنع التسريب.
+                جميع حقوق الملكية الفكرية محفوظة لمستر عمرو شاهين. تُعرض علامة مائية باسمك ورقم هاتفك على الفيديو لمنع التسريب.
               </span>
             </div>
           </div>

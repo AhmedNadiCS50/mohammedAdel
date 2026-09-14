@@ -102,7 +102,7 @@ export default function SubscriptionPage() {
             </div>
             <a
               href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
-                `مرحباً مستر محمد، أود تجديد اشتراكي في المنصة (${student.name} - ${GRADE_LABELS[student.grade]})`
+                `مرحباً مستر عمرو شاهين، أود تجديد اشتراكي في المنصة (${student.name} - ${GRADE_LABELS[student.grade]})`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -182,7 +182,7 @@ export default function SubscriptionPage() {
               </div>
               <div>
                 <h2 className="text-base font-black text-gray-900 leading-snug">تفعيل كود الاشتراك</h2>
-                <p className="text-xs text-gray-500">أدخل الكود الذي استلمته من مستر محمد عادل</p>
+                <p className="text-xs text-gray-500">أدخل الكود الذي استلمته من مستر عمرو شاهين</p>
               </div>
             </div>
 
@@ -288,7 +288,7 @@ export default function SubscriptionPage() {
             <div className="pt-2">
               <a
                 href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
-                  `مرحباً مستر محمد عادل، أنا الطالب (${student.name}) بالصف (${GRADE_LABELS[student.grade]}). قمت بالتحويل وأرسل لحضرتك إثبات الدفع لاستلام كود التفعيل.`
+                  `مرحباً مستر عمرو شاهين، أنا الطالب (${student.name}) بالصف (${GRADE_LABELS[student.grade]}). قمت بالتحويل وأرسل لحضرتك إثبات الدفع لاستلام كود التفعيل.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

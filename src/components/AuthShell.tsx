@@ -27,7 +27,7 @@ export default function AuthShell({
 
           <div className="relative flex items-center justify-center lg:justify-start">
             <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-[#F3D879]/50 shadow-lg ring-2 ring-[#F3D879]/20">
-              <Image src="/images/teacher.png" alt="مستر محمد عادل" fill className="object-cover object-top" />
+              <Image src="/images/teacher.png" alt="مستر عمرو شاهين" fill className="object-cover object-top" />
             </div>
           </div>
 
@@ -60,7 +60,7 @@ export default function AuthShell({
           </div>
 
           <div className="relative text-center lg:text-right text-[11px] text-emerald-100/50">
-            الخبير مستر محمد عادل — تكنولوجيا المعلومات والبرمجة
+            الخبير مستر عمرو شاهين — تكنولوجيا المعلومات والبرمجة
           </div>
         </div>
 

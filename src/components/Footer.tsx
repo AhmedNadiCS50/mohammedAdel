@@ -24,14 +24,14 @@ export default function Footer() {
               <div className="relative w-12 h-12 rounded-[8px] overflow-hidden border border-emerald-600/40 shrink-0" style={{ background: '#1B4332' }}>
                 <Image 
                   src="/images/teacher.png" 
-                  alt="مستر محمد عادل"
+                  alt="مستر عمرو شاهين"
                   fill
                   className="object-cover object-top"
                 />
               </div>
               <div>
                 <h3 className="text-white font-bold text-base leading-snug">مادة التكنولوجيا مع الخبير</h3>
-                <p className="text-emerald-300 text-xs mt-0.5">مستر محمد عادل • المرحلة الثانوية</p>
+                <p className="text-emerald-300 text-xs mt-0.5">مستر عمرو شاهين • المرحلة الثانوية</p>
               </div>
             </div>
             <p className="text-emerald-100/70 text-xs sm:text-sm leading-relaxed max-w-md">
@@ -76,7 +76,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-emerald-900/60 text-center text-xs text-emerald-100/60">
-          <p>© 2026 - 2027 منصة مادة التكنولوجيا مع الخبير مستر محمد عادل. جميع الحقوق محفوظة.</p>
+          <p>© 2026 - 2027 منصة مادة التكنولوجيا مع الخبير مستر عمرو شاهين. جميع الحقوق محفوظة.</p>
           <p className="mt-2 text-emerald-200/60">تم تطوير الموقع من قبل أحمد نادي · <span dir="ltr">01030585226</span></p>
         </div>
 

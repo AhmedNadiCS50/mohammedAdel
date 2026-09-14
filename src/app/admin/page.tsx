@@ -96,10 +96,10 @@ export default function AdminOverviewPage() {
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-800/80 text-gold-400 text-xs font-bold border border-emerald-700">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>لوحة الإدارة الرسمية • مستر محمد عادل</span>
+              <span>لوحة الإدارة الرسمية • مستر عمرو شاهين</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white">
-              أهلاً بحضرتك يا مستر محمد
+              أهلاً بحضرتك يا مستر عمرو شاهين
             </h1>
             <p className="text-xs sm:text-sm text-emerald-200">
               جميع الإحصائيات والأرقام المعروضة حقيقية 100% ومربوطة مباشرة بالطلاب والمحتوى.
@@ -279,7 +279,7 @@ export default function AdminOverviewPage() {
           <div className="divide-y divide-slate-100">
             {expiringStudents.map((std) => {
               const daysLeft = getDaysRemaining(std.subscription.expiresAt);
-              const whatsappReminderMsg = `مرحباً يا ${std.name}، نود تذكيرك بأن اشتراكك في مادة التكنولوجيا مع مستر محمد عادل سينتهي خلال ${daysLeft} أيام. يرجى المبادرة بالتجديد لضمان استمرار وصولك للدروس.`;
+              const whatsappReminderMsg = `مرحباً يا ${std.name}، نود تذكيرك بأن اشتراكك في مادة التكنولوجيا مع مستر عمرو شاهين سينتهي خلال ${daysLeft} أيام. يرجى المبادرة بالتجديد لضمان استمرار وصولك للدروس.`;
 
               return (
                 <div key={std.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

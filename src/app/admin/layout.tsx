@@ -146,7 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/25 to-transparent pointer-events-none" />
                 <Image
                   src="/images/teacher.png"
-                  alt="مستر محمد عادل"
+                  alt="مستر عمرو شاهين"
                   fill
                   className="object-cover object-top"
                   priority
@@ -161,7 +161,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
                   </span>
-                  مستر محمد عادل
+                  مستر عمرو شاهين
                 </span>
               </div>
             </div>

@@ -321,7 +321,7 @@ export default function StudentAssignmentsPage() {
                           <div className="flex items-start gap-2 bg-green-50/60 border border-green-200 rounded-r-xl rounded-l-lg border-r-[3px] border-r-green-700 p-3.5 text-xs">
                             <MessageSquare className="w-4 h-4 text-green-700 shrink-0 mt-0.5" />
                             <div>
-                              <span className="text-[10px] font-black text-green-800 block mb-0.5">تعليق مستر محمد عادل:</span>
+                              <span className="text-[10px] font-black text-green-800 block mb-0.5">تعليق مستر عمرو شاهين:</span>
                               <p className="text-green-900 leading-relaxed font-medium whitespace-pre-line">{submission.teacherComment}</p>
                             </div>
                           </div>
