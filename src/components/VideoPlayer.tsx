@@ -138,10 +138,21 @@ export default function VideoPlayer({
   }, [student]);
 
   // Fullscreen handling: container-based fullscreen keeps the watermark visible.
-// We hide the native fullscreen button and use our own drum-fullscreen toggle.
+  // We hide the native fullscreen button and use our own drum-fullscreen toggle.
   useEffect(() => {
     const onFs = () => {
       const container = containerRef.current;
+      const videoEl = videoRef.current;
+      // Bounce native video-element fullscreen (e.g. browser double-click,
+      // keyboard/remote triggers) to the container so the watermark never hides.
+      if (videoEl && document.fullscreenElement === videoEl) {
+        document.exitFullscreen().then(() => {
+          if (container && document.fullscreenElement !== container) {
+            container.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+          }
+        }).catch(() => {});
+        return;
+      }
       setIsContainerFS(Boolean(container && document.fullscreenElement === container));
       setTimeout(() => driftRef.current(), 60);
     };
@@ -264,7 +275,7 @@ export default function VideoPlayer({
     try {
       const player = new window.YT.Player(containerIdRef.current, {
         videoId: videoId,
-        playerVars: { rel: 0, modestbranding: 1, controls: 1, playsinline: 1 },
+        playerVars: { rel: 0, modestbranding: 1, controls: 1, playsinline: 1, fs: 0 },
         events: {
           onReady: (event: any) => {
             if (student && lessonId) {
@@ -398,6 +409,10 @@ export default function VideoPlayer({
               playsInline
               preload="auto"
               onLoadedMetadata={() => driftRef.current()}
+              onDoubleClick={(e) => {
+                e.preventDefault();
+                toggleFullscreen();
+              }}
             />
           )
         ) : showEmptyState ? (
@@ -426,7 +441,7 @@ export default function VideoPlayer({
         )}
 
         {/* Custom fullscreen toggle (container-based so the watermark stays visible) */}
-        {isHls && !hlsError && (
+        {!hlsError && !showEmptyState && (
           <button
             type="button"
             aria-label="ملء الشاشة"
