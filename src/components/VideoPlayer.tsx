@@ -36,6 +36,7 @@ export default function VideoPlayer({
   onProgressUpdate
 }: VideoPlayerProps) {
   const [wmVisible, setWmVisible] = useState(true);
+  const [isContainerFS, setIsContainerFS] = useState(false);
   const [wmPos, setWmPos] = useState<{ top: number; left: number; usePx: boolean }>({
     top: 20,
     left: 20,
@@ -50,6 +51,7 @@ export default function VideoPlayer({
 
   const playerRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const hlsRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const containerIdRef = useRef<string>(`yt-player-${lessonId || 'vid'}-${Math.random().toString(36).substring(2, 7)}`);
@@ -134,6 +136,27 @@ export default function VideoPlayer({
       window.removeEventListener('resize', drift);
     };
   }, [student]);
+
+  // Fullscreen swap: when the native video enters fullscreen, move fullscreen to
+// the container (video + watermark together) so the watermark stays visible
+  useEffect(() => {
+    const onFs = () => {
+      const video = videoRef.current;
+      const container = containerRef.current;
+      if (video && container && document.fullscreenElement === video) {
+        const c = container;
+        document.exitFullscreen().catch(() => {});
+        setTimeout(() => {
+          c.requestFullscreen().catch(() => {});
+        }, 0);
+        return;
+      }
+      setIsContainerFS(Boolean(container && document.fullscreenElement === container));
+      setTimeout(() => driftRef.current(), 60);
+    };
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
 
   // ---------- HLS MODE ----------
   const initHls = useCallback(async () => {
@@ -354,7 +377,9 @@ export default function VideoPlayer({
   return (
     <div className="space-y-3">
       <div
+        ref={containerRef}
         className="relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-emerald-800/40 select-none group"
+        style={isContainerFS ? { width: '100vw', height: '100vh', maxWidth: '100vw', aspectRatio: 'auto', borderRadius: 0 } : undefined}
         onContextMenu={(e) => e.preventDefault()}
       >
         {isHls ? (
