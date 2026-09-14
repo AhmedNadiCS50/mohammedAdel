@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getCurrentStudent,
@@ -116,42 +116,86 @@ export default function ProfilePage() {
 
   if (!student) return <DashboardSkeleton />;
 
-  const sub = student.subscription;
-  const isActive = sub.isActive && (!sub.expiresAt || new Date(sub.expiresAt).getTime() > nowMs);
-  const remaining = sub.expiresAt ? daysRemaining(sub.expiresAt, nowMs) : null;
+  const {
+    sub,
+    isActive,
+    remaining,
+    lessons,
+    progressList,
+    assignments,
+    assignmentSubs,
+    exams,
+    examSubs,
+    completedLessons,
+    overallPercent,
+    currentLesson,
+    submittedAssignments,
+    solvedExamCount,
+    latestExam,
+    latestAssignment,
+    lastActivity,
+    whatsappDigits,
+    teacherName,
+  } = useMemo(() => {
+    const sub = student.subscription;
+    const isActive = sub.isActive && (!sub.expiresAt || new Date(sub.expiresAt).getTime() > nowMs);
+    const remaining = sub.expiresAt ? daysRemaining(sub.expiresAt, nowMs) : null;
 
-  // Progress stats (device-local store)
-  const lessons = getLessons(student.grade).sort((a, b) => a.orderIndex - b.orderIndex);
-  const progressList = getAllProgressForStudent(student.id);
-  const assignments = getAssignments(student.grade);
-  const assignmentSubs = getAssignmentSubmissions(undefined, student.id);
-  const exams = getExams(student.grade);
-  const examSubs = getExamSubmissions(student.id);
+    // Progress stats (device-local store) — parsed once per student/tick, not per keystroke.
+    const lessons = getLessons(student.grade).sort((a, b) => a.orderIndex - b.orderIndex);
+    const progressList = getAllProgressForStudent(student.id);
+    const assignments = getAssignments(student.grade);
+    const assignmentSubs = getAssignmentSubmissions(undefined, student.id);
+    const exams = getExams(student.grade);
+    const examSubs = getExamSubmissions(student.id);
 
-  const completedLessons = lessons.filter((l) => {
-    const p = getLessonProgress(student.id, l.id);
-    return !!p && (p.completed || p.watchPercentage >= 90);
-  }).length;
-  const overallPercent = lessons.length === 0 ? 0 : Math.round((completedLessons / lessons.length) * 100);
-  const currentLesson = lessons.find((l) => {
-    const p = getLessonProgress(student.id, l.id);
-    return !(p && (p.completed || p.watchPercentage >= 90));
-  });
-  const submittedAssignments = assignmentSubs.filter((s) => s.status === 'submitted' || s.status === 'graded');
-  const solvedExamCount = new Set(examSubs.map((s) => s.examId)).size;
-  const byDateDesc = <T extends { submittedAt: string }>(a: T, b: T) => b.submittedAt.localeCompare(a.submittedAt);
-  const latestExam = [...examSubs].sort(byDateDesc)[0];
-  const latestAssignment = [...assignmentSubs].sort(byDateDesc)[0];
-  const lastActivity = [
-    ...progressList.map((p) => p.lastUpdated),
-    ...assignmentSubs.map((s) => s.submittedAt),
-    ...examSubs.map((s) => s.submittedAt),
-  ].filter(Boolean).sort().slice(-1)[0];
+    const completedLessons = lessons.filter((l) => {
+      const p = getLessonProgress(student.id, l.id);
+      return !!p && (p.completed || p.watchPercentage >= 90);
+    }).length;
+    const overallPercent = lessons.length === 0 ? 0 : Math.round((completedLessons / lessons.length) * 100);
+    const currentLesson = lessons.find((l) => {
+      const p = getLessonProgress(student.id, l.id);
+      return !(p && (p.completed || p.watchPercentage >= 90));
+    });
+    const submittedAssignments = assignmentSubs.filter((s) => s.status === 'submitted' || s.status === 'graded');
+    const solvedExamCount = new Set(examSubs.map((s) => s.examId)).size;
+    const byDateDesc = <T extends { submittedAt: string }>(a: T, b: T) => b.submittedAt.localeCompare(a.submittedAt);
+    const latestExam = [...examSubs].sort(byDateDesc)[0];
+    const latestAssignment = [...assignmentSubs].sort(byDateDesc)[0];
+    const lastActivity = [
+      ...progressList.map((p) => p.lastUpdated),
+      ...assignmentSubs.map((s) => s.submittedAt),
+      ...examSubs.map((s) => s.submittedAt),
+    ].filter(Boolean).sort().slice(-1)[0];
 
-  const settings = getSettings();
-  const whatsappRaw = settings.whatsappNumber || '';
-  const whatsappDigits = whatsappRaw.replace(/\D/g, '');
-  const teacherName = settings.teacherName || 'المدرس';
+    const settings = getSettings();
+    const whatsappRaw = settings.whatsappNumber || '';
+    const whatsappDigits = whatsappRaw.replace(/\D/g, '');
+    const teacherName = settings.teacherName || 'المدرس';
+
+    return {
+      sub,
+      isActive,
+      remaining,
+      lessons,
+      progressList,
+      assignments,
+      assignmentSubs,
+      exams,
+      examSubs,
+      completedLessons,
+      overallPercent,
+      currentLesson,
+      submittedAssignments,
+      solvedExamCount,
+      latestExam,
+      latestAssignment,
+      lastActivity,
+      whatsappDigits,
+      teacherName,
+    };
+  }, [student, nowMs]);
 
   const applyStudent = (patch: Partial<Student>) => {
     const merged = { ...student, ...patch };
@@ -390,7 +434,7 @@ export default function ProfilePage() {
             {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
             {copied ? 'تم النسخ' : 'نسخ الرقم'}
           </button>
-          <span className="text-[11px] text-gray-400" dir="ltr">{whatsappRaw}</span>
+          <span className="text-[11px] text-gray-400" dir="ltr">{whatsappDigits}</span>
         </div>
       </div>
 

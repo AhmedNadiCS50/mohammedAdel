@@ -38,6 +38,7 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
   const [submissionResult, setSubmissionResult] = useState<ExamSubmission | null>(null);
   // Homework photo attachments: questionId -> uploaded attachments
   const submissionIdRef = useRef('sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+  const submitGuardRef = useRef(false);
   const [attachmentsByQuestion, setAttachmentsByQuestion] = useState<Record<string, SubmissionAttachment[]>>({});
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
 
@@ -56,17 +57,14 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
   }, [student.id, exam.id]);
 
   useEffect(() => {
-    if (isSubmitted || timeLeftSeconds <= 0) return;
+    if (isSubmitted) return;
+    if (timeLeftSeconds <= 0) {
+      handleSubmit();
+      return;
+    }
 
     const timer = setInterval(() => {
-      setTimeLeftSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeftSeconds((prev) => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -134,35 +132,41 @@ export default function ExamRunner({ exam, student, onFinished }: ExamRunnerProp
   };
 
   const handleSubmit = () => {
-    if (isSubmitted) return;
-    const submitAttachments = Object.entries(attachmentsByQuestion).reduce<SubmissionAttachment[]>(
-      (acc, [qid, list]) => acc.concat(list.map((a) => ({ name: `${qid}-${a.name}`, url: a.url }))),
-      []
-    );
-    const result = submitExamAnswers({
-      exam,
-      student,
-      answers: selectedAnswers,
-      essayAnswers,
-      submissionId: submissionIdRef.current,
-      attachments: submitAttachments.length > 0 ? submitAttachments : undefined,
-    });
-    setSubmissionResult(result);
-    setIsSubmitted(true);
+    if (isSubmitted || submitGuardRef.current) return;
+    submitGuardRef.current = true;
+    try {
+      const submitAttachments = Object.entries(attachmentsByQuestion).reduce<SubmissionAttachment[]>(
+        (acc, [qid, list]) => acc.concat(list.map((a) => ({ name: `${qid}-${a.name}`, url: a.url }))),
+        []
+      );
+      const result = submitExamAnswers({
+        exam,
+        student,
+        answers: selectedAnswers,
+        essayAnswers,
+        submissionId: submissionIdRef.current,
+        attachments: submitAttachments.length > 0 ? submitAttachments : undefined,
+      });
+      setSubmissionResult(result);
+      setIsSubmitted(true);
 
-    if (result.passed && !result.hasPendingEssays) {
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } catch (e) {
-        // Safe fallback
+      if (result.passed && !result.hasPendingEssays) {
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+        } catch (e) {
+          // Safe fallback
+        }
       }
-    }
 
-    if (onFinished) onFinished(result);
+      if (onFinished) onFinished(result);
+    } catch (e) {
+      submitGuardRef.current = false;
+      throw e;
+    }
   };
 
   const formatTime = (seconds: number) => {

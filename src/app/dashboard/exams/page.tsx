@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentStudent, getExams } from '@/lib/storage';
 import { Student } from '@/lib/types';
@@ -19,9 +19,9 @@ export default function ExamsPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <DashboardSkeleton />;
+  const exams = useMemo(() => (student ? getExams(student.grade) : []), [student]);
 
-  const exams = getExams(student.grade);
+  if (!student) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">

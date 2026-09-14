@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   getCurrentModerator,
@@ -36,8 +36,9 @@ export default function ModeratorOverviewPage() {
     setPendingEssays(getPendingEssaySubmissions().length);
     setPendingAssignments(getAssignmentSubmissions().filter((s) => s.status === 'submitted').length);
 
+    let unsub = () => {};
     if (isFirebaseConfigured()) {
-      subscribePendingPostsCount((n) => setPendingPosts(n), () => {});
+      unsub = subscribePendingPostsCount((n) => setPendingPosts(n), () => {});
       getSubmissionsFromFirestore().then((list) => {
         const pending = list.filter((s) => s.hasPendingEssays).length;
         setPendingEssays((prev) => Math.max(prev, pending));
@@ -46,9 +47,10 @@ export default function ModeratorOverviewPage() {
         setPendingAssignments((prev) => Math.max(prev, list.filter((s) => s.status === 'submitted').length));
       }).catch(() => {});
     }
+    return () => unsub();
   }, []);
 
-  const mod = getCurrentModerator();
+  const mod = useMemo(() => getCurrentModerator(), []);
   if (typeof window !== 'undefined' && !mod) {
     return null;
   }

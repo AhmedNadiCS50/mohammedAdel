@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentStudent, getLessons } from '@/lib/storage';
@@ -26,16 +26,19 @@ export default function TermPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <DashboardSkeleton />;
-
-  const allLessons = getLessons(student.grade);
-  const monthMap: Record<string, typeof allLessons> = {};
-  allLessons.forEach(l => {
-    const m = l.month || 'غير محدد';
-    if (!monthMap[m]) monthMap[m] = [];
-    monthMap[m].push(l);
-  });
+  const allLessons = useMemo(() => (student ? getLessons(student.grade) : []), [student]);
+  const monthMap = useMemo(() => {
+    const map: Record<string, typeof allLessons> = {};
+    allLessons.forEach(l => {
+      const m = l.month || 'غير محدد';
+      if (!map[m]) map[m] = [];
+      map[m].push(l);
+    });
+    return map;
+  }, [allLessons]);
   const months = Object.entries(monthMap);
+
+  if (!student) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">

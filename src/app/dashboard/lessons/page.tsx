@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentStudent, getLessons } from '@/lib/storage';
 import { Student } from '@/lib/types';
@@ -22,11 +22,14 @@ export default function LessonsPage() {
     setStudent(s);
   }, [router]);
 
-  if (!student) return <DashboardSkeleton />;
+  const allLessons = useMemo(() => (student ? getLessons(student.grade) : []), [student]);
+  const months = useMemo(() => Array.from(new Set(allLessons.map(l => l.month).filter(Boolean))) as string[], [allLessons]);
+  const filteredLessons = useMemo(
+    () => selectedMonth === 'all' ? allLessons : allLessons.filter(l => l.month === selectedMonth),
+    [allLessons, selectedMonth]
+  );
 
-  const allLessons = getLessons(student.grade);
-  const months = Array.from(new Set(allLessons.map(l => l.month).filter(Boolean))) as string[];
-  const filteredLessons = selectedMonth === 'all' ? allLessons : allLessons.filter(l => l.month === selectedMonth);
+  if (!student) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-6">

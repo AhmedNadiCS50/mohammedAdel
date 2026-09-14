@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Student, Lesson, Exam } from '@/lib/types';
 import { getLessonProgress, getExamSubmissions } from '@/lib/storage';
@@ -18,82 +18,114 @@ export default function StudentCourseStats({
   exams,
   onSelectTab,
 }: StudentCourseStatsProps) {
-  // 1. VIDEOS STATS (Only for student's grade)
-  const totalLessons = lessons.length;
-  const completedLessons = lessons.filter((lesson) => {
-    const progress = getLessonProgress(student.id, lesson.id);
-    return progress?.completed || (progress && progress.watchPercentage >= 90);
-  });
-  const completedVideosCount = completedLessons.length;
-  const videoPercent = totalLessons > 0 ? Math.min(100, Math.round((completedVideosCount / totalLessons) * 100)) : 0;
-
-  // 2. EXAMS STATS (Only for student's grade)
-  const totalExams = exams.length;
-  const examsTaken = exams.filter((exam) => {
-    const subs = getExamSubmissions(student.id, exam.id);
-    return subs.length > 0;
-  });
-  const examsTakenCount = examsTaken.length;
-  const examPercent = totalExams > 0 ? Math.min(100, Math.round((examsTakenCount / totalExams) * 100)) : 0;
-
-  // 3. AVERAGE EXAM SCORES & WEEKLY PERFORMANCE
-  const allSubmissions = exams.flatMap((exam) => getExamSubmissions(student.id, exam.id));
-  const validScores = allSubmissions.map((s) => s.percentage).filter((p): p is number => typeof p === 'number');
-  const averageScore = validScores.length > 0
-    ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length)
-    : 0;
-
-  // Weekly points mapping (Saturday to Friday)
-  // Day order: Saturday (6), Sunday (0), Monday (1), Tuesday (2), Wednesday (3), Thursday (4), Friday (5)
-  const dayLabels = ['س', 'م', 'ث', 'ر', 'خ', 'ج', 'س'];
-  const dayIndices = [6, 0, 1, 2, 3, 4, 5];
-
-  // Map submissions to day of week
-  const dayScores: number[] = dayIndices.map((dayIdx) => {
-    const subsOnDay = allSubmissions.filter((s) => {
-      const d = new Date(s.submittedAt);
-      return d.getDay() === dayIdx;
+  const {
+    totalLessons,
+    completedVideosCount,
+    videoPercent,
+    totalExams,
+    examsTakenCount,
+    examPercent,
+    averageScore,
+    dayScores,
+    maxDayScore,
+    peakIndex,
+    points,
+    pathD,
+    cheerBadge,
+    dayLabels,
+    svgWidth,
+    svgHeight,
+  } = useMemo(() => {
+    // 1. VIDEOS STATS (Only for student's grade)
+    const totalLessons = lessons.length;
+    const completedLessons = lessons.filter((lesson) => {
+      const progress = getLessonProgress(student.id, lesson.id);
+      return progress?.completed || (progress && progress.watchPercentage >= 90);
     });
-    if (subsOnDay.length === 0) return 0;
-    const avg = subsOnDay.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / subsOnDay.length;
-    return Math.round(avg);
-  });
+    const completedVideosCount = completedLessons.length;
+    const videoPercent = totalLessons > 0 ? Math.min(100, Math.round((completedVideosCount / totalLessons) * 100)) : 0;
 
-  // If student has no activity yet, show gentle baseline or preview curve if scores exist
-  const maxDayScore = Math.max(...dayScores);
-  const peakIndex = maxDayScore > 0 ? dayScores.indexOf(maxDayScore) : 2;
+    // 2. EXAMS STATS (Only for student's grade)
+    const totalExams = exams.length;
+    const examsTaken = exams.filter((exam) => {
+      const subs = getExamSubmissions(student.id, exam.id);
+      return subs.length > 0;
+    });
+    const examsTakenCount = examsTaken.length;
+    const examPercent = totalExams > 0 ? Math.min(100, Math.round((examsTakenCount / totalExams) * 100)) : 0;
 
-  // Build smooth SVG curve coordinates
-  const svgWidth = 140;
-  const svgHeight = 65;
-  const paddingX = 12;
-  const usableWidth = svgWidth - paddingX * 2;
-  const stepX = usableWidth / (dayLabels.length - 1);
+    // 3. AVERAGE EXAM SCORES & WEEKLY PERFORMANCE
+    const allSubmissions = exams.flatMap((exam) => getExamSubmissions(student.id, exam.id));
+    const validScores = allSubmissions.map((s) => s.percentage).filter((p): p is number => typeof p === 'number');
+    const averageScore = validScores.length > 0
+      ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length)
+      : 0;
 
-  const points = dayScores.map((score, i) => {
-    const x = paddingX + i * stepX;
-    // Map score 0-100 to y (55 to 10)
-    const normalizedScore = score > 0 ? score : (maxDayScore === 0 && i === 2 ? 0 : 0);
-    const y = 55 - (normalizedScore / 100) * 45;
-    return { x, y, score };
-  });
+    // Weekly points mapping (Saturday to Friday)
+    const dayLabels = ['س', 'م', 'ث', 'ر', 'خ', 'ج', 'س'];
+    const dayIndices = [6, 0, 1, 2, 3, 4, 5];
+    const svgWidth = 140;
+    const svgHeight = 65;
+    const dayScores: number[] = dayIndices.map((dayIdx) => {
+      const subsOnDay = allSubmissions.filter((s) => {
+        const d = new Date(s.submittedAt);
+        return d.getDay() === dayIdx;
+      });
+      if (subsOnDay.length === 0) return 0;
+      const avg = subsOnDay.reduce((acc, curr) => acc + (curr.percentage || 0), 0) / subsOnDay.length;
+      return Math.round(avg);
+    });
 
-  // Construct SVG Path
-  const pathD = points.reduce((acc, pt, i, arr) => {
-    if (i === 0) return `M ${pt.x} ${pt.y}`;
-    const prev = arr[i - 1];
-    const cp1x = prev.x + (pt.x - prev.x) / 2;
-    const cp1y = prev.y;
-    const cp2x = prev.x + (pt.x - prev.x) / 2;
-    const cp2y = pt.y;
-    return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${pt.x} ${pt.y}`;
-  }, '');
+    const maxDayScore = Math.max(...dayScores);
+    const peakIndex = maxDayScore > 0 ? dayScores.indexOf(maxDayScore) : 2;
 
-  // Performance cheering badge text
-  let cheerBadge = 'يلا ابدأ!';
-  if (averageScore >= 85) cheerBadge = 'عاش يا بطل!!';
-  else if (averageScore >= 60) cheerBadge = 'عاش!!';
-  else if (averageScore > 0) cheerBadge = 'استمر وشد حيلك!';
+    // Build smooth SVG curve coordinates
+    const paddingX = 12;
+    const usableWidth = svgWidth - paddingX * 2;
+    const stepX = usableWidth / (dayLabels.length - 1);
+
+    const points = dayScores.map((score, i) => {
+      const x = paddingX + i * stepX;
+      const normalizedScore = score > 0 ? score : (maxDayScore === 0 && i === 2 ? 0 : 0);
+      const y = 55 - (normalizedScore / 100) * 45;
+      return { x, y, score };
+    });
+
+    const pathD = points.reduce((acc, pt, i, arr) => {
+      if (i === 0) return `M ${pt.x} ${pt.y}`;
+      const prev = arr[i - 1];
+      const cp1x = prev.x + (pt.x - prev.x) / 2;
+      const cp1y = prev.y;
+      const cp2x = prev.x + (pt.x - prev.x) / 2;
+      const cp2y = pt.y;
+      return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${pt.x} ${pt.y}`;
+    }, '');
+
+    // Performance cheering badge text
+    let cheerBadge = 'يلا ابدأ!';
+    if (averageScore >= 85) cheerBadge = 'عاش يا بطل!!';
+    else if (averageScore >= 60) cheerBadge = 'عاش!!';
+    else if (averageScore > 0) cheerBadge = 'استمر وشد حيلك!';
+
+    return {
+      totalLessons,
+      completedVideosCount,
+      videoPercent,
+      totalExams,
+      examsTakenCount,
+      examPercent,
+      averageScore,
+      dayScores,
+      maxDayScore,
+      peakIndex,
+      points,
+      pathD,
+      cheerBadge,
+      dayLabels,
+      svgWidth,
+      svgHeight,
+    };
+  }, [student, lessons, exams]);
 
   return (
     <div className="w-full space-y-3">

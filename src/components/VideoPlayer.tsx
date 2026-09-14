@@ -59,6 +59,14 @@ export default function VideoPlayer({
   const containerIdRef = useRef<string>(`yt-player-${lessonId || 'vid'}-${Math.random().toString(36).substring(2, 7)}`);
   const currentTimeRef = useRef(0);
   const durationRef = useRef(0);
+  const lastSaveRef = useRef(0);
+  const lastUiRef = useRef(0);
+  const lastTimesRef = useRef({ time: 0, duration: 0 });
+  const lastSavedProgressRef = useRef<LessonProgress | null>(null);
+  const fsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const PROGRESS_SAVE_MS = 10000;
+  const PROGRESS_UI_MS = 1000;
 
   const isHls = videoSource === 'hls';
   const videoId = isHls ? '' : extractYoutubeId(videoUrlOrId);
@@ -168,10 +176,14 @@ export default function VideoPlayer({
         return;
       }
       setIsContainerFS(Boolean(container && document.fullscreenElement === container));
-      setTimeout(() => driftRef.current(), 60);
+      if (fsTimerRef.current) clearTimeout(fsTimerRef.current);
+      fsTimerRef.current = setTimeout(() => { fsTimerRef.current = null; driftRef.current(); }, 60);
     };
     document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs);
+      if (fsTimerRef.current) clearTimeout(fsTimerRef.current);
+    };
   }, []);
 
   const toggleFullscreen = useCallback(() => {
@@ -354,6 +366,7 @@ export default function VideoPlayer({
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    flushProgress();
   };
 
   const recordProgress = (player: any) => {
@@ -366,25 +379,58 @@ export default function VideoPlayer({
 
   const recordFromTimes = (currentTime: number, duration: number) => {
     if (!student || !lessonId || !duration || duration <= 0) return;
-    const percentage = Math.min(100, Math.round((currentTime / duration) * 100));
-    const completed = percentage >= threshold;
+    lastTimesRef.current = { time: currentTime, duration };
+    const now = Date.now();
 
-    const updated = saveLessonProgress({
+    // Persist at most every 10s while watching (not every 3s) to avoid the
+    // localStorage write + Firestore write storm on the main thread.
+    if (!lastSaveRef.current || now - lastSaveRef.current >= PROGRESS_SAVE_MS) {
+      lastSaveRef.current = now;
+      lastSavedProgressRef.current = saveLessonProgress({
+        studentId: student.id,
+        lessonId,
+        watchedSeconds: currentTime,
+        durationSeconds: duration,
+        watchPercentage: Math.min(100, Math.round((currentTime / duration) * 100)),
+        completed: Math.min(100, Math.round((currentTime / duration) * 100)) >= threshold,
+      });
+    }
+
+    // Reflect the latest time on screen at most once per second (avoids HLS
+    // timeupdate re-render storms while playback runs).
+    if (!lastUiRef.current || now - lastUiRef.current >= PROGRESS_UI_MS) {
+      lastUiRef.current = now;
+      if (lastSavedProgressRef.current) {
+        setCurrentProgress(lastSavedProgressRef.current);
+        if (onProgressUpdate) onProgressUpdate(lastSavedProgressRef.current);
+      }
+    }
+  };
+
+  const flushProgress = () => {
+    const { time, duration } = lastTimesRef.current;
+    if (!student || !lessonId || !duration || duration <= 0) return;
+    if (lastSaveRef.current && Date.now() - lastSaveRef.current < PROGRESS_SAVE_MS / 2) return;
+    lastSaveRef.current = Date.now();
+    const percentage = Math.min(100, Math.round((time / duration) * 100));
+    lastSavedProgressRef.current = saveLessonProgress({
       studentId: student.id,
       lessonId,
-      watchedSeconds: currentTime,
+      watchedSeconds: time,
       durationSeconds: duration,
       watchPercentage: percentage,
-      completed,
+      completed: percentage >= threshold,
     });
-
-    setCurrentProgress(updated);
-    if (onProgressUpdate) onProgressUpdate(updated);
   };
 
   // cleanup on unmount
   useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') flushProgress();
+    };
+    document.addEventListener('visibilitychange', onVis);
     return () => {
+      document.removeEventListener('visibilitychange', onVis);
       stopTracking();
       if (hlsRef.current) {
         try { hlsRef.current.destroy(); } catch { /* noop */ }

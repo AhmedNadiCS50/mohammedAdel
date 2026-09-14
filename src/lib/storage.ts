@@ -69,12 +69,24 @@ function getLocal<T>(key: string, fallback: T): T {
   }
 }
 
+// Debounced "platform data changed" event: bursts of writes (e.g. syncFromFirestore
+// writing several collections, or frequent progress saves) collapse into ONE event.
+let dataChangeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleDataChangedEmit(delay = 250): void {
+  if (typeof window === 'undefined') return;
+  if (dataChangeDebounceTimer) clearTimeout(dataChangeDebounceTimer);
+  dataChangeDebounceTimer = setTimeout(() => {
+    dataChangeDebounceTimer = null;
+    window.dispatchEvent(new Event('platform-data-changed'));
+  }, delay);
+}
+
 function setLocal<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    // Trigger storage event so open tabs/components can re-render if needed
-    window.dispatchEvent(new Event('platform-data-changed'));
+    // Trigger debounced storage event so open tabs/components can re-render if needed
+    scheduleDataChangedEmit();
   } catch (e) {
     console.error(`Error saving ${key} to storage:`, e);
   }
@@ -166,9 +178,6 @@ export async function syncFromFirestore(): Promise<{ synced: boolean; count: num
     }
     if (remoteSettings) {
       setLocal(KEYS.SETTINGS, remoteSettings);
-    }
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('platform-data-changed'));
     }
     return { synced: true, count };
   } catch (err) {
