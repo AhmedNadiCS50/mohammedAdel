@@ -11,12 +11,13 @@ import {
   setReplyStatus,
   deleteForumReply,
   addForumReply,
+  setPostResolved,
   ensureForumAuth
 } from '@/lib/forumService';
 import { GRADE_LABELS } from '@/lib/storage';
 import { ForumPost, ForumReply } from '@/lib/types';
 import { isFirebaseConfigured } from '@/lib/firebase';
-import { formatTimeAgo, forumErrorMessage } from '@/lib/forumUtils';
+import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
 import {
   MessagesSquare,
   CheckCircle2,
@@ -28,7 +29,8 @@ import {
   Loader2,
   Inbox,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  CheckCheck
 } from 'lucide-react';
 
 export default function AdminForumPage() {
@@ -104,6 +106,13 @@ export default function AdminForumPage() {
     setBusyId(post.id);
     await togglePostPin(post.id, !post.pinned);
     setBusyId('');
+  };
+
+  const handleResolveToggle = async (post: ForumPost) => {
+    setBusyId(post.id);
+    const res = await setPostResolved(post.id, !post.resolved, { asTeacher: true });
+    setBusyId('');
+    if (!res.success) flash(res.error || 'فشل تحديث حالة السؤال.');
   };
 
   const handleDeletePost = async (post: ForumPost) => {
@@ -378,6 +387,16 @@ export default function AdminForumPage() {
                           <Pin className="w-3 h-3" /> مثبّت
                         </span>
                       )}
+                      {post.resolved && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                          <CheckCheck className="w-3 h-3" /> تم الحل
+                        </span>
+                      )}
+                      {post.topic && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-300 text-blue-800 text-[10px] font-bold">
+                          {forumTopicLabel(post.topic)}
+                        </span>
+                      )}
                       <span className="text-[10px] text-gray-400 mr-auto">{formatTimeAgo(post.createdAt)}</span>
                     </div>
                     <h3 className="text-sm font-bold text-gray-900 line-clamp-1">{post.title}</h3>
@@ -398,6 +417,19 @@ export default function AdminForumPage() {
                     >
                       <ExternalLink className="w-3.5 h-3.5" /> فتح
                     </a>
+                    <button
+                      onClick={() => handleResolveToggle(post)}
+                      disabled={busyId === post.id}
+                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-colors ${
+                        post.resolved
+                          ? 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                      }`}
+                      title={post.resolved ? 'إلغاء تم الحل' : 'تمييز كـ تم الحل'}
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      {post.resolved ? 'إلغاء الحل' : 'تم الحل'}
+                    </button>
                     <button
                       onClick={() => handlePinToggle(post)}
                       disabled={busyId === post.id}

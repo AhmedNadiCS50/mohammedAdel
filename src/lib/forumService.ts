@@ -20,7 +20,8 @@ import {
   ForumReply,
   ForumPostStatus,
   GradeLevel,
-  ForumAuthorRole
+  ForumAuthorRole,
+  ForumTopic
 } from './types';
 
 const POST_COLLECTION = 'forum_posts';
@@ -162,6 +163,9 @@ export async function createForumPost(params: {
   grade: GradeLevel;
   author: { studentId: string; name: string; phone: string };
   asTeacher?: boolean;
+  topic?: ForumTopic;
+  lessonId?: string;
+  imageUrls?: string[];
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   if (!isFirebaseConfigured() || !db) return { success: false, error: 'منصة الدردشة تتطلب تفعيل Firebase Cloud من إعدادات المدرس.' };
 
@@ -170,6 +174,8 @@ export async function createForumPost(params: {
     title: params.title.trim(),
     content: params.content.trim(),
     grade: params.grade,
+    topic: params.topic,
+    lessonId: params.lessonId,
     authorStudentId: params.author.studentId,
     authorName: params.author.name,
     authorPhone: params.author.phone,
@@ -177,6 +183,7 @@ export async function createForumPost(params: {
     status: params.asTeacher ? 'published' : 'pending',
     pinned: false,
     replyCount: 0,
+    imageUrls: params.imageUrls?.length ? params.imageUrls.slice(0, 6) : undefined,
     createdAt: now,
     updatedAt: now,
   };
@@ -229,6 +236,33 @@ export async function togglePostPin(postId: string, pinned: boolean): Promise<{ 
   } catch (err: any) {
     console.error('togglePostPin error:', err);
     return { success: false, error: err?.message || 'فشل تحديث تثبيت السؤال.' };
+  }
+}
+
+/** Mark/unmark a post as "resolved". Owner students or the teacher may toggle. */
+export async function setPostResolved(
+  postId: string,
+  resolved: boolean,
+  opts: { asTeacher?: boolean; authorStudentId?: string }
+): Promise<{ success: boolean; error?: string }> {
+  if (!isFirebaseConfigured() || !db) return { success: false, error: 'Firebase غير مفعل.' };
+  try {
+    if (opts.asTeacher) {
+      if (!(await requireAdminAuth())) return { success: false, error: 'غير مصرح.' };
+    } else if (!opts.authorStudentId) {
+      return { success: false, error: 'غير مصرح.' };
+    }
+    const payload: Record<string, any> = {
+      resolved,
+      resolvedBy: opts.asTeacher ? 'teacher' : opts.authorStudentId,
+      resolvedAt: resolved ? new Date().toISOString() : null,
+      updatedAt: new Date().toISOString(),
+    };
+    await updateDoc(doc(db, POST_COLLECTION, postId), payload);
+    return { success: true };
+  } catch (err: any) {
+    console.error('setPostResolved error:', err);
+    return { success: false, error: err?.message || 'فشل تحديث حالة السؤال.' };
   }
 }
 
@@ -349,6 +383,7 @@ export async function addForumReply(params: {
   content: string;
   author: { studentId: string; name: string; phone: string };
   asTeacher?: boolean;
+  imageUrls?: string[];
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   if (!isFirebaseConfigured() || !db) return { success: false, error: 'منتدى النقاش يتطلب تفعيل Firebase Cloud.' };
 
@@ -363,7 +398,9 @@ export async function addForumReply(params: {
     authorName: params.author.name,
     authorPhone: params.author.phone,
     authorRole: (params.asTeacher ? 'teacher' : 'student') as ForumAuthorRole,
-    status: params.asTeacher ? 'published' : 'pending',
+    // Student replies publish instantly (no moderation needed); posts still get reviewed.
+    status: 'published',
+    imageUrls: params.imageUrls?.length ? params.imageUrls.slice(0, 6) : undefined,
     createdAt: now,
   };
 
@@ -372,13 +409,10 @@ export async function addForumReply(params: {
       if (!(await requireAdminAuth())) return { success: false, error: 'غير مصرح.' };
     }
     const docRef = await addDoc(collection(db, REPLY_COLLECTION), reply);
-    // Teacher replies are live instantly; students' replies count only once approved.
-    if (params.asTeacher) {
-      await updateDoc(doc(db, POST_COLLECTION, params.postId), {
-        replyCount: increment(1),
-        updatedAt: now,
-      });
-    }
+    await updateDoc(doc(db, POST_COLLECTION, params.postId), {
+      replyCount: increment(1),
+      updatedAt: now,
+    });
     return { success: true, id: docRef.id };
   } catch (err: any) {
     console.error('addForumReply error:', err);

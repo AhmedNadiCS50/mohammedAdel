@@ -15,16 +15,17 @@ import { getLessonByIdFromFirestore } from '@/lib/firestoreService';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { Student, Lesson, Exam } from '@/lib/types';
 import VideoPlayer from '@/components/VideoPlayer';
-import { 
-  ArrowRight, 
-  Lock, 
-  Download, 
-  HelpCircle, 
-  FileText, 
-  Sparkles, 
-  Clock, 
+import {
+  ArrowRight,
+  Lock,
+  Download,
+  HelpCircle,
+  FileText,
+  Sparkles,
+  Clock,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  MessageCircleQuestion
 } from 'lucide-react';
 
 export default function WatchLessonPage() {
@@ -226,7 +227,7 @@ export default function WatchLessonPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {lesson.pdfAttachmentUrl && (
                 <a
                   href={lesson.pdfAttachmentUrl}
@@ -238,6 +239,14 @@ export default function WatchLessonPage() {
                   <span>تحميل مذكرة (PDF)</span>
                 </a>
               )}
+
+              <Link
+                href={`/forum?lesson=${lesson.id}`}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-green-800 bg-green-50 hover:bg-green-100 border border-green-200 transition-colors"
+              >
+                <MessageCircleQuestion className="w-4 h-4" />
+                <span>اسأل عن هذا الدرس</span>
+              </Link>
 
               {relatedExam && (
                 <Link

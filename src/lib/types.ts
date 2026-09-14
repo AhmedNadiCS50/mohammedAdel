@@ -163,12 +163,15 @@ export interface ActivationLog {
 
 export type ForumPostStatus = 'pending' | 'published' | 'rejected';
 export type ForumAuthorRole = 'student' | 'teacher';
+export type ForumTopic = 'lesson' | 'homework' | 'exam' | 'general';
 
 export interface ForumPost {
   id: string;
   title: string;
   content: string;
   grade: GradeLevel;
+  topic?: ForumTopic;
+  lessonId?: string;
   authorStudentId: string;
   authorName: string;
   authorPhone: string;
@@ -177,6 +180,10 @@ export interface ForumPost {
   pinned?: boolean;
   rejectionReason?: string;
   replyCount?: number;
+  resolved?: boolean;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  imageUrls?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -190,6 +197,7 @@ export interface ForumReply {
   authorPhone: string;
   authorRole: ForumAuthorRole;
   status: ForumPostStatus;
+  imageUrls?: string[];
   createdAt: string;
 }
 

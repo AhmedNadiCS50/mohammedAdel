@@ -13,6 +13,7 @@ import {
   subscribePost,
   subscribePostReplies,
   addForumReply,
+  setPostResolved,
   ensureForumAuth
 } from '@/lib/forumService';
 import { isFirebaseConfigured } from '@/lib/firebase';
@@ -27,9 +28,12 @@ import {
   XCircle,
   Lock,
   GraduationCap,
-  AlertCircle
+  AlertCircle,
+  CheckCheck,
+  BookOpen
 } from 'lucide-react';
-import { formatTimeAgo, forumErrorMessage } from '@/lib/forumUtils';
+import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
+import ForumImageUploader from '@/components/ForumImageUploader';
 
 export default function ForumPostPage() {
   const router = useRouter();
@@ -43,7 +47,9 @@ export default function ForumPostPage() {
   const [notFound, setNotFound] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [replyImages, setReplyImages] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -110,13 +116,24 @@ export default function ForumPostPage() {
       postId: post.id,
       content: replyText,
       author: { studentId: student.id, name: student.name, phone: student.phone },
+      imageUrls: replyImages,
     });
     setSending(false);
     if (res.success) {
       setReplyText('');
+      setReplyImages([]);
     } else {
       setError(res.error || 'فشل إرسال الرد.');
     }
+  };
+
+  const handleResolve = async () => {
+    if (!post || !student) return;
+    setError('');
+    setResolving(true);
+    const res = await setPostResolved(post.id, !post.resolved, { authorStudentId: student.id });
+    setResolving(false);
+    if (!res.success) setError(res.error || 'فشل تحديث حالة السؤال.');
   };
 
   if (!student || loading) {
@@ -198,6 +215,21 @@ export default function ForumPostPage() {
                 <Pin className="w-3 h-3" /> مثبّت
               </span>
             )}
+            {post.resolved && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-black">
+                <CheckCheck className="w-3 h-3" /> تم الحل
+              </span>
+            )}
+            {post.topic && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold">
+                {forumTopicLabel(post.topic)}
+              </span>
+            )}
+            {post.lessonId && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-800 text-[11px] font-bold">
+                <BookOpen className="w-3 h-3" /> مرتبط بدرس
+              </span>
+            )}
             {post.authorRole === 'teacher' ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-800 border border-green-300 text-[11px] font-bold">
                 <GraduationCap className="w-3 h-3" /> منشور بواسطة المدرس
@@ -223,6 +255,15 @@ export default function ForumPostPage() {
           <h1 className="text-base sm:text-lg font-black text-gray-900 leading-snug">{post.title}</h1>
           <p className="text-sm text-gray-600 leading-relaxed mt-3 whitespace-pre-wrap">{post.content}</p>
 
+          {post.imageUrls && post.imageUrls.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {post.imageUrls.map((url) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={url} src={url} alt="" className="w-full h-40 object-cover rounded-xl border border-gray-200" />
+              ))}
+            </div>
+          )}
+
           {post.status === 'rejected' && post.rejectionReason && (
             <div className="mt-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
               <span className="font-bold">السبب: </span>{post.rejectionReason}
@@ -232,6 +273,28 @@ export default function ForumPostPage() {
             <div className="mt-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-800">
               <Clock className="w-4 h-4 shrink-0 mt-0.5" />
               سؤالك الآن بانتظار مراجعة المدرس. سيظهر للجميع فور الموافقة عليه.
+            </div>
+          )}
+
+          {isAuthor && post.status === 'published' && (
+            <div className="mt-4 pt-3.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="text-[11px] text-gray-500">
+                {post.resolved
+                  ? 'سؤالك عليه علامة "تم الحل". يمكنك إلغاؤها إذا ظهرت عليه إجابة جديدة.'
+                  : 'بعدما تكون استفدت من الإجابات، أخبر زملاءك بوضع علامة "تم الحل" على سؤالك.'}
+              </span>
+              <button
+                onClick={handleResolve}
+                disabled={resolving}
+                className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-black shrink-0 transition-colors cursor-pointer ${
+                  post.resolved
+                    ? 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                } disabled:opacity-50`}
+              >
+                {resolving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : post.resolved ? <XCircle className="w-3.5 h-3.5" /> : <CheckCheck className="w-3.5 h-3.5" />}
+                {post.resolved ? 'إلغاء تم الحل' : 'تحديد كـ تم الحل'}
+              </button>
             </div>
           )}
         </article>
@@ -273,8 +336,16 @@ export default function ForumPostPage() {
                       <span className="w-1 h-1 rounded-full bg-gray-300" />
                       <span className="text-[10px] text-gray-400">{formatTimeAgo(reply.createdAt)}</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
-                  </div>
+<p className="text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+                      {reply.imageUrls && reply.imageUrls.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {reply.imageUrls.map((url) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={url} src={url} alt="" className="w-24 h-24 rounded-xl object-cover border border-gray-200" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                 );
               })}
             </div>
@@ -291,13 +362,16 @@ export default function ForumPostPage() {
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                placeholder="اكتب ردّك أو إجابتك على السؤال… (يُرسل للمراجعة قبل النشر)"
+                placeholder="اكتب ردّك أو إجابتك على السؤال… (يُنشر فوراً)"
                 rows={3}
                 maxLength={1000}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 resize-none"
               />
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] text-gray-400">ردود الطلاب تُنشر بعد موافقة المدرس.</span>
+                <span className="text-[11px] text-gray-400">ردود الطلاب تُنشر فوراً بدون انتظار موافقة المدرس.</span>
+                <ForumImageUploader urls={replyImages} onChange={setReplyImages} max={3} />
+              </div>
+              <div className="flex items-center justify-end gap-2">
                 <button
                   type="submit"
                   disabled={sending}

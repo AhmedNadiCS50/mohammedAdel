@@ -1,3 +1,16 @@
+import { ForumTopic } from './types';
+
+export const FORUM_TOPICS: { value: ForumTopic; label: string }[] = [
+  { value: 'lesson', label: 'سؤال درسي' },
+  { value: 'homework', label: 'واجب' },
+  { value: 'exam', label: 'امتحان' },
+  { value: 'general', label: 'عام' },
+];
+
+export function forumTopicLabel(topic?: ForumTopic): string {
+  return FORUM_TOPICS.find((t) => t.value === topic)?.label || 'سؤال درسي';
+}
+
 export function formatTimeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);

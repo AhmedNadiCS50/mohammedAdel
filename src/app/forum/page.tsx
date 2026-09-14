@@ -8,7 +8,7 @@ import {
   GRADE_LABELS,
   normalizeGrade
 } from '@/lib/storage';
-import { Student, ForumPost } from '@/lib/types';
+import { Student, ForumPost, ForumTopic } from '@/lib/types';
 import {
   subscribePublishedPosts,
   subscribeMyPosts,
@@ -16,7 +16,8 @@ import {
   ensureForumAuth
 } from '@/lib/forumService';
 import { isFirebaseConfigured } from '@/lib/firebase';
-import { formatTimeAgo, forumErrorMessage } from '@/lib/forumUtils';
+import { formatTimeAgo, forumErrorMessage, FORUM_TOPICS, forumTopicLabel } from '@/lib/forumUtils';
+import ForumImageUploader from '@/components/ForumImageUploader';
 import {
   MessagesSquare,
   MessageCircleQuestion,
@@ -29,7 +30,9 @@ import {
   XCircle,
   Lock,
   Inbox,
-  AlertCircle
+  AlertCircle,
+  BookOpen,
+  CheckCheck
 } from 'lucide-react';
 
 function statusBadge(post: ForumPost) {
@@ -69,8 +72,26 @@ export default function StudentForumPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [postTitle, setPostTitle] = useState('');
   const [postContent, setPostContent] = useState('');
+  const [postTopic, setPostTopic] = useState<ForumTopic>('lesson');
+  const [postLessonId, setPostLessonId] = useState<string | undefined>(undefined);
+  const [postImages, setPostImages] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
   const [sentOk, setSentOk] = useState(false);
+
+  // Filters
+  const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
+  const [resolveFilter, setResolveFilter] = useState<'all' | 'unresolved' | 'solved' | 'no_replies'>('all');
+
+  // Pre-fill composer when arriving from a lesson ("اسأل عن هذا الدرس")
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lessonParam = params.get('lesson');
+    if (lessonParam) {
+      setPostLessonId(lessonParam);
+      setPostTopic('lesson');
+      setComposerOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     const s = getCurrentStudent();
@@ -140,6 +161,9 @@ export default function StudentForumPage() {
       title: postTitle,
       content: postContent,
       grade: student.grade,
+      topic: postTopic,
+      lessonId: postLessonId,
+      imageUrls: postImages,
       author: { studentId: student.id, name: student.name, phone: student.phone },
     });
     setSending(false);
@@ -147,6 +171,9 @@ export default function StudentForumPage() {
       setSentOk(true);
       setPostTitle('');
       setPostContent('');
+      setPostImages([]);
+      setPostLessonId(undefined);
+      setPostTopic('lesson');
       setComposerOpen(false);
       setTimeout(() => setSentOk(false), 6000);
     } else {
@@ -157,14 +184,17 @@ export default function StudentForumPage() {
   if (!student) return null;
 
   const isActivated = student.subscription.isActive || student.subscription.unlockedLessons?.length;
-  const filteredPublished = search.trim()
-    ? published.filter(
-        (p) =>
-          p.title.includes(search.trim()) ||
-          p.content.includes(search.trim()) ||
-          p.authorName.includes(search.trim())
-      )
-    : published;
+  const filteredPublished = published.filter((p) => {
+    if (search.trim()) {
+      const q = search.trim();
+      if (!(p.title.includes(q) || p.content.includes(q) || p.authorName.includes(q))) return false;
+    }
+    if (topicFilter !== 'all' && p.topic !== topicFilter) return false;
+    if (resolveFilter === 'solved' && !p.resolved) return false;
+    if (resolveFilter === 'unresolved' && p.resolved) return false;
+    if (resolveFilter === 'no_replies' && (p.replyCount || 0) > 0) return false;
+    return true;
+  });
 
   return (
     <div className="bg-gray-50 min-h-screen py-6 sm:py-8">
@@ -244,6 +274,34 @@ export default function StudentForumPage() {
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 resize-none"
                 />
               </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold text-gray-500">القسم:</span>
+                  <select
+                    value={postTopic}
+                    onChange={(e) => setPostTopic(e.target.value as ForumTopic)}
+                    className="px-3 py-2 rounded-xl border border-gray-300 text-xs font-semibold bg-white text-gray-700 focus:outline-none focus:border-green-600 cursor-pointer"
+                  >
+                    {FORUM_TOPICS.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                  {postLessonId && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-50 border border-green-200 text-[11px] font-bold text-green-800">
+                      <BookOpen className="w-3.5 h-3.5" /> مرتبط بدرس
+                      <button
+                        type="button"
+                        onClick={() => setPostLessonId(undefined)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                        aria-label="إلغاء ربط الدرس"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  )}
+                </div>
+                <ForumImageUploader urls={postImages} onChange={setPostImages} max={3} />
+              </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] text-gray-400">
                   يُرسل إلى المدرس للمراجعة قبل النشر، وسيظهر في منتدى صفّك.
@@ -279,6 +337,48 @@ export default function StudentForumPage() {
             className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
           />
         </div>
+
+      {/* Filters: topic + resolved state */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-bold text-gray-500 ml-1">القسم:</span>
+          {[{ value: 'all' as const, label: 'الكل' }, ...FORUM_TOPICS].map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setTopicFilter(t.value as 'all' | ForumTopic)}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                topicFilter === t.value
+                  ? 'bg-green-800 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <span className="hidden sm:block w-px h-5 bg-gray-200" />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-bold text-gray-500 ml-1">الحالة:</span>
+          {[
+            { value: 'all', label: 'الكل' },
+            { value: 'unresolved', label: 'غير محلولة' },
+            { value: 'solved', label: 'محلولة ✓' },
+            { value: 'no_replies', label: 'بلا رد' },
+          ].map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setResolveFilter(f.value as typeof resolveFilter)}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                resolveFilter === f.value
+                  ? 'bg-emerald-900 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-600'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
@@ -359,6 +459,33 @@ export default function StudentForumPage() {
                     </div>
                     <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-snug line-clamp-1">{post.title}</h3>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{post.content}</p>
+                    {(post.resolved || post.topic || post.lessonId) && (
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {post.resolved && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                            <CheckCheck className="w-3 h-3" /> تم الحل
+                          </span>
+                        )}
+                        {post.topic && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold">
+                            {forumTopicLabel(post.topic)}
+                          </span>
+                        )}
+                        {post.lessonId && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-800 text-[10px] font-bold">
+                            <BookOpen className="w-3 h-3" /> مرتبط بدرس
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {post.imageUrls && post.imageUrls.length > 0 && (
+                      <div className="flex gap-1.5 mt-2">
+                        {post.imageUrls.slice(0, 3).map((url) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={url} src={url} alt="" className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
+                        ))}
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 text-[11px] text-gray-400 mt-1">
                       <span className="inline-flex items-center gap-1">
                         <MessagesSquare className="w-3 h-3" /> {post.replyCount || 0} رد
@@ -394,6 +521,28 @@ export default function StudentForumPage() {
                     </div>
                     <h3 className="text-sm sm:text-base font-bold text-gray-900 line-clamp-1">{post.title}</h3>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{post.content}</p>
+                    {(post.topic || post.resolved) && (
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {post.resolved && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                            <CheckCheck className="w-3 h-3" /> تم الحل
+                          </span>
+                        )}
+                        {post.topic && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold">
+                            {forumTopicLabel(post.topic)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {post.imageUrls && post.imageUrls.length > 0 && (
+                      <div className="flex gap-1.5 mt-2">
+                        {post.imageUrls.slice(0, 3).map((url) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={url} src={url} alt="" className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
+                        ))}
+                      </div>
+                    )}
                     {post.status === 'rejected' && post.rejectionReason && (
                       <div className="mt-1 p-2.5 bg-red-50 border border-red-200 rounded-xl text-[11px] text-red-700">
                         <span className="font-bold">سبب الرفض: </span>{post.rejectionReason}
