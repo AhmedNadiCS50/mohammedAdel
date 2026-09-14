@@ -59,6 +59,7 @@ export default function Navbar() {
   }
 
   return (
+    <>
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -232,5 +233,29 @@ export default function Navbar() {
         </div>
       )}
     </header>
+
+    {/* Mobile & Tablet bottom tab bar (below lg) */}
+    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] pb-[env(safe-area-inset-bottom)]">
+      <div className="grid grid-cols-5">
+        {navLinks.map((link) => {
+          const Icon = link.icon;
+          const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+          return (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[3.4rem] transition-colors ${isActive
+                ? 'text-green-800 bg-green-50 border-t-[3px] border-green-700'
+                : 'text-gray-500 hover:text-green-800 border-t-[3px] border-transparent'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[10px] font-bold leading-none">{link.name}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+    </>
   );
 }

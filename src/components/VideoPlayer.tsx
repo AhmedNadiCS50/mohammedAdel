@@ -413,7 +413,7 @@ export default function VideoPlayer({
         {/* Moving watermark (always visible, red, 3s drift / 2s rest cycle) */}
         {student && (
           <div
-            className="video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-red-600/40 px-3 py-1 rounded-md backdrop-blur-[1px] border border-red-400/40 z-10 opacity-80"
+            className="video-watermark-layer absolute pointer-events-none text-xs sm:text-sm font-mono font-bold text-white tracking-wider bg-red-600/40 px-3 py-1 rounded-md backdrop-blur-[1px] border border-red-400/40 z-10 opacity-80"
             style={{
               top: wmPos.usePx ? `${wmPos.top}px` : `${wmPos.top}%`,
               left: wmPos.usePx ? `${wmPos.left}px` : `${wmPos.left}%`,
@@ -431,7 +431,7 @@ export default function VideoPlayer({
             type="button"
             aria-label="ملء الشاشة"
             onClick={toggleFullscreen}
-            className="absolute bottom-3 right-3 z-30 pointer-events-auto flex items-center justify-center w-9 h-9 rounded-lg bg-black/50 hover:bg-black/75 text-white border border-white/20 transition-colors"
+            className="absolute bottom-3 right-3 z-30 pointer-events-auto flex items-center justify-center w-11 h-11 rounded-xl bg-black/50 hover:bg-black/75 text-white border border-white/20 transition-colors"
           >
             {isContainerFS ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>

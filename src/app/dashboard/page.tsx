@@ -329,16 +329,16 @@ export default function StudentDashboardPage() {
 
                       <div className="p-4 sm:p-5 pt-0">
                         {accessCheck.canAccess ? (
-                          <Link href={`/dashboard/lessons/${lesson.id}`} className="w-full py-2.5 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 shadow-sm" style={{ background: '#1B4332' }}>
+                          <Link href={`/dashboard/lessons/${lesson.id}`} className="w-full py-3 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 shadow-sm" style={{ background: '#1B4332' }}>
                             <Play className="w-3.5 h-3.5 fill-white" />
                             {progress?.completed ? 'إعادة مشاهدة' : progress && progress.watchPercentage > 0 ? 'متابعة' : 'مشاهدة الآن'}
                           </Link>
                         ) : accessCheck.reason === 'previous_locked' ? (
-                          <Link href={accessCheck.previousLesson ? `/dashboard/lessons/${accessCheck.previousLesson.id}` : '#'} className="w-full py-2.5 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-200 hover:bg-amber-100 transition-colors">
+                          <Link href={accessCheck.previousLesson ? `/dashboard/lessons/${accessCheck.previousLesson.id}` : '#'} className="w-full py-3 bg-amber-50 text-amber-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-200 hover:bg-amber-100 transition-colors">
                             <Lock className="w-3.5 h-3.5" /> أكمل المحاضرة السابقة
                           </Link>
                         ) : (
-                          <Link href="/dashboard/subscription" className="w-full py-2.5 bg-gray-50 text-gray-500 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-100 transition-colors">
+                          <Link href="/dashboard/subscription" className="w-full py-3 bg-gray-50 text-gray-500 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-100 transition-colors">
                             <Lock className="w-3.5 h-3.5" /> تفعيل الاشتراك
                           </Link>
                         )}
@@ -411,14 +411,14 @@ export default function StudentDashboardPage() {
                         {canTake ? (
                           <Link
                             href={`/dashboard/exams/${exam.id}`}
-                            className="w-full py-2.5 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 text-white shadow-sm"
+                            className="w-full py-3 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90 text-white shadow-sm"
                             style={{ background: latestSub?.hasPendingEssays ? '#d97706' : '#1B4332' }}
                           >
                             <HelpCircle className="w-4 h-4" />
                             {latestSub ? (latestSub.hasPendingEssays ? 'عرض الإجابات' : 'عرض النتيجة') : 'ابدأ الامتحان'}
                           </Link>
                         ) : (
-                          <Link href="/dashboard/subscription" className="w-full py-2.5 bg-gray-50 text-gray-400 font-bold text-xs rounded-xl flex items-center justify-center gap-2 border border-gray-200">
+                          <Link href="/dashboard/subscription" className="w-full py-3 bg-gray-50 text-gray-400 font-bold text-xs rounded-xl flex items-center justify-center gap-2 border border-gray-200">
                             <Lock className="w-3.5 h-3.5" /> مغلق (يتطلب اشتراك)
                           </Link>
                         )}

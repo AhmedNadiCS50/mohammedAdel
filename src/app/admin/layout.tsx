@@ -204,7 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors duration-200 ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 min-h-[2.6rem] rounded-xl text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors duration-200 ${
                   isActive
                     ? 'bg-white text-emerald-950 shadow-md shadow-black/25 font-black'
                     : 'text-green-100/90 bg-white/10 hover:bg-white/20 hover:text-white border border-white/10'

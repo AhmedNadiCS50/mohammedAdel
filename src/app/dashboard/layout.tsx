@@ -153,7 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Compact sidebar header for small screens */}
           <div className="lg:hidden py-5 space-y-4">
             {StudentCard}
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-3 gap-2.5 min-[420px]:grid-cols-4 sm:grid-cols-5">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
@@ -161,23 +161,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors duration-200 ${
+                    className={`flex flex-col items-center justify-center gap-1.5 px-1 py-3 min-h-[4.2rem] rounded-2xl text-[11px] font-bold cursor-pointer transition-all duration-200 ${
                       active
-                        ? 'bg-emerald-800 text-white shadow-sm'
+                        ? 'bg-emerald-800 text-white shadow-md shadow-emerald-900/20'
                         : 'bg-white text-slate-600 border border-gray-200 hover:border-emerald-300 hover:text-emerald-900'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{item.name}</span>
+                    <Icon className="w-5 h-5" />
+                    <span className="leading-tight text-center">{item.name}</span>
                   </Link>
                 );
               })}
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-red-700 bg-red-50 border border-red-200 cursor-pointer transition-colors hover:bg-red-100"
+                className="flex flex-col items-center justify-center gap-1.5 px-1 py-3 min-h-[4.2rem] rounded-2xl text-[11px] font-black text-red-700 bg-red-50 border border-red-200 cursor-pointer transition-colors hover:bg-red-100"
               >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>تسجيل الخروج</span>
+                <LogOut className="w-5 h-5" />
+                <span>خروج</span>
               </button>
             </div>
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500">
