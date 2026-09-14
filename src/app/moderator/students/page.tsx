@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getStudents, GRADE_LABELS, getDaysRemaining, syncFromFirestore } from '@/lib/storage';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { Student } from '@/lib/types';
@@ -12,6 +13,7 @@ import {
   Phone,
   RefreshCw,
   Eye,
+  ArrowLeft,
 } from 'lucide-react';
 
 export default function ModeratorStudentsPage() {
@@ -133,6 +135,7 @@ export default function ModeratorStudentsPage() {
                   <th className="p-4">رقم ولي الأمر</th>
                   <th className="p-4">حالة الاشتراك</th>
                   <th className="p-4">تاريخ الانتهاء</th>
+                  <th className="p-4">عرض التفاصيل</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -177,6 +180,15 @@ export default function ModeratorStudentsPage() {
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
+                      </td>
+                      <td className="p-4">
+                        <Link
+                          href={`/moderator/students/${s.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-black text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> متابعة
+                          <ArrowLeft className="w-3 h-3 -mr-0.5" />
+                        </Link>
                       </td>
                     </tr>
                   );
