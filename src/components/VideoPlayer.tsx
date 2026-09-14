@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-// Watermark spec: appears every 5s, drifts for 3s, then hides (2s rest)
+// Watermark spec: always visible, fixed position
 const WM_CYCLE_MS = 5000;
 const WM_MOVE_MS = 3000;
 
@@ -35,8 +35,8 @@ export default function VideoPlayer({
   hlsPath,
   onProgressUpdate
 }: VideoPlayerProps) {
-  const [wmVisible, setWmVisible] = useState(false);
-  const [wmPos, setWmPos] = useState({ top: 20, left: 20 });
+  const [wmVisible, setWmVisible] = useState(true);
+  const [wmPos, setWmPos] = useState({ top: 85, left: 85 });
   const [currentProgress, setCurrentProgress] = useState<LessonProgress | null>(null);
   const [threshold, setThreshold] = useState(90);
   const [isResumed, setIsResumed] = useState(false);
@@ -82,20 +82,11 @@ export default function VideoPlayer({
     }
   }, [student, lessonId]);
 
-  // Dynamic security watermark: shown every 5s, drifting for 3s, hidden until next cycle
+  // Static watermark: always visible at bottom-right
   useEffect(() => {
     if (!student) return;
-    const drift = () => {
-      setWmPos({
-        top: Math.floor(Math.random() * 68) + 8,
-        left: Math.floor(Math.random() * 68) + 8,
-      });
-      setWmVisible(true);
-      window.setTimeout(() => setWmVisible(false), WM_MOVE_MS);
-    };
-    drift();
-    const interval = setInterval(drift, WM_CYCLE_MS);
-    return () => clearInterval(interval);
+    setWmVisible(true);
+    setWmPos({ top: 85, left: 85 });
   }, [student]);
 
   // ---------- HLS MODE ----------
@@ -346,17 +337,14 @@ export default function VideoPlayer({
           <div id={containerIdRef.current} className="w-full h-full" />
         )}
 
-        {/* Resulting moving watermark (5s show / 3s drift) */}
+        {/* Static watermark (always visible, bottom-right) */}
         {student && (
           <div
-            className={`video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-black/30 px-3 py-1 rounded-md backdrop-blur-[1px] border border-white/10 z-10 transition-opacity duration-300 ${
-              wmVisible ? 'opacity-80' : 'opacity-0'
-            }`}
+            className="video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-black/30 px-3 py-1 rounded-md backdrop-blur-[1px] border border-white/10 z-10 opacity-80"
             style={{
               top: `${wmPos.top}%`,
               left: `${wmPos.left}%`,
               transform: 'translate(-50%, -50%)',
-              transition: 'top 3s ease-in-out, left 3s ease-in-out, opacity 300ms ease-in-out',
             }}
           >
             <span>{student.name} • {student.phone}</span>
