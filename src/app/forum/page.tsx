@@ -8,7 +8,7 @@ import {
   GRADE_LABELS,
   normalizeGrade
 } from '@/lib/storage';
-import { Student, ForumPost, ForumTopic } from '@/lib/types';
+import { Student, ForumPost, ForumTopic, StudentMute } from '@/lib/types';
 import {
   subscribePublishedPosts,
   subscribeMyPosts,
@@ -17,6 +17,7 @@ import {
 } from '@/lib/forumService';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { formatTimeAgo, forumErrorMessage, FORUM_TOPICS, forumTopicLabel } from '@/lib/forumUtils';
+import { subscribeStudentMute, isStudentMuted, formatMuteUntil } from '@/lib/muteService';
 import ForumImageUploader from '@/components/ForumImageUploader';
 import StaffIdentityBadge from '@/components/StaffIdentityBadge';
 import {
@@ -80,9 +81,10 @@ export default function StudentForumPage() {
   const [sentOk, setSentOk] = useState(false);
 
   // Filters
-  const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
-  const [resolveFilter, setResolveFilter] = useState<'all' | 'unresolved' | 'solved' | 'no_replies'>('all');
+const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
 
+  const [resolveFilter, setResolveFilter] = useState<'all' | 'unresolved' | 'solved' | 'no_replies'>('all');
+  const [myMute, setMyMute] = useState<StudentMute | null>(null);
   // Pre-fill composer when arriving from a lesson ("اسأل عن هذا الدرس")
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -140,6 +142,14 @@ export default function StudentForumPage() {
     );
     return () => unsub();
   }, [student, authReady]);
+
+  // Own mute status (blocks asking new questions while active)
+  useEffect(() => {
+    if (!student?.id || !authReady) return;
+    if (!isFirebaseConfigured()) return;
+    const unsub = subscribeStudentMute(student.id, setMyMute, () => {});
+    return () => unsub();
+  }, [student?.id, authReady]);
 
   // Live subscription: my own posts (any status)
   useEffect(() => {
@@ -252,7 +262,16 @@ export default function StudentForumPage() {
             </div>
           )}
 
-          {composerOpen && isActivated && (
+          {isStudentMuted(myMute) ? (
+            <div className="mt-5 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-2.5 text-xs text-red-800">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">تم تقييد مشاركتك في المنتدى مؤقتاً {myMute ? formatMuteUntil(myMute.until) : ''}</p>
+                {myMute?.reason && <p className="mt-1 text-red-700">السبب: {myMute.reason}</p>}
+                <p className="mt-1 text-red-600">لا يمكنك إرسال أسئلة أو ردود جديدة حتى ينتهي التقييد.</p>
+              </div>
+            </div>
+          ) : composerOpen && isActivated && (
             <form onSubmit={handleSubmit} className="mt-5 p-4 bg-gray-50 border border-gray-200 rounded-2xl space-y-3">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">عنوان السؤال</label>

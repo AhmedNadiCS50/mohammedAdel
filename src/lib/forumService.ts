@@ -377,6 +377,28 @@ export function subscribePendingReplies(
   );
 }
 
+/** Live listener for ALL published replies (moderator thread view). */
+export function subscribeAllPublishedReplies(
+  onData: (replies: ForumReply[]) => void,
+  onError?: (error: any) => void
+): Unsubscribe {
+  if (!isFirebaseConfigured() || !db) return () => {};
+  return onSnapshot(
+    collection(db, REPLY_COLLECTION),
+    (snap) => {
+      const list = snap.docs
+        .map((d) => withData<ForumReply>(d))
+        .filter((r) => r.status === 'published')
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      onData(list);
+    },
+    (err) => {
+      console.error('subscribeAllPublishedReplies error:', err);
+      onError?.(err);
+    }
+  );
+}
+
 // -------------------------------------------------------------
 // REPLIES — Mutations
 // -------------------------------------------------------------

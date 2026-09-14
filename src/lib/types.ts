@@ -234,3 +234,13 @@ export interface PlatformSettings {
   // Sequential unlock threshold (0-100), default 90
   completionThreshold?: number;
 }
+
+// Typed mute record stored in the `student_mutes` collection. A student is
+// blocked from posting forum content while `until` is in the future.
+export interface StudentMute {
+  id: string;
+  until: string;   // ISO timestamp; '' means not muted
+  reason?: string;
+  mutedBy?: string;
+  setAt?: string;
+}

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   subscribeAllPosts,
   subscribePendingReplies,
+  subscribeAllPublishedReplies,
   setPostStatus,
   togglePostPin,
   deleteForumPost,
@@ -16,7 +17,14 @@ import {
 } from '@/lib/forumService';
 import { GRADE_LABELS, isAdminLoggedIn, getCurrentModerator } from '@/lib/storage';
 import { logModeratorAction } from '@/lib/moderatorService';
-import { ForumPost, ForumReply } from '@/lib/types';
+import {
+  subscribeAllMutes,
+  setStudentMute,
+  clearStudentMute,
+  isStudentMuted,
+  formatMuteUntil
+} from '@/lib/muteService';
+import { ForumPost, ForumReply, StudentMute } from '@/lib/types';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
 import {
@@ -32,7 +40,12 @@ import {
   AlertCircle,
   ExternalLink,
   CheckCheck,
-  AudioLines
+  AudioLines,
+  VolumeX,
+  VolumeOff,
+  ChevronDown,
+  ChevronUp,
+  Ban
 } from 'lucide-react';
 import VoiceRecorder from '@/components/VoiceRecorder';
 
@@ -50,6 +63,19 @@ export default function AdminForumPage() {
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [allReplies, setAllReplies] = useState<ForumReply[]>([]);
+  const [mutes, setMutes] = useState<StudentMute[]>([]);
+  const [openThread, setOpenThread] = useState<string | null>(null);
+  const [mutePanel, setMutePanel] = useState<{ studentId: string; name: string } | null>(null);
+  const [muteHours, setMuteHours] = useState(24);
+  const [muteReason, setMuteReason] = useState('');
+  const [busyMuteId, setBusyMuteId] = useState<string | null>(null);
+
+  const muteMap = useMemo(() => {
+    const map = new Map<string, StudentMute>();
+    mutes.forEach((m) => map.set(m.id, m));
+    return map;
+  }, [mutes]);
 
   useEffect(() => {
     if (!isFirebaseConfigured()) {
@@ -69,9 +95,13 @@ export default function AdminForumPage() {
       }
     );
     const unsubReplies = subscribePendingReplies(setPendingReplies, () => {});
+    const unsubAllReplies = subscribeAllPublishedReplies(setAllReplies, () => {});
+    const unsubMutes = subscribeAllMutes(setMutes, () => {});
     return () => {
       unsubPosts();
       unsubReplies();
+      unsubAllReplies();
+      unsubMutes();
     };
   }, []);
 
@@ -163,6 +193,39 @@ export default function AdminForumPage() {
     const res = await deleteForumReply(reply.id, reply.postId, reply.status === 'published');
     setBusyId('');
     if (res.success) logModeratorActionIfAny('delete_reply', 'forum_reply', reply.id, 'حذف رد من موضوع منتدى');
+  };
+
+  const openMutePanel = (studentId: string, name: string) => {
+    setMutePanel({ studentId, name });
+    setMuteHours(24);
+    setMuteReason('');
+  };
+
+  const confirmMute = async (studentId: string, name: string) => {
+    if (!muteHours || muteHours <= 0) return;
+    setBusyMuteId(studentId);
+    const res = await setStudentMute(studentId, muteHours, muteReason, staffIdentity.name);
+    setBusyMuteId(null);
+    if (res.success) {
+      logModeratorActionIfAny('mute_student', 'student', studentId, `قيّد ${name} لمدة ${muteHours} ساعة${muteReason ? ` — السبب: ${muteReason.slice(0, 80)}` : ''}`);
+      setMutePanel(null);
+      flash(`تم تقييد ${name} بنجاح.`);
+    } else {
+      flash(res.error || 'فشل تقييد الطالب.');
+    }
+  };
+
+  const confirmUnmute = async (studentId: string, name: string) => {
+    if (!confirm(`إلغاء التقييد عن ${name}؟`)) return;
+    setBusyMuteId(studentId);
+    const res = await clearStudentMute(studentId);
+    setBusyMuteId(null);
+    if (res.success) {
+      logModeratorActionIfAny('unmute_student', 'student', studentId, `ألغى تقييد ${name}`);
+      flash(`تم إلغاء تقييد ${name}.`);
+    } else {
+      flash(res.error || 'فشل إلغاء التقييد.');
+    }
   };
 
   const handleTeacherReply = async (post: ForumPost) => {
@@ -356,11 +419,18 @@ export default function AdminForumPage() {
               <div className="space-y-3">
                 {pendingReplies.map((reply) => {
                   const parent = postById.get(reply.postId);
+                  const replyMute = muteMap.get(reply.authorStudentId);
+                  const isMutedAuthor = isStudentMuted(replyMute);
                   return (
                     <div key={reply.id} className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
                         <span className="text-[11px] font-bold text-gray-700">{reply.authorName}</span>
                         <span className="text-[10px] text-gray-400">{reply.authorPhone}</span>
+                        {isMutedAuthor && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold">
+                            <Ban className="w-3 h-3" /> مقيّد {replyMute ? formatMuteUntil(replyMute.until) : ''}
+                          </span>
+                        )}
                         <span className="text-[10px] text-gray-400 mr-auto">{formatTimeAgo(reply.createdAt)}</span>
                       </div>
                       {parent && (
@@ -396,7 +466,79 @@ export default function AdminForumPage() {
                         >
                           <Trash2 className="w-3.5 h-3.5" /> حذف
                         </button>
+                        {reply.authorRole === 'student' && reply.authorStudentId && (
+                          isMutedAuthor ? (
+                            <button
+                              onClick={() => confirmUnmute(reply.authorStudentId, reply.authorName)}
+                              disabled={busyMuteId === reply.authorStudentId}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-gray-600 border border-gray-200 disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700 transition-colors"
+                            >
+                              {busyMuteId === reply.authorStudentId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <VolumeOff className="w-3.5 h-3.5" />}
+                              إلغاء الكتم
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openMutePanel(reply.authorStudentId, reply.authorName)}
+                              disabled={busyMuteId === reply.authorStudentId}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-gray-600 border border-gray-200 disabled:opacity-50 hover:border-red-400 hover:text-red-600 transition-colors"
+                            >
+                              {busyMuteId === reply.authorStudentId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <VolumeX className="w-3.5 h-3.5" />}
+                              كتم الطالب
+                            </button>
+                          )
+                        )}
                       </div>
+                      {mutePanel?.studentId === reply.authorStudentId && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl space-y-2.5">
+                          <p className="text-[11px] font-bold text-red-800">تقييد {mutePanel.name} عن الكتابة في المنتدى:</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {[
+                              { h: 24, label: '24 ساعة' },
+                              { h: 72, label: '3 أيام' },
+                              { h: 168, label: '7 أيام' },
+                              { h: 720, label: '30 يوم' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.h}
+                                type="button"
+                                onClick={() => setMuteHours(opt.h)}
+                                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-colors ${
+                                  muteHours === opt.h
+                                    ? 'bg-red-600 text-white border-red-600'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:border-red-400'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                          <input
+                            value={muteReason}
+                            onChange={(e) => setMuteReason(e.target.value)}
+                            placeholder="السبب (اختياري) — مثل: شتم أو تجاوز في الرد"
+                            maxLength={200}
+                            className="w-full px-3 py-2 rounded-lg border border-red-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-red-500"
+                          />
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => confirmMute(reply.authorStudentId, reply.authorName)}
+                              disabled={busyMuteId === reply.authorStudentId}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600 text-white text-xs font-bold disabled:opacity-50 hover:bg-red-700 transition-colors"
+                            >
+                              {busyMuteId === reply.authorStudentId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <VolumeX className="w-3.5 h-3.5" />}
+                              تأكيد التقييد
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setMutePanel(null)}
+                              className="inline-flex items-center px-3 py-2 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-700"
+                            >
+                              إلغاء
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -510,6 +652,141 @@ export default function AdminForumPage() {
                     </button>
                   </div>
                   <VoiceRecorder url={teacherReplyAudio[post.id] || null} onChange={(u) => setTeacherReplyAudio((prev) => ({ ...prev, [post.id]: u }))} />
+                </div>
+
+                {/* Thread: view all published replies on this post */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={() => setOpenThread(openThread === post.id ? null : post.id)}
+                    className="w-full inline-flex items-center justify-between gap-2 py-1.5 text-[11px] font-bold text-gray-600 hover:text-green-800 transition-colors"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <MessagesSquare className="w-3.5 h-3.5" />
+                      عرض ردود المنشور ({post.replyCount || 0})
+                    </span>
+                    {openThread === post.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+
+                  {openThread === post.id && (
+                    <div className="mt-2 space-y-2.5">
+                      {allReplies.filter((r) => r.postId === post.id).length === 0 && (
+                        <p className="text-[11px] text-gray-400 py-1">لا توجد ردود منشورة على هذا السؤال بعد.</p>
+                      )}
+                      {allReplies
+                        .filter((r) => r.postId === post.id)
+                        .map((reply) => {
+                          const rMute = muteMap.get(reply.authorStudentId);
+                          const rMuted = isStudentMuted(rMute);
+                          return (
+                            <div key={reply.id} className="rounded-xl border border-gray-100 bg-gray-50/60 p-3">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <span className={`text-[11px] font-bold ${reply.authorRole !== 'student' ? 'text-green-800' : 'text-gray-700'}`}>
+                                  {reply.authorRole === 'teacher'
+                                    ? 'إجابة المدرس'
+                                    : reply.authorRole === 'moderator'
+                                    ? `مشرف المنصة (${reply.authorName})`
+                                    : reply.authorName}
+                                </span>
+                                {rMuted && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold">
+                                    <Ban className="w-3 h-3" /> مقيّد {rMute ? formatMuteUntil(rMute.until) : ''}
+                                  </span>
+                                )}
+                                <span className="text-[10px] text-gray-400 mr-auto">{formatTimeAgo(reply.createdAt)}</span>
+                              </div>
+                              <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+                              {reply.audioUrl && (
+                                <div className="flex items-center gap-2 mt-1.5">
+                                  <AudioLines className="w-4 h-4 text-green-700 shrink-0" />
+                                  <audio controls src={reply.audioUrl} preload="metadata" className="h-8 w-64 max-w-full rounded-xl bg-gray-50" />
+                                </div>
+                              )}
+                              <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                                <a
+                                  href={`/forum/post/${reply.postId}`}
+                                  target="_blank"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-green-800 hover:underline"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> فتح
+                                </a>
+                                {reply.authorRole === 'student' && reply.authorStudentId && (
+                                  rMuted ? (
+                                    <button
+                                      onClick={() => confirmUnmute(reply.authorStudentId, reply.authorName)}
+                                      disabled={busyMuteId === reply.authorStudentId}
+                                      className="mr-auto inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-gray-600 border border-gray-200 disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700 transition-colors"
+                                    >
+                                      {busyMuteId === reply.authorStudentId ? <Loader2 className="w-3 h-3 animate-spin" /> : <VolumeOff className="w-3 h-3" />}
+                                      إلغاء الكتم
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => openMutePanel(reply.authorStudentId, reply.authorName)}
+                                      disabled={busyMuteId === reply.authorStudentId}
+                                      className="mr-auto inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-gray-600 border border-gray-200 disabled:opacity-50 hover:border-red-400 hover:text-red-600 transition-colors"
+                                    >
+                                      {busyMuteId === reply.authorStudentId ? <Loader2 className="w-3 h-3 animate-spin" /> : <VolumeX className="w-3 h-3" />}
+                                      كتم
+                                    </button>
+                                  )
+                                )}
+                              </div>
+                              {mutePanel?.studentId === reply.authorStudentId && (
+                                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl space-y-2.5">
+                                  <p className="text-[11px] font-bold text-red-800">تقييد {mutePanel.name} عن الكتابة في المنتدى:</p>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {[
+                                      { h: 24, label: '24 ساعة' },
+                                      { h: 72, label: '3 أيام' },
+                                      { h: 168, label: '7 أيام' },
+                                      { h: 720, label: '30 يوم' },
+                                    ].map((opt) => (
+                                      <button
+                                        key={opt.h}
+                                        type="button"
+                                        onClick={() => setMuteHours(opt.h)}
+                                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-colors ${
+                                          muteHours === opt.h
+                                            ? 'bg-red-600 text-white border-red-600'
+                                            : 'bg-white text-gray-700 border-gray-300 hover:border-red-400'
+                                        }`}
+                                      >
+                                        {opt.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <input
+                                    value={muteReason}
+                                    onChange={(e) => setMuteReason(e.target.value)}
+                                    placeholder="السبب (اختياري) — مثل: شتم أو تجاوز في الرد"
+                                    maxLength={200}
+                                    className="w-full px-3 py-2 rounded-lg border border-red-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                  />
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => confirmMute(reply.authorStudentId, reply.authorName)}
+                                      disabled={busyMuteId === reply.authorStudentId}
+                                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600 text-white text-xs font-bold disabled:opacity-50 hover:bg-red-700 transition-colors"
+                                    >
+                                      {busyMuteId === reply.authorStudentId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <VolumeX className="w-3.5 h-3.5" />}
+                                      تأكيد التقييد
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setMutePanel(null)}
+                                      className="inline-flex items-center px-3 py-2 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-700"
+                                    >
+                                      إلغاء
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
                 </div>
               </div>
             ))

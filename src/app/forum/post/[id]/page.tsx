@@ -8,7 +8,7 @@ import {
   GRADE_LABELS,
   normalizeGrade
 } from '@/lib/storage';
-import { Student, ForumPost, ForumReply } from '@/lib/types';
+import { Student, ForumPost, ForumReply, StudentMute } from '@/lib/types';
 import {
   subscribePost,
   subscribePostReplies,
@@ -33,6 +33,7 @@ import {
   AudioLines
 } from 'lucide-react';
 import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
+import { subscribeStudentMute, isStudentMuted, formatMuteUntil } from '@/lib/muteService';
 import ForumImageUploader from '@/components/ForumImageUploader';
 import VoiceRecorder from '@/components/VoiceRecorder';
 import StaffIdentityBadge from '@/components/StaffIdentityBadge';
@@ -54,6 +55,7 @@ export default function ForumPostPage() {
   const [sending, setSending] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState('');
+  const [myMute, setMyMute] = useState<StudentMute | null>(null);
 
   useEffect(() => {
     const s = getCurrentStudent();
@@ -105,6 +107,14 @@ export default function ForumPostPage() {
     const unsub = subscribePostReplies(postId, false, setReplies, () => {});
     return () => unsub();
   }, [postId, authReady]);
+
+  // Own mute status (blocks replying + posting while active)
+  useEffect(() => {
+    if (!student?.id || !authReady) return;
+    if (!isFirebaseConfigured()) return;
+    const unsub = subscribeStudentMute(student.id, setMyMute, () => {});
+    return () => unsub();
+  }, [student?.id, authReady]);
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,7 +377,16 @@ export default function ForumPostPage() {
           )}
 
           {/* Reply box */}
-          {canReply ? (
+          {isStudentMuted(myMute) ? (
+            <div className="mt-5 pt-4 border-t border-gray-100 p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-800">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">تم تقييد مشاركتك في المنتدى مؤقتاً {formatMuteUntil(myMute!.until)}</p>
+                {myMute?.reason && <p className="mt-1 text-red-700">السبب: {myMute.reason}</p>}
+                <p className="mt-1 text-red-600">يمكنك تصفح الأسئلة والردود، لكن لا يمكنك إرسال أسئلة أو ردود جديدة حتى ينتهي التقييد.</p>
+              </div>
+            </div>
+          ) : canReply ? (
             <form onSubmit={handleReply} className="mt-5 pt-4 border-t border-gray-100 space-y-3">
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-xs text-red-700">

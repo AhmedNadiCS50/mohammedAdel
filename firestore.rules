@@ -13,6 +13,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // الطالب مقيّد من الكتابة في المنتدى إذا كان ممنوعاً حتى لحظة مؤجلة
+    function isMutedStudent(studentId) {
+      return exists(/databases/$(database)/documents/student_mutes/$(studentId))
+        && get(/databases/$(database)/documents/student_mutes/$(studentId)).data.until is timestamp
+        && get(/databases/$(database)/documents/student_mutes/$(studentId)).data.until > request.time;
+    }
+
 
     // محاضرات: أي حد يقرأ، الأدمن بس يكتب
     match /lessons/{id} {
@@ -117,20 +124,23 @@ service cloud.firestore {
         request.resource.data.authorStudentId is string &&
         request.resource.data.grade is string &&
         request.resource.data.title is string &&
-        request.resource.data.content.size() <= 2000);
+        request.resource.data.content.size() <= 2000 &&
+        !isMutedStudent(request.resource.data.authorStudentId));
       allow update, delete: if isAdmin();
     }
 
 
-    // ردود المنتدى: نفس سياسة المنشورات - الطالب يرد بقيد المراجعة،
-    // والمدرس يردّ منشوراً مباشرة ويقبل/يرفض/يحذف ردود الطلاب.
+    // ردود المنتدى: الطالب يردّ بنشر فوري (كما يفعل التطبيق فعلياً)، والمدرس
+    // يردّ منشوراً مباشرة ويقبل/يرفض/يحذف ردود الطلاب. المقيّد لا يستطيع الرد.
     match /forum_replies/{replyId} {
       allow read: if isAuthenticated();
       allow create: if (isAdmin() && request.resource.data.status in ['pending', 'published'] &&
         request.resource.data.postId is string && request.resource.data.content.size() <= 1000) ||
-        (isAuthenticated() && request.resource.data.status == 'pending' &&
+        (isAuthenticated() && request.resource.data.status in ['pending', 'published'] &&
         request.resource.data.postId is string &&
-        request.resource.data.content.size() <= 1000);
+        request.resource.data.content.size() <= 1000 &&
+        request.resource.data.authorStudentId is string &&
+        !isMutedStudent(request.resource.data.authorStudentId));
       allow update, delete: if isAdmin();
     }
 
@@ -143,6 +153,15 @@ service cloud.firestore {
     }
     match /moderator_actions/{actionId} {
       allow read, write: if isAdmin();
+    }
+
+
+    // كتم الطلاب مؤقتاً: أي مستخدم مصادق يقرأ حالات الكتم (حتى يتجاهل
+    // المقيّد أو يُعرض عليه التنبيه)، والكتابة فقط للمدرس والمشرفين
+    // عبر جلسة الأدمن الموحدة.
+    match /student_mutes/{studentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
 
