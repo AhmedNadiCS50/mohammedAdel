@@ -219,6 +219,7 @@ export interface ForumReply {
   authorRole: ForumAuthorRole;
   status: ForumPostStatus;
   imageUrls?: string[];
+  audioUrl?: string;
   createdAt: string;
 }
 

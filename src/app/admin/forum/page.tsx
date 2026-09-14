@@ -31,8 +31,10 @@ import {
   Inbox,
   AlertCircle,
   ExternalLink,
-  CheckCheck
+  CheckCheck,
+  AudioLines
 } from 'lucide-react';
+import VoiceRecorder from '@/components/VoiceRecorder';
 
 export default function AdminForumPage() {
   const router = useRouter();
@@ -44,6 +46,7 @@ export default function AdminForumPage() {
   const [busyId, setBusyId] = useState('');
   const [actionMsg, setActionMsg] = useState('');
   const [teacherReply, setTeacherReply] = useState<Record<string, string>>({});
+  const [teacherReplyAudio, setTeacherReplyAudio] = useState<Record<string, string | null>>({});
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -164,19 +167,22 @@ export default function AdminForumPage() {
 
   const handleTeacherReply = async (post: ForumPost) => {
     const content = (teacherReply[post.id] || '').trim();
-    if (!content) return;
+    const audio = teacherReplyAudio[post.id] || null;
+    if (!content && !audio) return;
     setBusyId(post.id);
     const res = await addForumReply({
       postId: post.id,
-      content,
+      content: content || 'رسالة صوتية',
       author: { studentId: staffIdentity.studentId, name: staffIdentity.name, phone: staffIdentity.phone },
       asTeacher: staffIdentity.asTeacher,
       asModerator: staffIdentity.asModerator,
+      audioUrl: audio || undefined,
     });
     setBusyId('');
     if (res.success) {
       if (staffIdentity.asModerator) logModeratorActionIfAny('reply', 'forum_reply', res.id, `رد باسمه على «${post.title.slice(0, 60)}»`);
       setTeacherReply((prev) => ({ ...prev, [post.id]: '' }));
+      setTeacherReplyAudio((prev) => ({ ...prev, [post.id]: null }));
       flash('تم نشر الرد مباشرة.');
     } else {
       flash(res.error || 'فشل إرسال الرد.');
@@ -368,6 +374,12 @@ export default function AdminForumPage() {
                         </a>
                       )}
                       <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+                      {reply.audioUrl && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <AudioLines className="w-4 h-4 text-green-700 shrink-0" />
+                          <audio controls src={reply.audioUrl} preload="metadata" className="h-8 w-64 max-w-full rounded-xl bg-gray-50" />
+                        </div>
+                      )}
                       <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                         <button
                           onClick={() => handleApproveReply(reply)}
@@ -478,23 +490,26 @@ export default function AdminForumPage() {
                 </div>
 
                 {/* Quick teacher reply */}
-                <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col sm:flex-row gap-2">
-                  <input
-                    value={teacherReply[post.id] || ''}
-                    onChange={(e) => setTeacherReply((prev) => ({ ...prev, [post.id]: e.target.value }))}
-                    placeholder={staffIdentity.asModerator ? 'اكتب ردّك أنت (المشرف) وسيُنشر فوراً…' : 'اكتب إجابة المدرس وسيتم نشرها فوراً…'}
-                    maxLength={1000}
-                    className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-                  />
-                  <button
-                    onClick={() => handleTeacherReply(post)}
-                    disabled={busyId === post.id || !(teacherReply[post.id] || '').trim()}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold disabled:opacity-50 transition-all hover:-translate-y-0.5 shadow-sm shrink-0"
-                    style={{ background: '#1B4332' }}
-                  >
-                    {busyId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    {staffIdentity.asModerator ? `أرسل ردّك (${staffIdentity.name})` : 'ردّ المدرس'}
-                  </button>
+                <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      value={teacherReply[post.id] || ''}
+                      onChange={(e) => setTeacherReply((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                      placeholder={staffIdentity.asModerator ? 'اكتب ردّك أنت (المشرف) وسيُنشر فوراً…' : 'اكتب إجابة المدرس وسيتم نشرها فوراً…'}
+                      maxLength={1000}
+                      className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+                    />
+                    <button
+                      onClick={() => handleTeacherReply(post)}
+                      disabled={busyId === post.id || (!(teacherReply[post.id] || '').trim() && !teacherReplyAudio[post.id])}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold disabled:opacity-50 transition-all hover:-translate-y-0.5 shadow-sm shrink-0"
+                      style={{ background: '#1B4332' }}
+                    >
+                      {busyId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      {staffIdentity.asModerator ? `أرسل ردّك (${staffIdentity.name})` : 'ردّ المدرس'}
+                    </button>
+                  </div>
+                  <VoiceRecorder url={teacherReplyAudio[post.id] || null} onChange={(u) => setTeacherReplyAudio((prev) => ({ ...prev, [post.id]: u }))} />
                 </div>
               </div>
             ))

@@ -387,6 +387,7 @@ export async function addForumReply(params: {
   asTeacher?: boolean;
   asModerator?: boolean;
   imageUrls?: string[];
+  audioUrl?: string;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   if (!isFirebaseConfigured() || !db) return { success: false, error: 'منتدى النقاش يتطلب تفعيل Firebase Cloud.' };
 
@@ -404,6 +405,7 @@ export async function addForumReply(params: {
     // Student replies publish instantly (no moderation needed); posts still get reviewed.
     status: 'published',
     ...(params.imageUrls?.length ? { imageUrls: params.imageUrls.slice(0, 6) } : {}),
+    ...(params.audioUrl ? { audioUrl: params.audioUrl } : {}),
     createdAt: now,
   };
 

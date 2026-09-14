@@ -29,10 +29,12 @@ import {
   Lock,
   AlertCircle,
   CheckCheck,
-  BookOpen
+  BookOpen,
+  AudioLines
 } from 'lucide-react';
 import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
 import ForumImageUploader from '@/components/ForumImageUploader';
+import VoiceRecorder from '@/components/VoiceRecorder';
 import StaffIdentityBadge from '@/components/StaffIdentityBadge';
 
 export default function ForumPostPage() {
@@ -48,6 +50,7 @@ export default function ForumPostPage() {
   const [authReady, setAuthReady] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [replyImages, setReplyImages] = useState<string[]>([]);
+  const [replyAudio, setReplyAudio] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState('');
@@ -107,21 +110,24 @@ export default function ForumPostPage() {
     e.preventDefault();
     setError('');
     if (!student || !post) return;
-    if (!replyText.trim()) {
-      setError('اكتب ردّك أولاً.');
+    const hasText = replyText.trim();
+    if (!hasText && !replyAudio) {
+      setError('اكتب ردّك أو سجّل رسالة صوتية أولاً.');
       return;
     }
     setSending(true);
     const res = await addForumReply({
       postId: post.id,
-      content: replyText,
+      content: hasText ? replyText : 'رسالة صوتية',
       author: { studentId: student.id, name: student.name, phone: student.phone },
       imageUrls: replyImages,
+      audioUrl: replyAudio || undefined,
     });
     setSending(false);
     if (res.success) {
       setReplyText('');
       setReplyImages([]);
+      setReplyAudio(null);
     } else {
       setError(res.error || 'فشل إرسال الرد.');
     }
@@ -348,6 +354,12 @@ export default function ForumPostPage() {
                           ))}
                         </div>
                       )}
+                      {reply.audioUrl && (
+                        <div className="flex items-center gap-2 mt-2.5">
+                          <AudioLines className="w-4 h-4 text-green-700 shrink-0" />
+                          <audio controls src={reply.audioUrl} preload="metadata" className="h-8 w-64 max-w-full rounded-xl bg-gray-50" />
+                        </div>
+                      )}
                     </div>
                 );
               })}
@@ -370,9 +382,12 @@ export default function ForumPostPage() {
                 maxLength={1000}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 resize-none"
               />
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[11px] text-gray-400">ردود الطلاب تُنشر فوراً بدون انتظار موافقة المدرس.</span>
-                <ForumImageUploader urls={replyImages} onChange={setReplyImages} max={3} />
+                <div className="flex flex-wrap items-center gap-3">
+                  <VoiceRecorder url={replyAudio} onChange={setReplyAudio} />
+                  <ForumImageUploader urls={replyImages} onChange={setReplyImages} max={3} />
+                </div>
               </div>
               <div className="flex items-center justify-end gap-2">
                 <button
