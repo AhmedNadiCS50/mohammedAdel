@@ -25,6 +25,7 @@ declare global {
 // Watermark spec: always visible, drifts for 3s every 5s cycle, rests 2s
 const WM_CYCLE_MS = 5000;
 const WM_MOVE_MS = 3000;
+const WM_HIDE_MS = 5000;
 
 export default function VideoPlayer({
   videoUrlOrId,
@@ -43,6 +44,7 @@ export default function VideoPlayer({
     usePx: false,
   });
   const driftRef = useRef<() => void>(() => {});
+  const wmHideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [currentProgress, setCurrentProgress] = useState<LessonProgress | null>(null);
   const [threshold, setThreshold] = useState(90);
   const [isResumed, setIsResumed] = useState(false);
@@ -89,8 +91,8 @@ export default function VideoPlayer({
     }
   }, [student, lessonId]);
 
-  // Always-visible watermark: random drift every 5s (3s eased move + 2s rest),
-// positioned INSIDE the actual rendered video frame (handles letterbox bars)
+// Watermark cycle: visible while it drifts (3s) + rests (2s), then hides
+  // for 5s (WM_HIDE_MS), then drifts again to a new spot and the cycle repeats.
   useEffect(() => {
     if (!student) return;
     const drift = () => {
@@ -128,11 +130,23 @@ export default function VideoPlayer({
       }
     };
     driftRef.current = drift;
-    drift();
-    const interval = setInterval(drift, WM_CYCLE_MS);
+
+    const showAndScheduleHide = () => {
+      drift();
+      setWmVisible(true);
+      if (wmHideTimerRef.current) clearTimeout(wmHideTimerRef.current);
+      wmHideTimerRef.current = setTimeout(() => {
+        setWmVisible(false);
+        wmHideTimerRef.current = null;
+      }, WM_CYCLE_MS);
+    };
+
+    showAndScheduleHide();
+    const interval = setInterval(showAndScheduleHide, WM_CYCLE_MS + WM_HIDE_MS);
     window.addEventListener('resize', drift);
     return () => {
       clearInterval(interval);
+      if (wmHideTimerRef.current) clearTimeout(wmHideTimerRef.current);
       window.removeEventListener('resize', drift);
     };
   }, [student]);
@@ -425,10 +439,10 @@ export default function VideoPlayer({
           <div id={containerIdRef.current} className="w-full h-full" />
         )}
 
-        {/* Moving watermark (always visible, red, 3s drift / 2s rest cycle) */}
+        {/* Moving watermark (drift 3s + rest 2s, then hides 5s, repeats) */}
         {student && (
           <div
-            className="video-watermark-layer absolute pointer-events-none text-xs sm:text-sm font-mono font-bold text-white tracking-wider bg-red-600/40 px-3 py-1 rounded-md backdrop-blur-[1px] border border-red-400/40 z-10 opacity-80"
+            className={`video-watermark-layer absolute pointer-events-none text-xs sm:text-sm font-mono font-bold text-white tracking-wider bg-red-600/40 px-3 py-1 rounded-md backdrop-blur-[1px] border border-red-400/40 z-10 ${wmVisible ? 'opacity-80' : 'opacity-0'}`}
             style={{
               top: wmPos.usePx ? `${wmPos.top}px` : `${wmPos.top}%`,
               left: wmPos.usePx ? `${wmPos.left}px` : `${wmPos.left}%`,
