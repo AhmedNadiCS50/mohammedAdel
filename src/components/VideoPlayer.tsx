@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-// Watermark spec: always visible, fixed position
+// Watermark spec: always visible, drifts for 3s every 5s cycle, rests 2s
 const WM_CYCLE_MS = 5000;
 const WM_MOVE_MS = 3000;
 
@@ -82,11 +82,18 @@ export default function VideoPlayer({
     }
   }, [student, lessonId]);
 
-  // Static watermark: always visible at bottom-right
+  // Always-visible watermark: random drift every 5s (3s eased move + 2s rest)
   useEffect(() => {
     if (!student) return;
-    setWmVisible(true);
-    setWmPos({ top: 85, left: 85 });
+    const drift = () => {
+      setWmPos({
+        top: Math.floor(Math.random() * 68) + 8,
+        left: Math.floor(Math.random() * 68) + 8,
+      });
+    };
+    drift();
+    const interval = setInterval(drift, WM_CYCLE_MS);
+    return () => clearInterval(interval);
   }, [student]);
 
   // ---------- HLS MODE ----------
@@ -337,14 +344,15 @@ export default function VideoPlayer({
           <div id={containerIdRef.current} className="w-full h-full" />
         )}
 
-        {/* Static watermark (always visible, bottom-right) */}
+        {/* Moving watermark (always visible, red, 3s drift / 2s rest cycle) */}
         {student && (
           <div
-            className="video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-black/30 px-3 py-1 rounded-md backdrop-blur-[1px] border border-white/10 z-10 opacity-80"
+            className="video-watermark-layer absolute pointer-events-none text-[11px] sm:text-xs font-mono font-bold text-white tracking-wider bg-red-600/40 px-3 py-1 rounded-md backdrop-blur-[1px] border border-red-400/40 z-10 opacity-80"
             style={{
               top: `${wmPos.top}%`,
               left: `${wmPos.left}%`,
               transform: 'translate(-50%, -50%)',
+              transition: 'top 3s ease-in-out, left 3s ease-in-out, opacity 300ms ease-in-out',
             }}
           >
             <span>{student.name} • {student.phone}</span>
