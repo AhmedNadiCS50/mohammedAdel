@@ -431,7 +431,7 @@ export default function VideoPlayer({
             type="button"
             aria-label="ملء الشاشة"
             onClick={toggleFullscreen}
-            className="absolute top-3 left-3 z-30 pointer-events-auto flex items-center justify-center w-9 h-9 rounded-lg bg-black/50 hover:bg-black/75 text-white border border-white/20 transition-colors"
+            className="absolute bottom-3 right-3 z-30 pointer-events-auto flex items-center justify-center w-9 h-9 rounded-lg bg-black/50 hover:bg-black/75 text-white border border-white/20 transition-colors"
           >
             {isContainerFS ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
