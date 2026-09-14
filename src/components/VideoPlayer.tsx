@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { extractYoutubeId, getLessonProgress, saveLessonProgress, getSettings } from '@/lib/storage';
 import { Student, LessonProgress, LessonVideoSource } from '@/lib/types';
-import { Shield, AlertCircle, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { Shield, AlertCircle, CheckCircle2, Clock, Sparkles, Maximize, Minimize } from 'lucide-react';
 
 interface VideoPlayerProps {
   videoUrlOrId: string;
@@ -137,25 +137,26 @@ export default function VideoPlayer({
     };
   }, [student]);
 
-  // Fullscreen swap: when the native video enters fullscreen, move fullscreen to
-// the container (video + watermark together) so the watermark stays visible
+  // Fullscreen handling: container-based fullscreen keeps the watermark visible.
+// We hide the native fullscreen button and use our own drum-fullscreen toggle.
   useEffect(() => {
     const onFs = () => {
-      const video = videoRef.current;
       const container = containerRef.current;
-      if (video && container && document.fullscreenElement === video) {
-        const c = container;
-        document.exitFullscreen().catch(() => {});
-        setTimeout(() => {
-          c.requestFullscreen().catch(() => {});
-        }, 0);
-        return;
-      }
       setIsContainerFS(Boolean(container && document.fullscreenElement === container));
       setTimeout(() => driftRef.current(), 60);
     };
     document.addEventListener('fullscreenchange', onFs);
     return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (document.fullscreenElement === container) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      container.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+    }
   }, []);
 
   // ---------- HLS MODE ----------
@@ -392,7 +393,7 @@ export default function VideoPlayer({
           ) : (
             <video
               ref={videoRef}
-              className="w-full h-full object-contain bg-black"
+              className="video-hls w-full h-full object-contain bg-black"
               controls
               playsInline
               preload="auto"
@@ -422,6 +423,18 @@ export default function VideoPlayer({
           >
             <span>{student.name} • {student.phone}</span>
           </div>
+        )}
+
+        {/* Custom fullscreen toggle (container-based so the watermark stays visible) */}
+        {isHls && !hlsError && (
+          <button
+            type="button"
+            aria-label="ملء الشاشة"
+            onClick={toggleFullscreen}
+            className="absolute top-3 left-3 z-30 pointer-events-auto flex items-center justify-center w-9 h-9 rounded-lg bg-black/50 hover:bg-black/75 text-white border border-white/20 transition-colors"
+          >
+            {isContainerFS ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
         )}
 
         <div className="absolute top-3 right-3 pointer-events-none z-20 flex items-center gap-1.5 bg-emerald-950/85 backdrop-blur-sm border border-emerald-700/50 text-[11px] font-bold text-emerald-300 px-2.5 py-1 rounded-lg shadow-sm">
