@@ -19,7 +19,7 @@ export default function AuthShell({
       <div className="absolute -top-40 -right-40 w-[480px] h-[480px] rounded-full bg-[#2D6A4F]/40 blur-3xl animate-blob pointer-events-none" />
       <div className="absolute -bottom-48 -left-32 w-[420px] h-[420px] rounded-full bg-[#D4AF37]/12 blur-3xl animate-blob pointer-events-none" style={{ animationDelay: "-5s" }} />
 
-      <div className="relative w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-[2rem] overflow-hidden bg-white shadow-2xl shadow-black/40 border border-white/10">
+      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 rounded-[2rem] overflow-hidden bg-white shadow-2xl shadow-black/40 border border-white/10">
         {/* Brand side */}
         <div className="relative lg:col-span-5 bg-gradient-to-br from-[#1B4332] via-[#245A42] to-[#0F2B1E] p-7 sm:p-9 flex flex-col justify-between overflow-hidden">
           <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-[#D4AF37]/15 blur-3xl pointer-events-none" />

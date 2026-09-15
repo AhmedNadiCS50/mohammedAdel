@@ -182,9 +182,9 @@ export default function RegisterPage() {
                 placeholder="اكتب اسمك الأول بالعربي زي اللي في البطاقة"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="prem-input pr-10"
+                className="prem-input pr-12"
               />
-              <User className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+              <User className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             </div>
             <div className="relative">
               <input
@@ -193,9 +193,9 @@ export default function RegisterPage() {
                 placeholder="اكتب اسمك التاني بالعربي زي اللي في البطاقة"
                 value={secondName}
                 onChange={(e) => setSecondName(e.target.value)}
-                className="prem-input pr-10"
+                className="prem-input pr-12"
               />
-              <User className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+              <User className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             </div>
             <div className="relative">
               <input
@@ -204,9 +204,9 @@ export default function RegisterPage() {
                 placeholder="اكتب اسمك التالت بالعربي زي اللي في البطاقة"
                 value={thirdName}
                 onChange={(e) => setThirdName(e.target.value)}
-                className="prem-input pr-10"
+                className="prem-input pr-12"
               />
-              <User className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+              <User className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             </div>
             <div className="relative">
               <input
@@ -215,9 +215,9 @@ export default function RegisterPage() {
                 placeholder="اكتب اسمك الرابع بالعربي زي اللي في البطاقة"
                 value={fourthName}
                 onChange={(e) => setFourthName(e.target.value)}
-                className="prem-input pr-10"
+                className="prem-input pr-12"
               />
-              <User className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+              <User className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             </div>
           </div>
         </div>
@@ -238,9 +238,9 @@ export default function RegisterPage() {
                 if (!governorateOpen) setGovernorateOpen(true);
               }}
               onFocus={() => setGovernorateOpen(true)}
-              className="prem-input pr-10"
+              className="prem-input pr-12"
             />
-            <MapPin className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+            <MapPin className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
           </div>
           {governorateOpen && (
             <div className="absolute z-20 mt-1.5 w-full max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg py-1">
@@ -277,9 +277,9 @@ export default function RegisterPage() {
                 placeholder="01012345678"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="prem-input pr-10"
+                className="prem-input pr-12"
               />
-              <Phone className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+              <Phone className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             </div>
           </div>
 
@@ -292,9 +292,9 @@ export default function RegisterPage() {
                 placeholder="01112345678"
                 value={parentPhone}
                 onChange={(e) => setParentPhone(e.target.value)}
-                className="prem-input pr-10"
+                className="prem-input pr-12"
               />
-              <Phone className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+              <Phone className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             </div>
           </div>
         </div>
@@ -352,9 +352,9 @@ export default function RegisterPage() {
               placeholder="اختر كلمة مرور لتسجيل الدخول"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="prem-input pr-10"
+              className="prem-input pr-12"
             />
-            <Lock className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+            <Lock className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
@@ -376,9 +376,9 @@ export default function RegisterPage() {
               placeholder="أعد كتابة كلمة المرور مرة أخرى للتأكيد"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="prem-input pr-10"
+              className="prem-input pr-12"
             />
-            <Lock className="w-4 h-4 text-gray-400 absolute right-3.5 top-3.5" />
+            <Lock className="w-4 h-4 text-gray-400 absolute right-4 top-4" />
           </div>
         </div>
 
