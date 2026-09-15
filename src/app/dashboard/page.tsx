@@ -14,6 +14,7 @@ import {
   canStudentAccessLessonSequential,
   getLessonProgress,
   getExamSubmissions,
+  verifySubscriptionExpiry,
   GRADE_LABELS
 } from '@/lib/storage';
 import { isFirebaseConfigured } from '@/lib/firebase';
@@ -55,7 +56,12 @@ export default function StudentDashboardPage() {
       s.grade = (s.grade as string).includes('second') ? 'second_secondary_bac' : 'first_secondary_bac';
       setCurrentStudent(s);
     }
-    setStudent(s);
+    // Normalize stale "active" flag so expired subscriptions show locked content/banner right away
+    const normalized = verifySubscriptionExpiry(s);
+    if (normalized !== s || normalized.subscription.isActive !== s.subscription.isActive) {
+      setCurrentStudent(normalized);
+    }
+    setStudent(normalized);
 
     // 1. Instant load static & local lessons/exams so user never waits
     const staticLessons = getLessons(s.grade);
@@ -92,8 +98,9 @@ export default function StudentDashboardPage() {
               freshStudent.grade = (freshStudent.grade as string).includes('second') ? 'second_secondary_bac' : 'first_secondary_bac';
             }
             activeGrade = freshStudent.grade;
-            setStudent(freshStudent);
-            setCurrentStudent(freshStudent);
+            const normalizedFresh = verifySubscriptionExpiry(freshStudent);
+            setStudent(normalizedFresh);
+            setCurrentStudent(normalizedFresh);
           }
 
           // Merge cloud content — cloud always wins over static/local copies.

@@ -64,6 +64,8 @@ export default function ProductsPage() {
                   src="/images/book-cover.jpg"
                   alt="كتاب الصف الثاني البكالوريا برمجة - مستر عمرو شاهين"
                   fill
+                  sizes="(max-width: 640px) 90vw, 300px"
+                  quality={85}
                   className="object-cover hover:scale-105 transition-transform duration-300"
                   priority
                 />

@@ -19,6 +19,8 @@ import Reveal from "@/components/Reveal";
 import Tilt from "@/components/Tilt";
 import ScrollCanvas from "@/components/ScrollCanvas";
 import TestimonialsMarquee from "@/components/TestimonialsMarquee";
+import StatsStrip from "@/components/StatsStrip";
+import Faq from "@/components/Faq";
 
 export default function Home() {
   const grades = [
@@ -186,12 +188,19 @@ href="/dashboard/subscription"
                 width={834}
                 height={1024}
                 priority
+                sizes="(max-width: 640px) 240px, (max-width: 1024px) 288px, 416px"
+                quality={82}
                 className="relative w-full h-full object-cover rounded-[2rem] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.7)]"
               />
             </div>
           </Reveal>
         </div>
       </ScrollCanvas>
+
+      {/* ═════════════════════════════════════════════
+          1.5 STATS — dark numbers strip with count-up
+      ════════════════════════════════════════════════ */}
+      <StatsStrip />
 
       {/* ═════════════════════════════════════════════
           2. CURRICULUM & GRADES
@@ -280,7 +289,7 @@ href="/dashboard/subscription"
               <div className="lg:col-span-4 flex justify-center">
                 <Tilt max={12} className="shrink-0">
                   <div className="relative w-44 h-60 sm:w-52 sm:h-72 lg:w-56 lg:h-80 rounded-2xl overflow-hidden shadow-xl border border-gray-200">
-                    <Image src="/images/book-cover.jpg" alt="كتاب الصف الثاني البكالوريا" fill className="object-cover" />
+                    <Image src="/images/book-cover.jpg" alt="كتاب الصف الثاني البكالوريا" fill sizes="(max-width: 640px) 176px, (max-width: 1024px) 208px, 224px" quality={82} className="object-cover" />
                   </div>
                 </Tilt>
               </div>
@@ -340,6 +349,11 @@ href="/dashboard/subscription"
           </div>
         </div>
       </section>
+
+      {/* ═════════════════════════════════════════════
+          5.5 FAQ — accordion
+      ════════════════════════════════════════════════ */}
+      <Faq />
 
       {/* ═════════════════════════════════════════════
           6. FINAL CTA BANNER

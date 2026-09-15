@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { getExamSubmissions } from '@/lib/storage';
+import { getExamSubmissions, getDaysRemaining } from '@/lib/storage';
 import { Student, Exam } from '@/lib/types';
 import {
   HelpCircle,
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 export default function ExamCard({ student, exam }: { student: Student; exam: Exam }) {
-  const canTake = student.subscription.isActive;
+  const canTake = student.subscription.isActive && getDaysRemaining(student.subscription.expiresAt) > 0;
   const subs = getExamSubmissions(student.id, exam.id);
   const latestSub = subs.length > 0 ? subs[0] : null;
 

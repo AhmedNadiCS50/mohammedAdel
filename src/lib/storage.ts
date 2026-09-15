@@ -675,6 +675,10 @@ export function canStudentAccessLesson(student: Student | null, lesson: Lesson):
   if (!student) return false;
   // If student has active subscription for this grade
   if (student.subscription.isActive && normalizeGrade(student.grade) === normalizeGrade(lesson.grade)) {
+    // Defense-in-depth: never grant access once the expiry date has passed
+    if (student.subscription.expiresAt && new Date(student.subscription.expiresAt).getTime() < Date.now()) {
+      return false;
+    }
     return true;
   }
   // Or if teacher gave specific custom access to this lesson

@@ -26,6 +26,7 @@ export default function Footer() {
                   src="/images/teacher.png" 
                   alt="مستر عمرو شاهين"
                   fill
+                  sizes="48px"
                   className="object-cover object-top"
                 />
               </div>
