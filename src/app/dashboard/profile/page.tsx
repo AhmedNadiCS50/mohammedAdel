@@ -114,8 +114,6 @@ export default function ProfilePage() {
     return () => clearInterval(t);
   }, []);
 
-  if (!student) return <DashboardSkeleton />;
-
   const {
     sub,
     isActive,
@@ -137,25 +135,25 @@ export default function ProfilePage() {
     whatsappDigits,
     teacherName,
   } = useMemo(() => {
-    const sub = student.subscription;
-    const isActive = sub.isActive && (!sub.expiresAt || new Date(sub.expiresAt).getTime() > nowMs);
-    const remaining = sub.expiresAt ? daysRemaining(sub.expiresAt, nowMs) : null;
+    const sub = student?.subscription;
+    const isActive = !!sub?.isActive && (!sub.expiresAt || new Date(sub.expiresAt).getTime() > nowMs);
+    const remaining = sub?.expiresAt ? daysRemaining(sub.expiresAt, nowMs) : null;
 
     // Progress stats (device-local store) — parsed once per student/tick, not per keystroke.
-    const lessons = getLessons(student.grade).sort((a, b) => a.orderIndex - b.orderIndex);
-    const progressList = getAllProgressForStudent(student.id);
-    const assignments = getAssignments(student.grade);
-    const assignmentSubs = getAssignmentSubmissions(undefined, student.id);
-    const exams = getExams(student.grade);
-    const examSubs = getExamSubmissions(student.id);
+    const lessons = student ? getLessons(student.grade).sort((a, b) => a.orderIndex - b.orderIndex) : [];
+    const progressList = student ? getAllProgressForStudent(student.id) : [];
+    const assignments = student ? getAssignments(student.grade) : [];
+    const assignmentSubs = student ? getAssignmentSubmissions(undefined, student.id) : [];
+    const exams = student ? getExams(student.grade) : [];
+    const examSubs = student ? getExamSubmissions(student.id) : [];
 
     const completedLessons = lessons.filter((l) => {
-      const p = getLessonProgress(student.id, l.id);
+      const p = student ? getLessonProgress(student.id, l.id) : null;
       return !!p && (p.completed || p.watchPercentage >= 90);
     }).length;
     const overallPercent = lessons.length === 0 ? 0 : Math.round((completedLessons / lessons.length) * 100);
     const currentLesson = lessons.find((l) => {
-      const p = getLessonProgress(student.id, l.id);
+      const p = student ? getLessonProgress(student.id, l.id) : null;
       return !(p && (p.completed || p.watchPercentage >= 90));
     });
     const submittedAssignments = assignmentSubs.filter((s) => s.status === 'submitted' || s.status === 'graded');
@@ -196,6 +194,8 @@ export default function ProfilePage() {
       teacherName,
     };
   }, [student, nowMs]);
+
+  if (!student) return <DashboardSkeleton />;
 
   const applyStudent = (patch: Partial<Student>) => {
     const merged = { ...student, ...patch };
@@ -546,21 +546,20 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
           <div className="rounded-xl bg-white/70 border border-emerald-100 p-3">
             <p className="text-[11px] font-bold text-gray-500 mb-0.5">ينتهي في</p>
-            <p className="font-bold text-gray-800">{formatDate(sub.expiresAt)}</p>
+            <p className="font-bold text-gray-800">{formatDate(sub?.expiresAt)}</p>
           </div>
-          {sub.monthName && (
+{sub?.monthName && (
             <div className="rounded-xl bg-white/70 border border-emerald-100 p-3">
-              <p className="text-[11px] font-bold text-gray-500 mb-0.5">الشهر المشترك</p>
-              <p className="font-bold text-gray-800">{sub.monthName}</p>
+              <p className="font-bold text-gray-800">{sub?.monthName}</p>
             </div>
           )}
           <div className="rounded-xl bg-white/70 border border-emerald-100 p-3">
             <p className="text-[11px] font-bold text-gray-500 mb-0.5">طريقة التفعيل</p>
-            <p className="font-bold text-gray-800">{VIA_LABELS[sub.activatedVia] || VIA_LABELS.none}</p>
+            <p className="font-bold text-gray-800">{VIA_LABELS[sub?.activatedVia ?? 'none'] || VIA_LABELS.none}</p>
           </div>
         </div>
-        {sub.activatedAt && (
-          <p className="text-[11px] text-gray-500 mt-3">تم التفعيل في {formatDate(sub.activatedAt)}</p>
+        {sub?.activatedAt && (
+          <p className="text-[11px] text-gray-500 mt-3">تم التفعيل في {formatDate(sub?.activatedAt)}</p>
         )}
       </div>
     </div>
