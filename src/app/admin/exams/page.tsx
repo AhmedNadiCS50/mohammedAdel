@@ -256,6 +256,8 @@ export default function AdminExamsPage() {
                   <option value="first_secondary_bac">الصف الأول الثانوي (بكالوريا)</option>
                   <option value="second_secondary_general">الصف الثاني الثانوي (عام)</option>
                   <option value="second_secondary_bac">الصف الثاني الثانوي (بكالوريا)</option>
+                  <option value="first_secondary_azhari">الصف الأول الثانوي (أزهر)</option>
+                  <option value="second_secondary_azhari">الصف الثاني الثانوي (أزهر)</option>
                 </select>
               </div>
 

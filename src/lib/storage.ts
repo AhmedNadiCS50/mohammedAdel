@@ -590,6 +590,12 @@ export function normalizeGrade(grade?: string): GradeLevel {
   if (grade === 'second_secondary_general') {
     return 'second_secondary_general';
   }
+  if (grade === 'first_secondary_azhari') {
+    return 'first_secondary_azhari';
+  }
+  if (grade === 'second_secondary_azhari') {
+    return 'second_secondary_azhari';
+  }
   return 'first_secondary_general';
 }
 
@@ -1178,9 +1184,11 @@ export const GRADE_LABELS: Record<GradeLevel, string> = {
   first_secondary_general: 'الصف الأول الثانوي (عام)',
   first_secondary_bac: 'الصف الأول الثانوي (بكالوريا)',
   first_secondary_baccalaureate: 'الصف الأول الثانوي (بكالوريا)',
+  first_secondary_azhari: 'الصف الأول الثانوي (أزهر)',
   second_secondary_general: 'الصف الثاني الثانوي (عام)',
   second_secondary_bac: 'الصف الثاني الثانوي (بكالوريا)',
   second_secondary_baccalaureate: 'الصف الثاني الثانوي (بكالوريا)',
+  second_secondary_azhari: 'الصف الثاني الثانوي (أزهر)',
 };
 
 export const TRACK_LABELS: Record<AcademicTrack, string> = {

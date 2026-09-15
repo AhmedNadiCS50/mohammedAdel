@@ -32,8 +32,10 @@ import {
 const GRADES_LIST: GradeLevel[] = [
   'first_secondary_general',
   'first_secondary_bac',
+  'first_secondary_azhari',
   'second_secondary_general',
   'second_secondary_bac',
+  'second_secondary_azhari',
 ];
 
 export default function AdminAssignmentsPage() {
