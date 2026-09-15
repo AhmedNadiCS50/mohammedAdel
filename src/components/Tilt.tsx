@@ -15,7 +15,10 @@ export default function Tilt({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  const HOVER_QUERY = "(hover: hover)";
+
   const onMove = (e: React.MouseEvent) => {
+    if (typeof window !== "undefined" && !window.matchMedia(HOVER_QUERY).matches) return;
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -25,6 +28,7 @@ export default function Tilt({
   };
 
   const reset = () => {
+    if (typeof window !== "undefined" && !window.matchMedia(HOVER_QUERY).matches) return;
     const el = ref.current;
     if (!el) return;
     el.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)";

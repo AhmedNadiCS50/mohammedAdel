@@ -451,8 +451,22 @@ p {
 }
 .marquee-right { animation-name: marquee-right; }
 .marquee-left  { animation-name: marquee-left; }
-/* Hovering any message pauses the row; unhovering resumes it */
-.marquee-shell:hover .marquee-track { animation-play-state: paused; }
+/* Hovering any message pauses the row; unhovering resumes it.
+   Only on devices that actually have a hover cursor — on touch it would
+   stick after a tap and freeze the marquee. */
+@media (hover: hover) {
+  .marquee-shell:hover .marquee-track { animation-play-state: paused; }
+}
+
+/* On touch devices the tap would leave a sticky highlight — neutralize it */
+@media (hover: none) {
+  .marquee-tcard:hover {
+    background: rgba(255,255,255,0.95);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+    --tw-ring-shadow: 0 0 transparent;
+  }
+}
 
 @keyframes marquee-right {
   from { transform: translateX(-50%); }
