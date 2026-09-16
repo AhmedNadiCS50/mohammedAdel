@@ -62,11 +62,11 @@ export default function Navbar() {
     <>
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 lg:h-16">
 
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-green-200">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden border-2 border-green-200 shrink-0">
               <Image
                 src="/images/teacher.png"
                 alt="مستر عمرو شاهين"
@@ -75,11 +75,11 @@ export default function Navbar() {
                 priority
               />
             </div>
-            <div className="flex flex-col leading-tight">
-              <span className="font-black text-base text-gray-900 group-hover:text-green-800 transition-colors">
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="font-black text-sm sm:text-base text-gray-900 group-hover:text-green-800 transition-colors truncate">
                 مادة التكنولوجيا
               </span>
-              <span className="text-xs font-medium text-green-700">
+              <span className="text-[11px] sm:text-xs font-medium text-green-700 truncate">
                 مستر عمرو شاهين
               </span>
             </div>

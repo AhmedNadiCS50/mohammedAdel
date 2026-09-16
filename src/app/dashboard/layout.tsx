@@ -151,9 +151,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Main Content */}
         <main className="flex-1 min-w-0">
           {/* Compact sidebar header for small screens */}
-          <div className="lg:hidden py-5 space-y-4">
+          <div className="lg:hidden py-4 space-y-3">
             {StudentCard}
-            <div className="grid grid-cols-3 gap-2.5 min-[420px]:grid-cols-4 sm:grid-cols-5">
+            <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 py-0.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
@@ -161,22 +161,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex flex-col items-center justify-center gap-1.5 px-1 py-3 min-h-[4.2rem] rounded-2xl text-[11px] font-bold cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center gap-1.5 px-4 min-h-[2.9rem] shrink-0 whitespace-nowrap rounded-xl text-[11px] font-bold cursor-pointer transition-all duration-200 border ${
                       active
-                        ? 'bg-emerald-800 text-white shadow-md shadow-emerald-900/20'
-                        : 'bg-white text-slate-600 border border-gray-200 hover:border-emerald-300 hover:text-emerald-900'
+                        ? 'bg-emerald-800 text-white border-emerald-800 shadow-md shadow-emerald-900/20'
+                        : 'bg-white text-slate-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-900'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="leading-tight text-center">{item.name}</span>
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span>{item.name}</span>
                   </Link>
                 );
               })}
               <button
                 onClick={handleLogout}
-                className="flex flex-col items-center justify-center gap-1.5 px-1 py-3 min-h-[4.2rem] rounded-2xl text-[11px] font-black text-red-700 bg-red-50 border border-red-200 cursor-pointer transition-colors hover:bg-red-100"
+                className="flex items-center gap-1.5 px-4 min-h-[2.9rem] shrink-0 whitespace-nowrap rounded-xl text-[11px] font-black text-red-700 bg-red-50 border border-red-200 cursor-pointer transition-colors hover:bg-red-100"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
                 <span>خروج</span>
               </button>
             </div>

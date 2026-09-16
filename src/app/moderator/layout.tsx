@@ -36,6 +36,7 @@ export default function ModeratorLayout({ children }: { children: React.ReactNod
   };
 
   useEffect(() => {
+    document.body.classList.add('no-tab-bar');
     const mod = getCurrentModerator();
     if (!mod) {
       router.push('/login');
@@ -80,6 +81,7 @@ export default function ModeratorLayout({ children }: { children: React.ReactNod
     }
 
     return () => {
+      document.body.classList.remove('no-tab-bar');
       window.removeEventListener('platform-data-changed', handleDataChange);
       unsubPostsCount();
       unsubRepliesCount();
@@ -121,16 +123,16 @@ export default function ModeratorLayout({ children }: { children: React.ReactNod
               <div className="w-11 h-11 rounded-2xl bg-teal-900/70 border-2 border-teal-300/70 flex items-center justify-center shadow-md shadow-black/40 shrink-0">
                 <ShieldCheck className="w-6 h-6 text-teal-200" />
               </div>
-              <div className="leading-tight">
-                <span className="font-black text-sm sm:text-base block whitespace-nowrap tracking-tight">
+              <div className="leading-tight min-w-0">
+                <span className="font-black text-sm sm:text-base block truncate tracking-tight">
                   لوحة المشرفين المساعدين
                 </span>
-                <span className="flex items-center gap-1.5 text-[11px] text-teal-200 font-bold mt-0.5 whitespace-nowrap">
-                  <span className="relative flex h-1.5 w-1.5">
+                <span className="flex items-center gap-1.5 text-[11px] text-teal-200 font-bold mt-0.5 truncate">
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-300 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-teal-300" />
                   </span>
-                  {moderator.name}
+                  <span className="truncate">{moderator.name}</span>
                 </span>
               </div>
             </div>

@@ -47,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   useEffect(() => {
+    document.body.classList.add('no-tab-bar');
     const check = isAdminLoggedIn();
     setIsAdmin(check);
     if (!check && pathname !== '/login') {
@@ -94,6 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       });
     }
     return () => {
+      document.body.classList.remove('no-tab-bar');
       window.removeEventListener('platform-data-changed', handleDataChange);
       unsubPostsCount();
       unsubRepliesCount();
@@ -152,16 +154,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   priority
                 />
               </div>
-              <div className="leading-tight">
-                <span className="font-black text-sm sm:text-base block whitespace-nowrap tracking-tight">
+              <div className="leading-tight min-w-0">
+                <span className="font-black text-sm sm:text-base block truncate tracking-tight">
                   لوحة تحكم الخبير
                 </span>
-                <span className="flex items-center gap-1.5 text-[11px] text-green-200 font-bold mt-0.5 whitespace-nowrap">
-                  <span className="relative flex h-1.5 w-1.5">
+                <span className="flex items-center gap-1.5 text-[11px] text-green-200 font-bold mt-0.5 truncate">
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
                   </span>
-                  مستر عمرو شاهين
+                  <span className="truncate">مستر عمرو شاهين</span>
                 </span>
               </div>
             </div>
@@ -170,12 +172,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/"
-                className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/45 backdrop-blur-sm shadow-md shadow-black/20 whitespace-nowrap transition-colors duration-200 cursor-pointer"
+                className="group inline-flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/45 backdrop-blur-sm shadow-md shadow-black/20 whitespace-nowrap transition-colors duration-200 cursor-pointer"
+                title="معاينة المنصة"
               >
                 <span className="flex items-center justify-center w-5 h-5 rounded-md bg-white/15 group-hover:bg-white/25 transition-colors">
                   <ArrowRight className="w-3 h-3 rotate-180" />
                 </span>
-                <span>معاينة المنصة</span>
+                <span className="hidden min-[400px]:inline">معاينة المنصة</span>
               </Link>
 
               <button

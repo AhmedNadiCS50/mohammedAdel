@@ -118,7 +118,7 @@ export default function Home() {
           1. HERO — cinematic scroll sequence
       ════════════════════════════════════════════════ */}
       <ScrollCanvas>
-        <div className="grid gap-10 lg:gap-14 items-center text-center lg:text-right mx-auto w-full max-w-5xl lg:grid-cols-[1fr_auto]">
+        <div className="grid gap-8 sm:gap-10 lg:gap-14 items-center text-center lg:text-right mx-auto w-full max-w-5xl lg:grid-cols-[1fr_auto]">
           <div>
             <Reveal>
               <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs tracking-[0.3em] font-bold text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
@@ -128,7 +128,7 @@ export default function Home() {
             </Reveal>
 
             <Reveal delay={100}>
-              <h1 className="mt-6 text-[2rem] leading-[1.35] sm:text-4xl lg:text-[3.4rem] sm:leading-[1.25] font-extrabold text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
+              <h1 className="mt-5 text-[1.7rem] leading-[1.35] sm:text-4xl lg:text-[3.4rem] sm:leading-[1.25] font-extrabold text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
                 مادة التكنولوجيا مع
                 <span className="block mt-2 bg-gradient-to-l from-white via-white to-[#D8D2FF] bg-clip-text text-transparent drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
                   الخبير مستر عمرو شاهين

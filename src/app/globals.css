@@ -83,6 +83,10 @@ input, textarea, select, button {
   body {
     padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
   }
+  /* Admin/moderator layouts have no bottom tab bar — remove the reserved gap */
+  body.no-tab-bar {
+    padding-bottom: 0;
+  }
 }
 
 /* Bigger, tap-friendly targets on touch devices */

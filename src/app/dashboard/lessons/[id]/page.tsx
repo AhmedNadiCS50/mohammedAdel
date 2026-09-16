@@ -187,13 +187,13 @@ export default function WatchLessonPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Back button & Breadcrumb */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-green-800 bg-white border border-gray-200 px-3.5 py-2 rounded-xl transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-green-800 bg-white border border-gray-200 px-3.5 py-2 rounded-xl transition-colors shadow-sm shrink-0"
           >
             <ArrowRight className="w-4 h-4" />
-            <span>العودة لجدول المحاضرات</span>
+            <span className="hidden min-[400px]:inline">العودة لجدول المحاضرات</span>
           </Link>
 
           <span className="text-xs font-bold text-green-800 bg-green-50 px-3 py-1.5 rounded-xl border border-green-200">

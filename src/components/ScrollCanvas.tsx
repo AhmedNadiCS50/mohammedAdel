@@ -115,7 +115,7 @@ let lastT = -1;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scrollHeight = isTouch ? "h-dvh" : heightClass;
+  const scrollHeight = isTouch ? "min-h-dvh" : heightClass;
 
   return (
     <section
@@ -124,7 +124,7 @@ let lastT = -1;
     >
       <div
         ref={overlayRef}
-        className={`${isTouch ? "absolute" : "fixed"} inset-0 z-0 pointer-events-none`}
+        className={`${isTouch ? "absolute inset-0 h-full" : "fixed"} inset-0 z-0 pointer-events-none`}
         aria-hidden="true"
       >
         <video
@@ -140,7 +140,7 @@ let lastT = -1;
         />
       </div>
 
-      <div className="sticky top-0 h-dvh overflow-hidden">
+      <div className={isTouch ? "relative" : "sticky top-0 h-dvh overflow-hidden"}>
         <div
           className="absolute inset-0 z-[5] pointer-events-none"
           aria-hidden="true"

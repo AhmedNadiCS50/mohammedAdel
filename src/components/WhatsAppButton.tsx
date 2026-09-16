@@ -31,7 +31,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="تواصل معنا عبر واتساب"
-      className="group fixed bottom-5 left-5 z-50 flex items-center"
+      className="group fixed left-4 bottom-[calc(4.6rem+env(safe-area-inset-bottom,0px))] z-40 flex items-center sm:left-5 lg:bottom-5"
     >
       <span className="pointer-events-none opacity-0 translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 ml-3 bg-white border border-gray-200 shadow-lg rounded-xl px-3 py-2 text-xs font-bold text-gray-800 whitespace-nowrap max-w-40">
         تواصل معنا واتساب
