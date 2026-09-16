@@ -16,6 +16,7 @@ import {
   FileCheck,
   MessagesSquare,
   Users,
+  Send,
   ArrowRight,
 } from 'lucide-react';
 
@@ -107,6 +108,7 @@ export default function ModeratorLayout({ children }: { children: React.ReactNod
     { name: 'منتدى الأسئلة', href: '/moderator/forum', icon: MessagesSquare, badge: forumPending > 0 ? forumPending : undefined },
     { name: 'تصحيح المقالي', href: '/moderator/submissions', icon: FileCheck, badge: pendingEssays > 0 ? pendingEssays : undefined },
     { name: 'متابعة الطلاب', href: '/moderator/students', icon: Users },
+    { name: 'واتساب ولي الأمر', href: '/moderator/parental', icon: Send },
   ];
 
   return (
