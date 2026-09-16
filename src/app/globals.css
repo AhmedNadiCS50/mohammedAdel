@@ -685,6 +685,35 @@ p {
   background: #101826;
   border-bottom-color: #223349;
 }
+
+/* الحقول داخل النماذج — تتحول لداكن بنص أبيض (بدل أبيض على أبيض) */
+.dark .prem-input {
+  background: #111C2D;
+  border-color: #2F4159;
+  color: #FFFFFF;
+}
+.dark .prem-input:focus {
+  border-color: var(--green-light);
+  box-shadow: 0 0 0 4px rgba(82,183,136,0.18);
+}
+
+/* زرار الهيرو الفاتح — يتحول لزجاجي داكن بنص أبيض */
+.dark .btn-hero--light {
+  background: rgba(255, 255, 255, 0.10);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* عدم فليش البطاقة أثناء اللمس */
+.dark .marquee-tcard:hover {
+  background: #1A2837;
+  border-color: #2A3B52;
+}
+
+/* صناديق الترحيب/التنبيه الذهبية — تهدأ في الداكن ليحفظ القراءة */
+.dark .bg-amber-500, .dark .bg-gold-500 { background-color: #6B4E12; }
+.dark .bg-amber-600 { background-color: #7C5A15; }
+.dark .text-slate-950 { color: #FFF3C4; }
 .dark ::placeholder {
   color: #6F8296;
   opacity: 1;
