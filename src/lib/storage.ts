@@ -1226,3 +1226,153 @@ export function deleteLessonNote(noteId: string): void {
   const allNotes = getLocal<LessonNote[]>(KEYS.NOTES, []);
   setLocal(KEYS.NOTES, allNotes.filter(n => n.id !== noteId));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Streak & Learning Analytics (الستريك اليومي وغرفة التحليل)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function activityDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function shiftDateKey(key: string, days: number): string {
+  const d = new Date(key + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return activityDateKey(d);
+}
+
+/**
+ * يسجّل نشاط الطالب اليومي ويحدّث الستريك:
+ * - نفس اليوم  -> الحفاظ على الستريك.
+ * - يوم متتالٍ -> +1.
+ * - انقطاع >48 ساعة -> البدء من جديد بـ 1.
+ * يحفظ محلياً + مزامنة سحابية (Firestore) في الخلفية.
+ */
+export function recordStudentActivity(studentId: string): Student | null {
+  const student = getStudentById(studentId);
+  if (!student) return null;
+
+  const today = activityDateKey(new Date());
+  const prev = student.streak || { currentStreak: 0, bestStreak: 0, lastActivityDate: '', activeDays: [] };
+
+  let currentStreak = prev.currentStreak || 0;
+  if (prev.lastActivityDate !== today) {
+    currentStreak = prev.lastActivityDate === shiftDateKey(today, -1) ? currentStreak + 1 : 1;
+  }
+  const bestStreak = Math.max(prev.bestStreak || 0, currentStreak);
+
+  const activeDays = prev.activeDays ? [...prev.activeDays] : [];
+  if (!activeDays.includes(today)) {
+    activeDays.push(today);
+    activeDays.sort();
+    while (activeDays.length > 14) activeDays.shift();
+  }
+
+  const updated = updateStudent(studentId, {
+    streak: { currentStreak, bestStreak, lastActivityDate: today, activeDays },
+  });
+
+  if (updated) {
+    scheduleDataChangedEmit(300);
+  }
+  return updated;
+}
+
+export interface ResumeTarget {
+  lesson: Lesson;
+  progress: LessonProgress;
+}
+
+/**
+ * آخر درس شاهده الطالب ولم يكمله بعد (نسبة < 90%) مع موضع التوقف بالضبط،
+ * حتى نستأنف المشاهدة من نفس اللحظة.
+ */
+export function getLastWatchedLesson(studentId: string): ResumeTarget | null {
+  const all = getAllProgressForStudent(studentId)
+    .filter(p => !p.completed && p.watchPercentage < 90 && p.watchedSeconds > 5)
+    .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+  if (all.length === 0) return null;
+  const progress = all[0];
+  const lesson = getLessonById(progress.lessonId);
+  if (!lesson) return null;
+  return { lesson, progress };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Leaderboard نقاط لوحة الشرف
+//   نقاط = (درجات الامتحانات) + (10 × محاضرة مكتملة) + (10 × واجب مسلّم)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface LeaderboardEntry {
+  studentId: string;
+  name: string;
+  points: number;
+  lessonsCompleted: number;
+  examsTaken: number;
+  examsPassed: number;
+  assignmentsSubmitted: number;
+  rank: number;
+}
+
+const isProgressDone = (p: LessonProgress) => p.completed === true || p.watchPercentage >= 90;
+
+export function computeLeaderboard(
+  students: Student[],
+  grade: GradeLevel,
+  progressByStudent: Record<string, LessonProgress[]>,
+  examSubsByStudent: Record<string, ExamSubmission[]>,
+  assignSubsByStudent: Record<string, AssignmentSubmission[]>
+): LeaderboardEntry[] {
+  const target = normalizeGrade(grade);
+  const entries = students
+    .filter(s => normalizeGrade(s.grade) === target)
+    .map(s => {
+      const progress = progressByStudent[s.id] || [];
+      const lessonsCompleted = progress.filter(isProgressDone).length;
+      const pointsFromLessons = lessonsCompleted * 10;
+
+      // أفضل نسبة لكل امتحان (النقطة المُحتسَبة = النسبة المئوية)
+      const byExam = new Map<string, ExamSubmission>();
+      (examSubsByStudent[s.id] || []).forEach(su => {
+        const cur = byExam.get(su.examId);
+        if (!cur || su.percentage > cur.percentage) byExam.set(su.examId, su);
+      });
+      const exams = Array.from(byExam.values());
+      const pointsFromExams = Math.round(exams.reduce((acc, su) => acc + su.percentage, 0));
+
+      const assignmentsSubmitted = (assignSubsByStudent[s.id] || []).length;
+      const pointsFromAssignments = assignmentsSubmitted * 10;
+
+      return {
+        studentId: s.id,
+        name: s.name,
+        points: pointsFromLessons + pointsFromExams + pointsFromAssignments,
+        lessonsCompleted,
+        examsTaken: exams.length,
+        examsPassed: exams.filter(su => su.passed).length,
+        assignmentsSubmitted,
+        rank: 0,
+      };
+    })
+    .sort((a, b) => b.points - a.points || b.lessonsCompleted - a.lessonsCompleted);
+
+  entries.forEach((e, i) => { e.rank = i + 1; });
+  return entries;
+}
+
+/** نسخة محلية خفيفة للوحة الشرف (تستخدم بيانات الجهاز الحالي فقط). */
+export function getLeaderboardLocal(grade: GradeLevel): LeaderboardEntry[] {
+  const students = getStudents();
+  const progressByStudent: Record<string, LessonProgress[]> = {};
+  const examSubsByStudent: Record<string, ExamSubmission[]> = {};
+  const assignSubsByStudent: Record<string, AssignmentSubmission[]> = {};
+  students.forEach(s => {
+    progressByStudent[s.id] = getAllProgressForStudent(s.id);
+    examSubsByStudent[s.id] = getExamSubmissions(s.id);
+    assignSubsByStudent[s.id] = getAssignmentSubmissions(undefined, s.id);
+  });
+  return computeLeaderboard(students, grade, progressByStudent, examSubsByStudent, assignSubsByStudent);
+}

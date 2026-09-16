@@ -38,6 +38,12 @@ export interface Student {
   };
   notes?: string;
   photoUrl?: string;
+  streak?: {
+    currentStreak: number;
+    bestStreak: number;
+    lastActivityDate: string;
+    activeDays?: string[]; // last ~14 daily activity keys (YYYY-MM-DD local)
+  };
 }
 
 export type LessonVideoSource = 'youtube' | 'hls';
@@ -54,6 +60,7 @@ export interface Lesson {
   hlsPath?: string;
   pdfAttachmentUrl?: string;
   chapters?: VideoChapter[];
+  checkpoints?: VideoCheckpoint[];
   durationMinutes?: number;
   orderIndex: number;
   createdAt: string;
@@ -62,6 +69,15 @@ export interface Lesson {
 export interface VideoChapter {
   title: string;
   timeSeconds: number;
+}
+
+export interface VideoCheckpoint {
+  id: string;
+  timeSeconds: number;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation?: string;
 }
 
 export interface LessonNote {

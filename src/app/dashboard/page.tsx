@@ -9,7 +9,9 @@ import {
   getStudentById,
   getLessons,
   getExams,
+  getAssignments,
   getDaysRemaining,
+  recordStudentActivity,
   isSubscriptionExpiringSoon,
   canStudentAccessLessonSequential,
   getLessonProgress,
@@ -21,9 +23,10 @@ import { isFirebaseConfigured } from '@/lib/firebase';
 import {
   getLessonsFromFirestore,
   getExamsFromFirestore,
+  getAssignmentsFromFirestore,
   getStudentByIdFromFirestore
 } from '@/lib/firestoreService';
-import { Student, Lesson, Exam } from '@/lib/types';
+import { Student, Lesson, Exam, Assignment } from '@/lib/types';
 import {
   Video,
   HelpCircle,
@@ -39,6 +42,11 @@ import {
 } from 'lucide-react';
 import StudentCourseStats from '@/components/StudentCourseStats';
 import StudentBadges from '@/components/StudentBadges';
+import StudyStreakBanner from '@/components/StudyStreakBanner';
+import ResumeLearningCard from '@/components/ResumeLearningCard';
+import TodayQuestCard from '@/components/TodayQuestCard';
+import ClassLeaderboard from '@/components/ClassLeaderboard';
+import WeeklyScheduleWidget from '@/components/WeeklyScheduleWidget';
 import RadialProgress from '@/components/RadialProgress';
 import PageHeader from '@/components/PageHeader';
 
@@ -47,6 +55,7 @@ export default function StudentDashboardPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [activeTab, setActiveTab] = useState<'lessons' | 'exams'>('lessons');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [dataLoading, setDataLoading] = useState(true);
@@ -64,12 +73,15 @@ export default function StudentDashboardPage() {
       setCurrentStudent(normalized);
     }
     setStudent(normalized);
+    recordStudentActivity(s.id);
 
     // 1. Instant load static & local lessons/exams so user never waits
     const staticLessons = getLessons(s.grade);
     const staticExams = getExams(s.grade);
+    const staticAssignments = getAssignments(s.grade);
     setLessons(staticLessons);
     setExams(staticExams);
+    setAssignments(staticAssignments);
     setDataLoading(false);
 
     const mergeLessons = (base: Lesson[], remote: Lesson[]) => {
@@ -84,13 +96,20 @@ export default function StudentDashboardPage() {
       remote.forEach(e => map.set(e.id, e));
       return Array.from(map.values());
     };
+    const mergeAssignments = (base: Assignment[], remote: Assignment[]) => {
+      const map = new Map<string, Assignment>();
+      base.forEach(a => map.set(a.id, a));
+      remote.forEach(a => map.set(a.id, a));
+      return Array.from(map.values());
+    };
 
     const loadData = async () => {
       try {
         if (isFirebaseConfigured()) {
-          const [remoteLessons, remoteExams, freshStudent] = await Promise.all([
+          const [remoteLessons, remoteExams, remoteAssignments, freshStudent] = await Promise.all([
             getLessonsFromFirestore(s.grade),
             getExamsFromFirestore(s.grade),
+            getAssignmentsFromFirestore(s.grade),
             getStudentByIdFromFirestore(s.id),
           ]);
 
@@ -105,19 +124,19 @@ export default function StudentDashboardPage() {
             setCurrentStudent(normalizedFresh);
           }
 
-          // Merge cloud content — cloud always wins over static/local copies.
-          // (Previously setLessons(getLessons(...)) overwrote the fresh Firestore
-          // list with stale localStorage, so newly added lessons never appeared.)
           if (activeGrade !== s.grade) {
-            const [gradeLessons, gradeExams] = await Promise.all([
+            const [gradeLessons, gradeExams, gradeAssignments] = await Promise.all([
               getLessonsFromFirestore(activeGrade),
               getExamsFromFirestore(activeGrade),
+              getAssignmentsFromFirestore(activeGrade),
             ]);
             setLessons(mergeLessons(getLessons(activeGrade), gradeLessons));
             setExams(mergeExams(getExams(activeGrade), gradeExams));
+            setAssignments(mergeAssignments(getAssignments(activeGrade), gradeAssignments));
           } else {
             setLessons(mergeLessons(staticLessons, remoteLessons));
             setExams(mergeExams(staticExams, remoteExams));
+            setAssignments(mergeAssignments(staticAssignments, remoteAssignments));
           }
         }
       } catch (err) {
@@ -239,6 +258,23 @@ export default function StudentDashboardPage() {
 
         {/* Student Achievements & Gamification Badges */}
         <StudentBadges student={student} />
+
+        {/* Daily streak + today quest */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <StudyStreakBanner student={student} />
+          <TodayQuestCard student={student} lessons={lessons} exams={exams} assignments={assignments} />
+        </div>
+
+        {/* Resume from where you stopped */}
+        <ResumeLearningCard student={student} />
+
+        {/* Class leaderboard + weekly schedule */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <ClassLeaderboard student={student} />
+          </div>
+          <WeeklyScheduleWidget lessons={lessons} exams={exams} assignments={assignments} />
+        </div>
 
         {/* Tabs & Month Filter */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-4">

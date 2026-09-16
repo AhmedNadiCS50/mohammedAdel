@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { extractYoutubeId, getLessonProgress, saveLessonProgress, getSettings } from '@/lib/storage';
-import { Student, LessonProgress, LessonVideoSource } from '@/lib/types';
-import { Shield, AlertCircle, CheckCircle2, Clock, Sparkles, Maximize, Minimize } from 'lucide-react';
+import { Student, LessonProgress, LessonVideoSource, VideoCheckpoint } from '@/lib/types';
+import { Shield, AlertCircle, CheckCircle2, Clock, Sparkles, Maximize, Minimize, Focus, X } from 'lucide-react';
+import InVideoCheckpointModal from '@/components/InVideoCheckpointModal';
 
 interface VideoPlayerProps {
   videoUrlOrId: string;
@@ -12,6 +13,7 @@ interface VideoPlayerProps {
   lessonId?: string;
   videoSource?: LessonVideoSource;
   hlsPath?: string;
+  checkpoints?: VideoCheckpoint[];
   onProgressUpdate?: (progress: LessonProgress) => void;
 }
 
@@ -34,6 +36,7 @@ export default function VideoPlayer({
   lessonId,
   videoSource,
   hlsPath,
+  checkpoints,
   onProgressUpdate
 }: VideoPlayerProps) {
   const [wmVisible, setWmVisible] = useState(true);
@@ -64,6 +67,10 @@ export default function VideoPlayer({
   const lastTimesRef = useRef({ time: 0, duration: 0 });
   const lastSavedProgressRef = useRef<LessonProgress | null>(null);
   const fsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
+  const [activeCheckpoint, setActiveCheckpoint] = useState<VideoCheckpoint | null>(null);
+  const handledCheckpointsRef = useRef<Set<string>>(new Set());
+  const lastSampleTimeRef = useRef<number | null>(null);
 
   const PROGRESS_SAVE_MS = 10000;
   const PROGRESS_UI_MS = 1000;
@@ -411,6 +418,21 @@ export default function VideoPlayer({
   const recordFromTimes = (currentTime: number, duration: number) => {
     if (!student || !lessonId || !duration || duration <= 0) return;
     lastTimesRef.current = { time: currentTime, duration };
+
+    // In-video checkpoints: pause & quiz the student when crossing a checkpoint time
+    if (checkpoints && checkpoints.length > 0) {
+      const prevSample = lastSampleTimeRef.current;
+      lastSampleTimeRef.current = currentTime;
+      const due = checkpoints.find(
+        (cp) =>
+          cp &&
+          cp.timeSeconds > 0 &&
+          !handledCheckpointsRef.current.has(cp.id) &&
+          currentTime >= cp.timeSeconds &&
+          (prevSample === null || prevSample < cp.timeSeconds)
+      );
+      if (due) triggerCheckpoint(due);
+    }
     const now = Date.now();
 
     // Persist at most every 10s while watching (not every 3s) to avoid the
@@ -454,6 +476,50 @@ export default function VideoPlayer({
     });
   };
 
+  const pausePlayer = () => {
+    if (isHls) {
+      if (videoRef.current) videoRef.current.pause();
+    } else if (playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
+      playerRef.current.pauseVideo();
+    }
+  };
+
+  const playPlayer = () => {
+    if (isHls) {
+      if (videoRef.current) videoRef.current.play().catch(() => {});
+    } else if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
+      playerRef.current.playVideo();
+    }
+  };
+
+  const seekToSeconds = (t: number) => {
+    if (isHls && videoRef.current) {
+      videoRef.current.currentTime = t;
+    } else if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
+      playerRef.current.seekTo(t, true);
+    }
+  };
+
+  const triggerCheckpoint = (cp: VideoCheckpoint) => {
+    handledCheckpointsRef.current.add(cp.id);
+    pausePlayer();
+    setActiveCheckpoint(cp);
+  };
+
+  // Focus Mode: Esc closes, scroll locked behind the dimmed page
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFocusMode(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = focusMode ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [focusMode]);
+
   // cleanup on unmount
   useEffect(() => {
     const onVis = () => {
@@ -479,10 +545,25 @@ export default function VideoPlayer({
 
   return (
     <div className="space-y-3">
+      {focusMode && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-sm"
+          onClick={() => setFocusMode(false)}
+        >
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none text-[11px] font-bold text-slate-400 bg-slate-900/70 px-3 py-1.5 rounded-full border border-slate-700">
+            وضع التركيز 🔍 — اضغط خارج الفيديو أو Esc للخروج
+          </div>
+        </div>
+      )}
+
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-emerald-800/40 select-none group"
-        style={isContainerFS ? { width: '100vw', height: '100vh', maxWidth: '100vw', aspectRatio: 'auto', borderRadius: 0 } : undefined}
+        className={`relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-emerald-800/40 select-none group ${focusMode ? 'ring-4 ring-emerald-500/50' : ''}`}
+        style={focusMode
+          ? { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'min(94vw, 1150px)', maxWidth: '94vw', zIndex: 60 }
+          : isContainerFS
+            ? { width: '100vw', height: '100vh', maxWidth: '100vw', aspectRatio: 'auto', borderRadius: 0 }
+            : undefined}
         onContextMenu={(e) => e.preventDefault()}
       >
         {isHls ? (
@@ -543,10 +624,42 @@ export default function VideoPlayer({
           </button>
         )}
 
+        {/* Custom focus-mode toggle (dim the page, enlarge the video) */}
+        {!hlsError && !showEmptyState && (
+          <button
+            type="button"
+            aria-label="وضع التركيز"
+            onClick={() => setFocusMode(v => !v)}
+            className="absolute bottom-3 left-3 z-30 pointer-events-auto flex items-center justify-center w-11 h-11 rounded-xl bg-black/50 hover:bg-black/75 text-white border border-white/20 transition-colors"
+          >
+            {focusMode ? <X className="w-4 h-4" /> : <Focus className="w-4 h-4" />}
+          </button>
+        )}
+
         <div className="absolute top-3 right-3 pointer-events-none z-20 flex items-center gap-1.5 bg-emerald-950/85 backdrop-blur-sm border border-emerald-700/50 text-[11px] font-bold text-emerald-300 px-2.5 py-1 rounded-lg shadow-sm">
           <Shield className="w-3 h-3 text-gold-400" />
           <span>منصة الخبير م. عمرو شاهين</span>
         </div>
+
+        {/* In-video checkpoint quiz */}
+        {activeCheckpoint && (
+          <InVideoCheckpointModal
+            checkpoint={activeCheckpoint}
+            onCorrect={() => {
+              setActiveCheckpoint(null);
+              playPlayer();
+            }}
+            onReplay={(back) => {
+              if (!activeCheckpoint) return;
+              const cp = activeCheckpoint;
+              handledCheckpointsRef.current.delete(cp.id);
+              lastSampleTimeRef.current = null;
+              setActiveCheckpoint(null);
+              seekToSeconds(Math.max(0, cp.timeSeconds - back));
+              playPlayer();
+            }}
+          />
+        )}
       </div>
 
       {student && lessonId && (

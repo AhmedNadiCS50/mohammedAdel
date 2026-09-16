@@ -9,6 +9,7 @@ import {
   getLessons,
   canStudentAccessLessonSequential,
   getExams,
+  recordStudentActivity,
   GRADE_LABELS
 } from '@/lib/storage';
 import { getLessonByIdFromFirestore } from '@/lib/firestoreService';
@@ -47,6 +48,7 @@ export default function WatchLessonPage() {
       return;
     }
     setStudent(s);
+    recordStudentActivity(s.id);
 
     const list = getLessons(s.grade);
     setAllLessons(list);
@@ -211,6 +213,7 @@ export default function WatchLessonPage() {
             title={lesson.title}
             student={student}
             lessonId={lesson.id}
+            checkpoints={lesson.checkpoints}
           />
         </div>
 
