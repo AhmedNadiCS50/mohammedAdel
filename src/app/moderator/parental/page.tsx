@@ -63,7 +63,7 @@ const toneClass: Record<MsgTone, string> = {
   neutral: 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300',
 };
 
-const greet = (s: Student) => `السلام عليكم ورحمة الله وبركاته، حضرتك ولي أمر الطالب ${s.name}،`;
+const greet = () => `السلام عليكم ورحمة الله 🌹`;
 
 interface GradeData {
   lessons: Lesson[];
@@ -124,7 +124,7 @@ export default function ModeratorParentalPage() {
     lastCompleted.forEach((l) => {
       out.lessons.push({
         label: `خلّص محاضرة: ${l.title}`,
-        message: `${greet(s)} ماشاء الله — الطالب خلّص محاضرة «${l.title}». نسأل الله له التوفيق والسداد، ياريت تشجعوه يكمل باقي المحاضرات.`,
+        message: `${greet()} مبروووك 🎉✨ الطالب ${s.name} خلّص محاضرة «${l.title}» لحد الآخر 💪 ربنا يوفقه ويكمل باقي المحاضرات بنفس الحماس 🔥 شكراً لتعاونكم معانا 🙏`,
         tone: 'success',
       });
     });
@@ -139,7 +139,7 @@ export default function ModeratorParentalPage() {
         const afterCount = data.lessons.filter((o) => o.orderIndex > l.orderIndex).length;
         out.lessons.push({
           label: `متأخر عن محاضرة: ${l.title}`,
-          message: `${greet(s)} حبيت أوقف حضرتك — الطالب لسه مخلّصش محاضرة «${l.title}» رغم نزول ${afterCount} محا${afterCount > 2 ? 'ضرا' : 'ضرة'} بعدها. ياريت تشجعوه يلحق يقفل المحاضرات المتراكمة.`,
+          message: `${greet()} حبيت أوقف حضرتك ⚠️ الطالب ${s.name} لسه مخلّصش محاضرة «${l.title}» مع إن بعدها نزلت ${afterCount} محاضرات 📚 ياريت تشجعوه يقفل المحاضرات المتراكمة الأول بأول 👌 وأي مساعدة محتاجينها إحنا جنبه 🤝`,
           tone: 'warn',
         });
       });
@@ -154,20 +154,24 @@ export default function ModeratorParentalPage() {
         if (latest.hasPendingEssays) {
           out.exams.push({
             label: `امتحان مستلم بانتظار التصحيح: ${exam.title}`,
-            message: `${greet(s)} الطالب سلّم امتحان «${exam.title}» وهو حالياً بانتظار تصحيح المدرس للمقالي.`,
+            message: `${greet()} الطالب ${s.name} سلّم امتحان «${exam.title}» 📝 والجزء المقالي بانتظار تصحيح المدرس ⏳ أول ما التصحيح يظهر هنبلغكم على طول ✅`,
             tone: 'info',
           });
         } else {
           out.exams.push({
             label: `خلّص امتحان (${latest.percentage}٪): ${exam.title}`,
-            message: `${greet(s)} الطالب أنهى امتحان «${exam.title}» وحصل على ${latest.percentage}٪${latest.passed ? ' — ناجح، مبروك.' : ' — ولم يجتز الامتحان، ياريت يذاكر المحاضرة ويعيد المحاولة.'}`,
+            message: `${greet()} ${
+              latest.passed
+                ? `أخبار حلوة 🎉 الطالب ${s.name} حل امتحان «${exam.title}» ونجح 👏 وحصل على ${latest.percentage}٪ ✅🔥 مبروك ليكم، ربنا يثبته ويزيده تفوق بإذن الله 🙏`
+                : `الطالب ${s.name} حل امتحان «${exam.title}» وحصل على ${latest.percentage}٪ 😔 لسه ما نجحش، بس مش نهاية الدنيا 😄 محتاج يراجع المحاضرة ويعيد المحاولة تاني 💪 ياريت وقفة معاه وتشجعوه، الفرق هيحسه 💯`
+            }`,
             tone: latest.passed ? 'success' : 'warn',
           });
         }
       } else {
         out.exams.push({
           label: `لسه مخدش امتحان: ${exam.title}`,
-          message: `${greet(s)} الطالب لسه مخدش امتحان «${exam.title}». الامتحان تدريب مهم على شكل الامتحان النهائي، ياريت تشجعوه يحله.`,
+          message: `${greet()} الطالب ${s.name} لسه مخدش امتحان «${exam.title}» 😅 الامتحان ده تدريب مهم جداً على شكل الامتحان النهائي 📝 ياريت تذكّروه وتحفزوه يحله، ومستنيين نتيجته 🎯`,
           tone: 'neutral',
         });
       }
@@ -182,13 +186,13 @@ export default function ModeratorParentalPage() {
         const graded = sub.status === 'graded' && typeof sub.score === 'number';
         out.assignments.push({
           label: `سلّم واجب: ${assign.title}`,
-          message: `${greet(s)} الطالب سلّم واجب «${assign.title}».${graded ? ` تم تصحيحه وحصل على ${sub.score}/${sub.maxScore}.` : ''}`,
+          message: `${greet()} الطالب ${s.name} سلّم واجب «${assign.title}» ✅ على بركة الله 👏${graded ? ` واتصحّح وحصل على ${sub.score}/${sub.maxScore} 🔥` : ' ونستنى المدرس يقيّمه 👀'}`,
           tone: 'success',
         });
       } else {
         out.assignments.push({
           label: `لسه مسلّمش واجب: ${assign.title}`,
-          message: `${greet(s)} الطالب لسه مسلّمش واجب «${assign.title}». ياريت تشجعوه يسلمه في وقته.`,
+          message: `${greet()} الطالب ${s.name} لسه مسلّمش واجب «${assign.title}» ⚠️ ياريت تذكّروه يسلمه في وقتها 📝 عشان نضمن إنه ماشي على النظام 👌 شكراً لكم 🙏`,
           tone: 'neutral',
         });
       }
@@ -374,7 +378,7 @@ export default function ModeratorParentalPage() {
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                       لا توجد أحداث حالياً لهذا الطالب — زر للرسالة العامة أدناه.
                       <a
-                        href={waLink(s.parentPhone, `${greet(s)} محتاجين متابعتكم مع الطالب خلال الفترة الجاية، وأي استفسار تفضلوا بكتابته وأحنا موجودين.`)}
+                        href={waLink(s.parentPhone, `${greet()} بنتابع الطالب ${s.name} معاكم خطوة بخطوة 👀 محتاجين متابعتكم معاه الفترة الجاية 🙏 وأي استفسار أو مساعدة إحنا في خدمتكم على طول ✅`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-bold"
