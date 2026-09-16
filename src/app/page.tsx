@@ -14,6 +14,7 @@ import {
   FileCheck,
   PenLine,
   Trophy,
+  CheckCircle2,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import Tilt from "@/components/Tilt";
@@ -118,19 +119,22 @@ export default function Home() {
           1. HERO — cinematic scroll sequence
       ════════════════════════════════════════════════ */}
       <ScrollCanvas>
-        <div className="grid gap-8 sm:gap-10 lg:gap-14 items-center text-center lg:text-right mx-auto w-full max-w-5xl lg:grid-cols-[1fr_auto]">
+        <div className="grid gap-8 sm:gap-10 lg:gap-16 items-center text-center lg:text-right mx-auto w-full max-w-6xl lg:grid-cols-[1fr_auto]">
           <div>
             <Reveal>
-              <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs tracking-[0.3em] font-bold text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_10px_#4ADE80]" />
+              <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs tracking-[0.3em] font-bold text-white/95 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
+                <span className="relative flex w-1.5 h-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#4ADE80] opacity-60 animate-ping" />
+                  <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-[#4ADE80]" />
+                </span>
                 المنصة الرسمية المعتمدة • دفعة 2027
               </span>
             </Reveal>
 
             <Reveal delay={100}>
-              <h1 className="mt-5 text-[1.7rem] leading-[1.35] sm:text-4xl lg:text-[3.4rem] sm:leading-[1.25] font-extrabold text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
+              <h1 className="mt-6 text-[1.8rem] leading-[1.33] sm:text-5xl lg:text-[3.6rem] sm:leading-[1.2] font-black text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
                 مادة التكنولوجيا مع
-                <span className="block mt-2 bg-gradient-to-l from-white via-white to-[#D8D2FF] bg-clip-text text-transparent drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
+                <span className="block mt-2 bg-gradient-to-l from-[#4ADE80] via-white to-[#D8D2FF] bg-clip-text text-transparent drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
                   الخبير مستر عمرو شاهين
                 </span>
               </h1>
@@ -152,10 +156,10 @@ export default function Home() {
                   أنشئ حسابك وابدأ المذاكرة
                 </Link>
                 <Link
-href="/dashboard/subscription"
-  className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
->
-  <Zap className="w-4 h-4 text-[#4ADE80] shrink-0" />
+                  href="/dashboard/subscription"
+                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+                >
+                  <Zap className="w-4 h-4 text-[#4ADE80] shrink-0" />
                   تفعيل كود الاشتراك
                 </Link>
                 <Link
@@ -169,19 +173,24 @@ href="/dashboard/subscription"
             </Reveal>
 
             <Reveal delay={340}>
-              <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs sm:text-sm font-semibold text-white/85 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                <span>4 صفوف · عام وبكالوريا</span>
-                <span className="w-px h-3 bg-white/25" />
-                <span>تغطية 100% للمنهج</span>
-                <span className="w-px h-3 bg-white/25" />
-                <span>تصحيح فوري</span>
+              <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-2.5 text-[11px] sm:text-xs font-bold text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#4ADE80]" /> 4 صفوف · عام وبكالوريا
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
+                  <FileCheck className="w-3.5 h-3.5 text-[#4ADE80]" /> تغطية 100% للمنهج
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm">
+                  <Zap className="w-3.5 h-3.5 text-[#4ADE80]" /> تصحيح فوري
+                </span>
               </div>
             </Reveal>
           </div>
 
           <Reveal delay={150}>
             <div className="relative w-60 sm:w-72 lg:w-[26rem] aspect-[834/1024] mx-auto lg:mr-auto">
-              <div className="absolute -inset-3 rounded-[2.2rem] bg-gradient-to-br from-[#4ADE80]/25 via-transparent to-[#C9C2FF]/25 blur-xl" />
+              <div className="absolute -inset-4 rounded-[2.6rem] bg-gradient-to-br from-[#4ADE80]/30 via-transparent to-[#C9C2FF]/30 blur-2xl" />
+              <div className="absolute -top-3 -right-3 w-full h-full rounded-[2rem] border-2 border-[#4ADE80]/30" />
               <Image
                 src="/images/teacher.png"
                 alt="مستر عمرو شاهين"
@@ -192,6 +201,15 @@ href="/dashboard/subscription"
                 quality={82}
                 className="relative w-full h-full object-cover rounded-[2rem] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.7)]"
               />
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg animate-float">
+                <Award className="w-3.5 h-3.5 text-[#F3D879]" /> منهج معتمد 2027
+              </div>
+              <div
+                className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg animate-float"
+                style={{ animationDelay: '-2.5s' }}
+              >
+                <Star className="w-3.5 h-3.5 text-[#F3D879]" /> 5.0 تقييم الطلاب
+              </div>
             </div>
           </Reveal>
         </div>
