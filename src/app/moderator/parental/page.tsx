@@ -53,7 +53,7 @@ function formatIntlDisplay(phone: string): string {
 
 function waLink(parentPhone: string, message: string): string {
   const intl = toInternational(parentPhone);
-  return intl ? `https://wa.me/${intl}?text=${encodeURIComponent(message)}` : '';
+  return intl ? `https://api.whatsapp.com/send?phone=${intl}&text=${encodeURIComponent(message)}` : '';
 }
 
 const toneClass: Record<MsgTone, string> = {
