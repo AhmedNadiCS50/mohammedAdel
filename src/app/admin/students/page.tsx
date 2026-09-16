@@ -157,100 +157,168 @@ export default function AdminStudentsPage() {
             <p className="text-xs">ستظهر بيانات الطلاب هنا فور قيام الطلاب بالتسجيل على المنصة.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-1 px-1">
-            <table className="w-full text-right text-xs min-w-[720px]">
-              <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-                <tr>
-                  <th className="p-4">اسم الطالب</th>
-                  <th className="p-4">الصف الدراسي</th>
-                  <th className="p-4">رقم الطالب</th>
-                  <th className="p-4">رقم ولي الأمر</th>
-                  <th className="p-4">حالة الاشتراك</th>
-                  <th className="p-4">تاريخ الانتهاء</th>
-                  <th className="p-4 text-center">الإجراء</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtered.map((s) => {
-                  const daysRemaining = getDaysRemaining(s.subscription.expiresAt);
-
-                  return (
-                    <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-4">
+          <>
+            <div className="md:hidden divide-y divide-slate-100">
+              {filtered.map((s) => {
+                const daysRemaining = getDaysRemaining(s.subscription.expiresAt);
+                return (
+                  <div key={s.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
                         <Link
                           href={`/admin/students/${s.id}`}
-                          className="font-bold text-slate-900 hover:text-emerald-800 text-sm block"
+                          className="font-bold text-slate-900 hover:text-emerald-800 text-sm block truncate"
                         >
                           {s.name}
                         </Link>
                         <span className="text-[10px] text-slate-400">
                           مسجل: {new Date(s.createdAt).toLocaleDateString('ar-EG')}
                         </span>
-                      </td>
-
-                      <td className="p-4">
-                        <span className="font-semibold text-slate-800 block">{GRADE_LABELS[s.grade]}</span>
-                      </td>
-
-                      <td className="p-4 font-mono font-bold text-slate-800">
-                        {s.phone}
-                      </td>
-
-                      <td className="p-4 font-mono text-slate-600">
-                        {s.parentPhone}
-                      </td>
-
-                      <td className="p-4">
+                      </div>
+                      {s.subscription.isActive ? (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل
+                        </span>
+                      ) : (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                          <Clock className="w-3.5 h-3.5" /> غير مفعّل
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-slate-400 text-[10px]">الصف</span>
+                        <p className="font-semibold text-slate-800 truncate">{GRADE_LABELS[s.grade]}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px]">رقم الطالب</span>
+                        <p className="font-mono font-bold text-slate-800">{s.phone}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px]">رقم ولي الأمر</span>
+                        <p className="font-mono text-slate-600">{s.parentPhone}</p>
+                      </div>
+                      <div>
                         {s.subscription.isActive ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-                            <Clock className="w-3.5 h-3.5" /> غير مفعّل
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="p-4">
-                        {s.subscription.isActive ? (
-                          <div>
-                            <span className="font-mono text-slate-800 font-bold block">
+                          <>
+                            <span className="text-slate-400 text-[10px]">تاريخ الانتهاء</span>
+                            <p className="font-mono text-slate-800 font-bold">
                               {new Date(s.subscription.expiresAt!).toLocaleDateString('ar-EG')}
-                            </span>
-                            <span className="text-[10px] text-emerald-700">متبقي {daysRemaining} يوم</span>
-                          </div>
+                            </p>
+                            <p className="text-[10px] text-emerald-700">متبقي {daysRemaining} يوم</p>
+                          </>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <>
+                            <span className="text-slate-400 text-[10px]">تاريخ الانتهاء</span>
+                            <p className="text-slate-400">-</p>
+                          </>
                         )}
-                      </td>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/admin/students/${s.id}`}
+                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                      >
+                        سجل الطالب <ChevronLeft className="w-3.5 h-3.5" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(s.id, s.name)}
+                        className="shrink-0 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 border border-slate-200 rounded-xl transition-colors"
+                        title="حذف الطالب"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+            <div className="hidden md:block overflow-x-auto -mx-1 px-1">
+              <table className="w-full text-right text-xs min-w-[720px]">
+                <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th className="p-4">اسم الطالب</th>
+                    <th className="p-4">الصف الدراسي</th>
+                    <th className="p-4">رقم الطالب</th>
+                    <th className="p-4">رقم ولي الأمر</th>
+                    <th className="p-4">حالة الاشتراك</th>
+                    <th className="p-4">تاريخ الانتهاء</th>
+                    <th className="p-4 text-center">الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((s) => {
+                    const daysRemaining = getDaysRemaining(s.subscription.expiresAt);
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4">
                           <Link
                             href={`/admin/students/${s.id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                            className="font-bold text-slate-900 hover:text-emerald-800 text-sm block"
                           >
-                            <span>سجل الطالب</span>
-                            <ChevronLeft className="w-3.5 h-3.5" />
+                            {s.name}
                           </Link>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(s.id, s.name)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                            title="حذف الطالب نهائياً من المنصة"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                          <span className="text-[10px] text-slate-400">
+                            مسجل: {new Date(s.createdAt).toLocaleDateString('ar-EG')}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-semibold text-slate-800 block">{GRADE_LABELS[s.grade]}</span>
+                        </td>
+                        <td className="p-4 font-mono font-bold text-slate-800">{s.phone}</td>
+                        <td className="p-4 font-mono text-slate-600">{s.parentPhone}</td>
+                        <td className="p-4">
+                          {s.subscription.isActive ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                              <Clock className="w-3.5 h-3.5" /> غير مفعّل
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          {s.subscription.isActive ? (
+                            <div>
+                              <span className="font-mono text-slate-800 font-bold block">
+                                {new Date(s.subscription.expiresAt!).toLocaleDateString('ar-EG')}
+                              </span>
+                              <span className="text-[10px] text-emerald-700">متبقي {daysRemaining} يوم</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Link
+                              href={`/admin/students/${s.id}`}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                            >
+                              <span>سجل الطالب</span>
+                              <ChevronLeft className="w-3.5 h-3.5" />
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(s.id, s.name)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                              title="حذف الطالب نهائياً من المنصة"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

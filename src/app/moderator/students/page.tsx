@@ -127,77 +127,150 @@ export default function ModeratorStudentsPage() {
             <p className="text-xs">ستظهر بيانات الطلاب هنا فور قيام الطلاب بالتسجيل على المنصة.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-1 px-1">
-            <table className="w-full text-right text-xs min-w-[720px]">
-              <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
-                <tr>
-                  <th className="p-4">اسم الطالب</th>
-                  <th className="p-4">الصف الدراسي</th>
-                  <th className="p-4">رقم الطالب</th>
-                  <th className="p-4">رقم ولي الأمر</th>
-                  <th className="p-4">حالة الاشتراك</th>
-                  <th className="p-4">تاريخ الانتهاء</th>
-                  <th className="p-4">عرض التفاصيل</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtered.map((s) => {
-                  const daysRemaining = getDaysRemaining(s.subscription.expiresAt);
-                  return (
-                    <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-4">
-                        <span className="font-bold text-slate-900 text-sm block">{s.name}</span>
+          <>
+            <div className="md:hidden divide-y divide-slate-100">
+              {filtered.map((s) => {
+                const daysRemaining = getDaysRemaining(s.subscription.expiresAt);
+                return (
+                  <div key={s.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/moderator/students/${s.id}`}
+                          className="font-bold text-slate-900 text-sm block truncate"
+                        >
+                          {s.name}
+                        </Link>
                         <span className="text-[10px] text-slate-400">
                           مسجل: {new Date(s.createdAt).toLocaleDateString('ar-EG')}
                         </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="font-semibold text-slate-800 block">{GRADE_LABELS[s.grade]}</span>
-                      </td>
-                      <td className="p-4 font-mono font-bold text-slate-800">{s.phone}</td>
-                      <td className="p-4 font-mono text-slate-600">
-                        <span className="inline-flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-teal-600" /> {s.parentPhone}
+                      </div>
+                      {s.subscription.isActive ? (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل
                         </span>
-                      </td>
-                      <td className="p-4">
+                      ) : (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                          <Clock className="w-3.5 h-3.5" /> غير مفعّل
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-slate-400 text-[10px]">الصف</span>
+                        <p className="font-semibold text-slate-800 truncate">{GRADE_LABELS[s.grade]}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px]">رقم الطالب</span>
+                        <p className="font-mono font-bold text-slate-800">{s.phone}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px]">رقم ولي الأمر</span>
+                        <p className="font-mono text-slate-600">
+                          <Phone className="w-3 h-3 text-teal-600 inline ml-1" />{s.parentPhone}
+                        </p>
+                      </div>
+                      <div>
                         {s.subscription.isActive ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-                            <Clock className="w-3.5 h-3.5" /> غير مفعّل
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        {s.subscription.isActive ? (
-                          <div>
-                            <span className="font-mono text-slate-800 font-bold block">
+                          <>
+                            <span className="text-slate-400 text-[10px]">تاريخ الانتهاء</span>
+                            <p className="font-mono text-slate-800 font-bold">
                               {new Date(s.subscription.expiresAt!).toLocaleDateString('ar-EG')}
-                            </span>
-                            <span className="text-[10px] text-emerald-700">متبقي {daysRemaining} يوم</span>
-                          </div>
+                            </p>
+                            <p className="text-[10px] text-emerald-700">متبقي {daysRemaining} يوم</p>
+                          </>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <>
+                            <span className="text-slate-400 text-[10px]">تاريخ الانتهاء</span>
+                            <p className="text-slate-400">-</p>
+                          </>
                         )}
-                      </td>
-                      <td className="p-4">
-                        <Link
-                          href={`/moderator/students/${s.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-black text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> متابعة
-                          <ArrowLeft className="w-3 h-3 -mr-0.5" />
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/moderator/students/${s.id}`}
+                      className="flex items-center justify-center gap-1 w-full px-3 py-2 rounded-xl text-xs font-black text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> متابعة
+                      <ArrowLeft className="w-3 h-3 -mr-0.5" />
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto -mx-1 px-1">
+              <table className="w-full text-right text-xs min-w-[720px]">
+                <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th className="p-4">اسم الطالب</th>
+                    <th className="p-4">الصف الدراسي</th>
+                    <th className="p-4">رقم الطالب</th>
+                    <th className="p-4">رقم ولي الأمر</th>
+                    <th className="p-4">حالة الاشتراك</th>
+                    <th className="p-4">تاريخ الانتهاء</th>
+                    <th className="p-4">عرض التفاصيل</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((s) => {
+                    const daysRemaining = getDaysRemaining(s.subscription.expiresAt);
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4">
+                          <span className="font-bold text-slate-900 text-sm block">{s.name}</span>
+                          <span className="text-[10px] text-slate-400">
+                            مسجل: {new Date(s.createdAt).toLocaleDateString('ar-EG')}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-semibold text-slate-800 block">{GRADE_LABELS[s.grade]}</span>
+                        </td>
+                        <td className="p-4 font-mono font-bold text-slate-800">{s.phone}</td>
+                        <td className="p-4 font-mono text-slate-600">
+                          <span className="inline-flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-teal-600" /> {s.parentPhone}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          {s.subscription.isActive ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> مفعّل
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                              <Clock className="w-3.5 h-3.5" /> غير مفعّل
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          {s.subscription.isActive ? (
+                            <div>
+                              <span className="font-mono text-slate-800 font-bold block">
+                                {new Date(s.subscription.expiresAt!).toLocaleDateString('ar-EG')}
+                              </span>
+                              <span className="text-[10px] text-emerald-700">متبقي {daysRemaining} يوم</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <Link
+                            href={`/moderator/students/${s.id}`}
+                            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-black text-teal-800 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors"
+                          >
+                            <Eye className="w-3.5 h-3.5" /> متابعة
+                            <ArrowLeft className="w-3 h-3 -mr-0.5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
