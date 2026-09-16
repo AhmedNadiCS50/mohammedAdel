@@ -152,8 +152,8 @@ export default function RegisterPage() {
 
     if (isFirebaseConfigured()) {
       const authRes = await firebaseRegisterUser(phone.trim(), password);
-      if (!authRes.success && authRes.error?.includes("مسجل")) {
-        setError(authRes.error);
+      if (!authRes.success) {
+        setError(authRes.error || "حدث خطأ أثناء إنشاء الحساب في السحابة. يرجى التحقق من اتصالك والمحاولة ثانيةً.");
         setLoading(false);
         return;
       }
@@ -166,6 +166,7 @@ export default function RegisterPage() {
       grade,
       governorate,
       track: studySystem === "bac" && bacTrack ? bacTrack : undefined,
+      bacTrack: studySystem === "bac" && bacTrack ? bacTrack : undefined,
     });
 
     if (result.success) {

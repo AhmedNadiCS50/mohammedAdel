@@ -18,7 +18,9 @@ import {
   CheckCircle2,
   Clock,
   GraduationCap,
+  Image as ImageIcon,
 } from 'lucide-react';
+import ReportCardModal from '@/components/ReportCardModal';
 
 type MsgTone = 'success' | 'warn' | 'info' | 'neutral';
 
@@ -77,6 +79,7 @@ export default function ModeratorParentalPage() {
   const [gradeFilter, setGradeFilter] = useState<string>('all');
   const [onlyWithParent, setOnlyWithParent] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [selectedReportStudent, setSelectedReportStudent] = useState<Student | null>(null);
 
   const loadStudents = () => setStudents(getStudents());
 
@@ -139,7 +142,7 @@ export default function ModeratorParentalPage() {
         const afterCount = data.lessons.filter((o) => o.orderIndex > l.orderIndex).length;
         out.lessons.push({
           label: `متأخر عن محاضرة: ${l.title}`,
-          message: `${greet()} حبيت أوقف حضرتك ⚠️ الطالب ${s.name} لسه مخلّصش محاضرة «${l.title}» مع إن بعدها نزلت ${afterCount} محاضرات 📚 ياريت تشجعوه يقفل المحاضرات المتراكمة الأول بأول 👌 وأي مساعدة محتاجينها إحنا جنبه 🤝`,
+          message: `${greet()} حبيت أنبّه حضرتك ⚠️ الطالب ${s.name} لسه مخلّصش محاضرة «${l.title}» مع إن بعدها نزلت ${afterCount} ${afterCount > 2 && afterCount <= 10 ? 'محاضرات' : 'محاضرة'} 📚 ياريت تشجعوه يقفل المحاضرات المتراكمة الأول بأول 👌 وأي مساعدة محتاجينها إحنا جنبه 🤝`,
           tone: 'warn',
         });
       });
@@ -350,14 +353,32 @@ export default function ModeratorParentalPage() {
                   </div>
 
                   {hasParent ? (
-                    <div className="mt-3 flex items-center gap-1.5 text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 w-fit">
-                      <Phone className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                      <span dir="ltr">{formatIntlDisplay(s.parentPhone)}</span>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-1.5 text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                        <Phone className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                        <span dir="ltr">{formatIntlDisplay(s.parentPhone)}</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedReportStudent(s)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-sm"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+                        <span>بطاقة التقرير المصورة 📸</span>
+                      </button>
                     </div>
                   ) : (
-                    <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      لا يوجد رقم ولي أمر لهذا الطالب — لن يتم الإرسال.
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        لا يوجد رقم ولي أمر لهذا الطالب — لن يتم الإرسال.
+                      </div>
+                      <button
+                        onClick={() => setSelectedReportStudent(s)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-sm"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+                        <span>بطاقة التقرير المصورة 📸</span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -397,6 +418,31 @@ export default function ModeratorParentalPage() {
           })}
         </div>
       )}
+      {selectedReportStudent && (() => {
+        const gData = gradeDataMap[selectedReportStudent.grade] || { lessons: [], exams: [], assignments: [] };
+        const pMap = new Map(getAllProgressForStudent(selectedReportStudent.id).map((p) => [p.lessonId, p]));
+        const lCompleted = gData.lessons.filter((l) => isCompleted(pMap.get(l.id))).length;
+
+        const allSubmissions = gData.exams.flatMap((e) => getExamSubmissions(selectedReportStudent.id, e.id));
+        const examAvg = allSubmissions.length > 0
+          ? Math.round(allSubmissions.reduce((acc, sub) => acc + (sub.percentage || 0), 0) / allSubmissions.length)
+          : null;
+
+        const aSubmissions = getAssignmentSubmissions(selectedReportStudent.id);
+
+        return (
+          <ReportCardModal
+            student={selectedReportStudent}
+            lessonsCompleted={lCompleted}
+            lessonsTotal={gData.lessons.length}
+            examsAverage={examAvg}
+            examsTaken={allSubmissions.length}
+            assignmentsSubmitted={aSubmissions.length}
+            assignmentsTotal={gData.assignments.length}
+            onClose={() => setSelectedReportStudent(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

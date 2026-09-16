@@ -353,6 +353,37 @@ export default function VideoPlayer({
     };
   }, [isHls]);
 
+  // Listen for external seek requests (e.g. from smart notes or chapters)
+  useEffect(() => {
+    (window as any).adelGetVideoTime = () => {
+      if (isHls && videoRef.current) return Math.floor(videoRef.current.currentTime || 0);
+      if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+        return Math.floor(playerRef.current.getCurrentTime() || 0);
+      }
+      return currentTimeRef.current || 0;
+    };
+
+    const handleSeek = (e: any) => {
+      const target = e.detail?.time;
+      if (typeof target !== 'number') return;
+      if (isHls && videoRef.current) {
+        videoRef.current.currentTime = target;
+        videoRef.current.play().catch(() => {});
+      } else if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
+        playerRef.current.seekTo(target, true);
+        if (typeof playerRef.current.playVideo === 'function') {
+          playerRef.current.playVideo();
+        }
+      }
+    };
+
+    window.addEventListener('adel-video-seek', handleSeek);
+    return () => {
+      window.removeEventListener('adel-video-seek', handleSeek);
+      delete (window as any).adelGetVideoTime;
+    };
+  }, [isHls]);
+
   // ---------- shared tracking ----------
   const startTracking = (player: any) => {
     stopTracking();

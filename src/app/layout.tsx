@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollProgress from "@/components/ScrollProgress";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { Cairo } from "next/font/google";
 
 const cairo = Cairo({
@@ -138,6 +139,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: siteName,
+  },
   category: "education",
 };
 
@@ -169,6 +176,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <WhatsAppButton />
+        <InstallPwaPrompt />
       </body>
     </html>
   );

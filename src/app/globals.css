@@ -750,3 +750,69 @@ p {
   background: #1A2837;
 }
 .dark .scrollbar-none { scrollbar-width: thin; }
+
+/* ═══════════════════════════════════════
+   PREMIUM SPOTLIGHT & ANIMATION SUITE
+═══════════════════════════════════════ */
+@keyframes scaleUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Spotlight Card Effect */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 0), rgba(82, 183, 136, 0.12), transparent 45%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 1;
+}
+
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
+.spotlight-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(27, 67, 50, 0.12);
+  border-color: rgba(82, 183, 136, 0.45);
+}
+
+.dark .spotlight-card::before {
+  background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 0), rgba(82, 183, 136, 0.18), transparent 45%);
+}
+
+.dark .spotlight-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  border-color: rgba(82, 183, 136, 0.4);
+}
+
+/* Stagger List Animation */
+.stagger-container > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger-container > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger-container > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger-container > *:nth-child(4) { animation-delay: 0.16s; }
+.stagger-container > *:nth-child(5) { animation-delay: 0.20s; }
+.stagger-container > *:nth-child(6) { animation-delay: 0.24s; }

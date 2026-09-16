@@ -38,6 +38,8 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import StudentCourseStats from '@/components/StudentCourseStats';
+import StudentBadges from '@/components/StudentBadges';
+import RadialProgress from '@/components/RadialProgress';
 import PageHeader from '@/components/PageHeader';
 
 export default function StudentDashboardPage() {
@@ -235,6 +237,9 @@ export default function StudentDashboardPage() {
           onSelectTab={(tab) => setActiveTab(tab)}
         />
 
+        {/* Student Achievements & Gamification Badges */}
+        <StudentBadges student={student} />
+
         {/* Tabs & Month Filter */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-4">
           <div className="flex items-center gap-2">
@@ -285,25 +290,33 @@ export default function StudentDashboardPage() {
                 <p className="text-xs sm:text-sm text-gray-400 mt-1">سيقوم المدرس برفع المحاضرات قريباً.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 stagger-container">
                 {filteredLessons.map((lesson) => {
                   const accessCheck = canStudentAccessLessonSequential(student, lesson, lessons);
                   const progress = getLessonProgress(student.id, lesson.id);
+                  const percentage = progress?.watchPercentage ?? 0;
                   return (
-                    <div key={lesson.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between">
+                    <div key={lesson.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between spotlight-card">
                       <div className="p-4 sm:p-5 flex-1">
                         <div className="flex items-center justify-between gap-2 mb-3">
                           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200">
                             {lesson.month || 'محاضرة'}
                           </span>
                           {progress?.completed ? (
-                            <span className="text-xs font-bold text-green-700 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> مكتمل
+                            <span className="text-xs font-bold text-green-700 flex items-center gap-1.5">
+                              <RadialProgress percentage={100} size={28} strokeWidth={3} color="#15803d">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                              </RadialProgress>
+                              <span>مكتمل</span>
                             </span>
                           ) : accessCheck.canAccess ? (
-                            <span className="text-xs font-bold text-green-700 flex items-center gap-1">
-                              <Play className="w-3.5 h-3.5 fill-green-700" />
-                              {progress && progress.watchPercentage > 0 ? `${progress.watchPercentage}%` : 'متاح'}
+                            <span className="text-xs font-bold text-green-700 flex items-center gap-1.5">
+                              {percentage > 0 ? (
+                                <RadialProgress percentage={percentage} size={28} strokeWidth={3} color="#2D6A4F" />
+                              ) : (
+                                <Play className="w-3.5 h-3.5 fill-green-700" />
+                              )}
+                              <span>{percentage > 0 ? 'قيد المتابعة' : 'متاح'}</span>
                             </span>
                           ) : accessCheck.reason === 'previous_locked' ? (
                             <span className="text-xs font-bold text-amber-600 flex items-center gap-1">

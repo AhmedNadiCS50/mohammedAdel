@@ -1,5 +1,5 @@
-import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission, Moderator } from './types';
-export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission, Moderator };
+import { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission, Moderator, LessonNote } from './types';
+export type { Student, Lesson, Exam, ExamSubmission, AccessCode, ActivationLog, PlatformSettings, GradeLevel, AcademicTrack, LessonProgress, SubmissionAttachment, Assignment, AssignmentSubmission, Moderator, LessonNote };
 import { STATIC_LESSONS } from '@/data/lessons';
 import { isFirebaseConfigured } from './firebase';
 import {
@@ -55,6 +55,7 @@ const KEYS = {
   ADMIN_AUTH: 'tech_adel_admin_logged_in',
   MODERATOR_SESSION: 'tech_adel_moderator_session',
   PROGRESS: 'tech_adel_progress',
+  NOTES: 'tech_adel_lesson_notes',
 };
 
 // Safe Local Storage access (runs in browser)
@@ -1200,3 +1201,28 @@ export const TRACK_LABELS: Record<AcademicTrack, string> = {
   bac_business: 'إدارة أعمال ومحاسبة',
   bac_arts: 'آداب وفنون',
 };
+
+// ── الملاحظات الذكية على المحاضرات (Smart Timestamped Notes) ──
+export function getLessonNotes(studentId: string, lessonId: string): LessonNote[] {
+  const allNotes = getLocal<LessonNote[]>(KEYS.NOTES, []);
+  return allNotes
+    .filter(n => n.studentId === studentId && n.lessonId === lessonId)
+    .sort((a, b) => a.timeSeconds - b.timeSeconds);
+}
+
+export function saveLessonNote(note: Omit<LessonNote, 'id' | 'createdAt'>): LessonNote {
+  const allNotes = getLocal<LessonNote[]>(KEYS.NOTES, []);
+  const newNote: LessonNote = {
+    ...note,
+    id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    createdAt: new Date().toISOString(),
+  };
+  allNotes.push(newNote);
+  setLocal(KEYS.NOTES, allNotes);
+  return newNote;
+}
+
+export function deleteLessonNote(noteId: string): void {
+  const allNotes = getLocal<LessonNote[]>(KEYS.NOTES, []);
+  setLocal(KEYS.NOTES, allNotes.filter(n => n.id !== noteId));
+}

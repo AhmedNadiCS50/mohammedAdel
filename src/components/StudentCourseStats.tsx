@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Student, Lesson, Exam } from '@/lib/types';
 import { getLessonProgress, getExamSubmissions } from '@/lib/storage';
+import AnimatedCounter from '@/components/AnimatedCounter';
 
 interface StudentCourseStatsProps {
   student: Student;
@@ -187,7 +188,7 @@ export default function StudentCourseStats({
 
             {/* Percentage Text */}
             <span className="relative z-10 text-lg sm:text-2xl font-black text-white drop-shadow-md tracking-wider">
-              {videoPercent}%
+              <AnimatedCounter value={videoPercent} suffix="%" />
             </span>
           </div>
         </div>
@@ -231,7 +232,7 @@ export default function StudentCourseStats({
 
             {/* Percentage Text */}
             <span className="relative z-10 text-lg sm:text-2xl font-black text-white drop-shadow-md tracking-wider">
-              {examPercent}%
+              <AnimatedCounter value={examPercent} suffix="%" />
             </span>
           </div>
         </div>
@@ -330,7 +331,7 @@ export default function StudentCourseStats({
             </h3>
             <div className="pt-1">
               <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {averageScore}%
+                <AnimatedCounter value={averageScore} suffix="%" />
               </span>
             </div>
           </div>

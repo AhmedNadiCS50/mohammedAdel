@@ -15,6 +15,7 @@ import { getLessonByIdFromFirestore } from '@/lib/firestoreService';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { Student, Lesson, Exam } from '@/lib/types';
 import VideoPlayer from '@/components/VideoPlayer';
+import LessonNotesSection from '@/components/LessonNotesSection';
 import {
   ArrowRight,
   Lock,
@@ -278,6 +279,15 @@ export default function WatchLessonPage() {
               </span>
             </div>
           </div>
+
+          {/* Notes & Chapters Section */}
+          {student && (
+            <LessonNotesSection
+              student={student}
+              lessonId={lesson.id}
+              chapters={lesson.chapters}
+            />
+          )}
         </div>
 
       </div>

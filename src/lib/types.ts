@@ -53,8 +53,23 @@ export interface Lesson {
   youtubeVideoId?: string;
   hlsPath?: string;
   pdfAttachmentUrl?: string;
+  chapters?: VideoChapter[];
   durationMinutes?: number;
   orderIndex: number;
+  createdAt: string;
+}
+
+export interface VideoChapter {
+  title: string;
+  timeSeconds: number;
+}
+
+export interface LessonNote {
+  id: string;
+  studentId: string;
+  lessonId: string;
+  text: string;
+  timeSeconds: number;
   createdAt: string;
 }
 
