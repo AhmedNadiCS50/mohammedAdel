@@ -36,7 +36,7 @@ function toInternational(phone: string): string {
   const m12 = digits.match(/201[0125]\d{8}$/);
   if (m12) return m12[0];
   const m11 = digits.match(/01[0125]\d{8}$/);
-  if (m11) return '2' + m11[0].slice(1);
+  if (m11) return '20' + m11[0].slice(1);
   const m10 = digits.match(/1[0125]\d{8}$/);
   if (m10) return '20' + m10[0];
   return digits;
