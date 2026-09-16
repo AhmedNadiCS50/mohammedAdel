@@ -7,7 +7,14 @@ export type GradeLevel =
   | 'second_secondary_bac'
   | 'second_secondary_baccalaureate'
   | 'second_secondary_azhari';
-export type AcademicTrack = 'general' | 'scientific' | 'literary';
+export type AcademicTrack =
+  | 'general'
+  | 'scientific'
+  | 'literary'
+  | 'bac_medical'       // بكالوريا: طب وعلوم حياة
+  | 'bac_engineering'   // بكالوريا: هندسة وعلوم حاسب
+  | 'bac_business'      // بكالوريا: إدارة أعمال ومحاسبة
+  | 'bac_arts';         // بكالوريا: آداب وفنون
 export type QuestionType = 'mcq' | 'essay';
 
 export interface Student {
@@ -15,9 +22,10 @@ export interface Student {
   name: string;
   phone: string;
   parentPhone: string;
+  governorate?: string;
   grade: GradeLevel;
   track?: AcademicTrack;
-  governorate?: string;
+  bacTrack?: string; // مسار البكالوريا: طب/هندسة/إدارة/آداب
   createdAt: string;
   subscription: {
     isActive: boolean;

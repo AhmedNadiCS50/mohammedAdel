@@ -1195,4 +1195,8 @@ export const TRACK_LABELS: Record<AcademicTrack, string> = {
   general: 'عام',
   scientific: 'علمي',
   literary: 'أدبي',
+  bac_medical: 'طب وعلوم حياة',
+  bac_engineering: 'هندسة وعلوم حاسب',
+  bac_business: 'إدارة أعمال ومحاسبة',
+  bac_arts: 'آداب وفنون',
 };
