@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import HeroCreatures3D from "./HeroCreatures3D";
+import ScrollIndicator from "./ScrollIndicator";
 
 const VIDEO_SRC = "/video/hero.mp4";
 
@@ -11,7 +13,7 @@ interface ScrollCanvasProps {
 
 export default function ScrollCanvas({
   children,
-  heightClass = "h-[130vh] sm:h-[260vh] lg:h-[400vh]",
+  heightClass = "h-[120vh] sm:h-[200vh] lg:h-[280vh]",
 }: ScrollCanvasProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -149,12 +151,14 @@ let lastT = -1;
               "linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.44) 12%, rgba(0,0,0,0.24) 30%, rgba(0,0,0,0.40) 62%, rgba(0,0,0,0.62) 100%), radial-gradient(ellipse 80% 60% at 50% 32%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.36) 55%, rgba(0,0,0,0.6) 100%)",
           }}
         />
+        <HeroCreatures3D />
         <div
           ref={contentRef}
           className="relative z-10 px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-14 sm:pb-20 text-center"
         >
           {children}
         </div>
+        <ScrollIndicator />
         <div className="absolute bottom-0 inset-x-0 h-px bg-white/10 z-10 pointer-events-none" />
       </div>
     </section>

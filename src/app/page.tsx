@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -15,6 +15,7 @@ import {
   PenLine,
   Trophy,
   CheckCircle2,
+  Play,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import Tilt from "@/components/Tilt";
@@ -22,8 +23,11 @@ import ScrollCanvas from "@/components/ScrollCanvas";
 import TestimonialsMarquee from "@/components/TestimonialsMarquee";
 import StatsStrip from "@/components/StatsStrip";
 import Faq from "@/components/Faq";
+import HeroWordSwitcher from "@/components/HeroWordSwitcher";
+import PromoModal from "@/components/PromoModal";
 
 export default function Home() {
+  const [promoOpen, setPromoOpen] = useState(false);
   const grades = [
     {
       id: "g1_general",
@@ -132,42 +136,73 @@ export default function Home() {
             </Reveal>
 
             <Reveal delay={100}>
-              <h1 className="mt-6 text-[1.8rem] leading-[1.33] sm:text-5xl lg:text-[3.6rem] sm:leading-[1.2] font-black text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
+              <h1 className="mt-6 text-[1.8rem] leading-[1.33] sm:text-5xl lg:text-[3.4rem] sm:leading-[1.2] font-black text-white tracking-tight drop-shadow-[0_6px_30px_rgba(0,0,0,0.9)] [text-shadow:0_2px_24px_rgba(0,0,0,0.7)]">
                 مادة التكنولوجيا مع
                 <span className="block mt-2 bg-gradient-to-l from-[#4ADE80] via-white to-[#D8D2FF] bg-clip-text text-transparent drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
                   الخبير مستر عمرو شاهين
+                </span>
+                <span className="block mt-3 text-lg sm:text-2xl lg:text-[1.7rem] font-black text-white/95 leading-normal">
+                  طريقك نحو <HeroWordSwitcher />
                 </span>
               </h1>
             </Reveal>
 
             <Reveal delay={180}>
-              <p className="mt-6 text-white/90 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium drop-shadow-[0_3px_16px_rgba(0,0,0,0.8)]">
+              <p className="mt-5 text-white/90 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium drop-shadow-[0_3px_16px_rgba(0,0,0,0.8)]">
                 المنصة التعليمية الأولى المتخصصة في شرح وتدريس مناهج الحاسب الآلي وتكنولوجيا المعلومات والبرمجة لطلاب المرحلة الثانوية، من أول المفاهيم وحتى الدرجة النهائية.
               </p>
+
+              {/* Student Community Social Proof Strip */}
+              <div className="mt-5 flex items-center justify-center lg:justify-start gap-3 select-none">
+                <div className="flex -space-x-2.5 rtl:space-x-reverse overflow-hidden">
+                  <span className="inline-flex h-8 w-8 rounded-full ring-2 ring-[#4ADE80] bg-emerald-700 text-white font-black text-[11px] items-center justify-center shadow-md">أ</span>
+                  <span className="inline-flex h-8 w-8 rounded-full ring-2 ring-[#4ADE80] bg-teal-600 text-white font-black text-[11px] items-center justify-center shadow-md">م</span>
+                  <span className="inline-flex h-8 w-8 rounded-full ring-2 ring-[#4ADE80] bg-amber-600 text-white font-black text-[11px] items-center justify-center shadow-md">ع</span>
+                  <span className="inline-flex h-8 w-8 rounded-full ring-2 ring-[#4ADE80] bg-sky-700 text-white font-black text-[11px] items-center justify-center shadow-md">س</span>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1 text-amber-400 text-xs">
+                    {'★★★★★'}
+                    <span className="font-mono text-white text-[11px] font-black mr-1">5.0</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-white/90 block">
+                    انضم لأكثر من 5,000 طالب متفوق في دفعة 2027
+                  </span>
+                </div>
+              </div>
             </Reveal>
 
             <Reveal delay={260}>
-              <div className="mt-9 flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3">
+              <div className="mt-8 flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3">
                 <Link
                   href="/register"
-                  className="btn-hero btn-hero--green w-full sm:w-auto px-7 py-3 text-sm sm:text-base"
+                  className="btn-hero btn-hero--green w-full sm:w-auto px-7 py-3 text-sm sm:text-base shadow-lg shadow-green-900/50"
                 >
                   <GraduationCap className="w-4 h-4 shrink-0" />
                   أنشئ حسابك وابدأ المذاكرة
                 </Link>
+                <button
+                  onClick={() => setPromoOpen(true)}
+                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-5 py-3 text-xs sm:text-sm flex items-center justify-center gap-2 group"
+                >
+                  <div className="w-5 h-5 rounded-full bg-[#4ADE80]/20 text-[#4ADE80] flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Play className="w-3 h-3 fill-current ml-0.5" />
+                  </div>
+                  <span>شاهد برومو المادة</span>
+                </button>
                 <Link
                   href="/dashboard/subscription"
-                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-5 py-3 text-sm"
                 >
                   <Zap className="w-4 h-4 text-[#4ADE80] shrink-0" />
                   تفعيل كود الاشتراك
                 </Link>
                 <Link
                   href="/products"
-                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-6 py-3 text-sm"
+                  className="btn-hero btn-hero--ghost w-full sm:w-auto px-5 py-3 text-sm"
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
-                  كتاب البكالوريا الورقي
+                  كتاب البكالوريا
                 </Link>
               </div>
             </Reveal>
@@ -188,32 +223,37 @@ export default function Home() {
           </div>
 
           <Reveal delay={150}>
-            <div className="relative w-60 sm:w-72 lg:w-[26rem] aspect-[834/1024] mx-auto lg:mr-auto">
-              <div className="absolute -inset-4 rounded-[2.6rem] bg-gradient-to-br from-[#4ADE80]/30 via-transparent to-[#C9C2FF]/30 blur-2xl" />
-              <div className="absolute -top-3 -right-3 w-full h-full rounded-[2rem] border-2 border-[#4ADE80]/30" />
-              <Image
-                src="/images/teacher.png"
-                alt="مستر عمرو شاهين"
-                width={834}
-                height={1024}
-                priority
-                sizes="(max-width: 640px) 240px, (max-width: 1024px) 288px, 416px"
-                quality={82}
-                className="relative w-full h-full object-cover rounded-[2rem] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.7)]"
-              />
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg animate-float">
-                <Award className="w-3.5 h-3.5 text-[#F3D879]" /> منهج معتمد 2027
+            <Tilt max={10} scale={1.03}>
+              <div className="relative w-60 sm:w-72 lg:w-[26rem] aspect-[834/1024] mx-auto lg:mr-auto">
+                <div className="absolute -inset-4 rounded-[2.6rem] bg-gradient-to-br from-[#4ADE80]/30 via-transparent to-[#C9C2FF]/30 blur-2xl" />
+                <div className="absolute -top-3 -right-3 w-full h-full rounded-[2rem] border-2 border-[#4ADE80]/30" />
+                <Image
+                  src="/images/teacher.png"
+                  alt="مستر عمرو شاهين"
+                  width={834}
+                  height={1024}
+                  priority
+                  sizes="(max-width: 640px) 240px, (max-width: 1024px) 288px, 416px"
+                  quality={82}
+                  className="relative w-full h-full object-cover rounded-[2rem] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.7)]"
+                />
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg animate-float">
+                  <Award className="w-3.5 h-3.5 text-[#F3D879]" /> منهج معتمد 2027
+                </div>
+                <div
+                  className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg animate-float"
+                  style={{ animationDelay: '-2.5s' }}
+                >
+                  <Star className="w-3.5 h-3.5 text-[#F3D879]" /> 5.0 تقييم الطلاب
+                </div>
               </div>
-              <div
-                className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg animate-float"
-                style={{ animationDelay: '-2.5s' }}
-              >
-                <Star className="w-3.5 h-3.5 text-[#F3D879]" /> 5.0 تقييم الطلاب
-              </div>
-            </div>
+            </Tilt>
           </Reveal>
         </div>
       </ScrollCanvas>
+
+      {/* Promo Video Modal */}
+      <PromoModal isOpen={promoOpen} onClose={() => setPromoOpen(false)} />
 
       {/* ═════════════════════════════════════════════
           1.5 STATS — dark numbers strip with count-up
