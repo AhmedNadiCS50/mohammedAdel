@@ -36,6 +36,14 @@ function toInternational(phone: string): string {
   return n.startsWith('0') ? '2' + n.slice(1) : n;
 }
 
+function formatIntlDisplay(phone: string): string {
+  let n = normalizePhone(phone).replace(/\D/g, '');
+  if (!n) return phone.trim();
+  if (n.startsWith('0')) n = '2' + n.slice(1);
+  if (n.length >= 12) return `+20 ${n.slice(2, 4)} ${n.slice(4, 8)} ${n.slice(8)}`;
+  return `+${n}`;
+}
+
 function waLink(parentPhone: string, message: string): string {
   const intl = toInternational(parentPhone);
   return intl ? `https://wa.me/${intl}?text=${encodeURIComponent(message)}` : '';
@@ -183,10 +191,13 @@ export default function ModeratorParentalPage() {
   };
 
   const filtered = students.filter((s) => {
+    const parentDst = formatIntlDisplay(s.parentPhone).replace(/[^0-9]/g, '');
+    const queryDst = searchQuery.replace(/[^0-9]/g, '');
     const matchesSearch =
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.phone.includes(searchQuery) ||
-      s.parentPhone.includes(searchQuery);
+      s.parentPhone.includes(searchQuery) ||
+      (queryDst !== '' && parentDst.includes(queryDst));
     const matchesGrade = gradeFilter === 'all' || s.grade === gradeFilter;
     const matchesParent = !onlyWithParent || s.parentPhone.trim().length > 0;
     return matchesSearch && matchesGrade && matchesParent;
@@ -330,7 +341,7 @@ export default function ModeratorParentalPage() {
                   {hasParent ? (
                     <div className="mt-3 flex items-center gap-1.5 text-xs font-mono text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 w-fit">
                       <Phone className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                      <span dir="ltr">{s.parentPhone}</span>
+                      <span dir="ltr">{formatIntlDisplay(s.parentPhone)}</span>
                     </div>
                   ) : (
                     <div className="mt-3 flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
