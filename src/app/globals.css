@@ -579,14 +579,27 @@ p {
 .dark .bg-gray-100, .dark .bg-slate-100 { background-color: #151F30; }
 .dark .bg-gray-200, .dark .bg-slate-200 { background-color: #1B2A3E; }
 .dark .bg-gray-300 { background-color: #22344C; }
+
+/* الخلفيات الشفافة الفاتحة — تتثبت كلون صلب داكن بدل "غيمة" رمادية */
+.dark .bg-gray-50\/50, .dark .bg-gray-50\/60, .dark .bg-gray-50\/70 { background-color: #111C2D; }
+.dark .bg-slate-50\/50, .dark .bg-slate-50\/70 { background-color: #111C2D; }
+.dark .bg-emerald-50\/40 { background-color: #0A2419; }
+.dark .bg-green-50\/20, .dark .bg-green-50\/30,
+.dark .bg-green-50\/50, .dark .bg-green-50\/60 { background-color: #0A2A15; }
+.dark .bg-teal-50\/60 { background-color: #0A2727; }
+.dark .bg-amber-50\/70 { background-color: #292006; }
+.dark .bg-red-50\/80 { background-color: #351112; }
+
 .dark .bg-\[\#F3F7F4\] { background-color: #0B1C17; }
 .dark .bg-\[\#FAFAF8\] { background-color: #0B1120; }
 .dark .bg-\[\#D4EFDF\] { background-color: #0B2B1C; }
 .dark .bg-\[\#D8F3DC\] { background-color: #0B2B17; }
-.dark .text-\[\#1B4332\] { color: #A7F3D0; }
-.dark .text-\[\#2D6A4F\] { color: #6EE7B7; }
+.dark .text-\[\#1B4332\] { color: #C7F7E2; }
+.dark .text-\[\#2D6A4F\] { color: #9CEBC9; }
+.dark .text-\[\#2D4A38\] { color: #E9EFF5; }
 .dark .border-\[\#74C69D\] { border-color: #1F3D2D; }
 .dark .border-\[\#A8D5B5\] { border-color: #1F3D2D; }
+.dark .border-\[\#D1E8D9\] { border-color: #2A3B52; }
 
 /* Brand-tinted surfaces */
 .dark .bg-emerald-50  { background-color: #08211A; }
@@ -616,8 +629,14 @@ p {
 .dark .border-teal-300 { border-color: #285050; }
 .dark .border-amber-100 { border-color: #3A2C0D; }
 .dark .border-amber-200 { border-color: #4A3A15; }
+.dark .border-amber-300 { border-color: #5C4914; }
 .dark .border-red-100 { border-color: #3A1416; }
 .dark .border-red-200 { border-color: #4A1B1E; }
+.dark .border-red-300 { border-color: #5A2326; }
+.dark .border-green-300 { border-color: #28503B; }
+.dark .border-blue-200 { border-color: #1E3A5F; }
+.dark .bg-violet-50   { background-color: #1E1530; }
+.dark .border-violet-200 { border-color: #33254A; }
 
 .dark .divide-slate-100 { border-color: #1E2B3F; }
 .dark .divide-slate-200, .dark .divide-gray-100 { border-color: #2A3B52; }
@@ -658,6 +677,7 @@ p {
 .dark .text-blue-800    { color: #D6E8FF; }
 .dark .text-blue-700    { color: #B8D7FF; }
 .dark .text-blue-600    { color: #96C1FF; }
+.dark .text-violet-800  { color: #DDD6FE; }
 
 /* ── Active nav pills that used white bg + dark text ── */
 .dark .bg-white.text-emerald-950 { color: #C7F7E2; }
@@ -679,6 +699,7 @@ p {
 .dark .hover\:text-emerald-700:hover, .dark .hover\:text-green-700:hover { color: #79E0B4; }
 .dark .hover\:text-slate-600:hover { color: #E9EFF5; }
 .dark .hover\:text-red-600:hover, .dark .hover\:text-red-500:hover { color: #FF9AA1; }
+.dark .hover\:border-green-300:hover { border-color: #28503B; }
 
 /* ── Structural dark-mode polish ──────────────────── */
 .dark .animated-gradient-header {
