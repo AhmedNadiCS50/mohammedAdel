@@ -9,6 +9,7 @@ import { getAssignmentSubmissionsFromFirestore } from '@/lib/firestoreService';
 import { ensureAdminFirebaseAuth } from '@/lib/firebaseAuth';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { subscribePendingPostsCount, subscribePendingReplies } from '@/lib/forumService';
+import ThemeToggle from '@/components/ThemeToggle';
 import { 
   LayoutDashboard, 
   Users, 
@@ -170,6 +171,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 shrink-0">
+              <ThemeToggle variant="onDark" />
+
               <Link
                 href="/"
                 className="group inline-flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/45 backdrop-blur-sm shadow-md shadow-black/20 whitespace-nowrap transition-colors duration-200 cursor-pointer"

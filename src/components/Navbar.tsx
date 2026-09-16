@@ -19,6 +19,7 @@ import {
 import { getCurrentStudent, setCurrentStudent, isAdminLoggedIn, setAdminLoggedIn } from '@/lib/storage';
 import { Student } from '@/lib/types';
 import { firebaseLogoutUser } from '@/lib/firebaseAuth';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -161,14 +162,17 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile/Tablet menu button (Phones & Tablets below 1024px) */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="القائمة"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Theme toggle + Mobile/Tablet menu button (Phones & Tablets below 1024px) */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="القائمة"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </div>
 

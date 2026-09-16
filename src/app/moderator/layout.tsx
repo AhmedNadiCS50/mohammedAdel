@@ -8,6 +8,7 @@ import { getAssignmentSubmissionsFromFirestore } from '@/lib/firestoreService';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { subscribePendingPostsCount, subscribePendingReplies } from '@/lib/forumService';
 import { Moderator } from '@/lib/types';
+import ThemeToggle from '@/components/ThemeToggle';
 import {
   LayoutDashboard,
   LogOut,
@@ -138,6 +139,7 @@ export default function ModeratorLayout({ children }: { children: React.ReactNod
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <ThemeToggle variant="onDark" />
               <Link
                 href="/"
                 className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/45 backdrop-blur-sm shadow-md shadow-black/20 whitespace-nowrap transition-colors duration-200 cursor-pointer"

@@ -149,11 +149,16 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <head>
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" id="theme-color-meta" content="#ffffff" />
         <meta name="format-detection" content="telephone=no" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('madrasa-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}var r=document.documentElement;r.classList.toggle('dark',t==='dark');r.style.colorScheme=t;var m=document.getElementById('theme-color-meta');if(m){m.setAttribute('content',t==='dark'?'#0B1120':'#ffffff');}}catch(e){}})();`,
+          }}
         />
       </head>
       <body className={`min-h-screen flex flex-col antialiased ${cairo.className} ${cairo.variable}`}>

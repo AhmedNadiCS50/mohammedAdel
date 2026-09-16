@@ -1,48 +1,44 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/lib/theme';
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+interface ThemeToggleProps {
+  variant?: 'default' | 'onDark';
+  className?: string;
+}
 
-  useEffect(() => {
-    const saved = localStorage.getItem('app-theme') as 'dark' | 'light' | null;
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.classList.toggle('light-mode', saved === 'light');
-      document.documentElement.classList.toggle('dark-mode', saved === 'dark');
-    } else {
-      document.documentElement.classList.add('dark-mode');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('app-theme', next);
-    document.documentElement.classList.toggle('light-mode', next === 'light');
-    document.documentElement.classList.toggle('dark-mode', next === 'dark');
-    window.dispatchEvent(new CustomEvent('theme-changed', { detail: next }));
-  };
+export default function ThemeToggle({ variant = 'default', className = '' }: ThemeToggleProps) {
+  const { isDark, toggleTheme } = useTheme();
+  const onDark = variant === 'onDark';
 
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label={isDark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
       onClick={toggleTheme}
-      aria-label="تبديل المظهر"
-      className="p-2 rounded-xl transition-all duration-300 border flex items-center justify-center"
-      style={{
-        background: theme === 'dark' ? 'rgba(0, 245, 160, 0.08)' : 'rgba(6, 78, 59, 0.08)',
-        borderColor: theme === 'dark' ? 'rgba(0, 245, 160, 0.25)' : 'rgba(6, 78, 59, 0.2)',
-        color: theme === 'dark' ? '#00f5a0' : '#064e3b',
-      }}
-      title={theme === 'dark' ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'}
+      className={`relative flex items-center justify-between w-14 h-7 rounded-full p-1 shrink-0 transition-colors duration-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 ${
+        onDark
+          ? 'bg-white/10 border border-white/20 hover:bg-white/20'
+          : isDark
+            ? 'bg-slate-800 border border-slate-600/50 hover:bg-slate-700'
+            : 'bg-emerald-100 border border-emerald-300/60 hover:bg-emerald-50'
+      } ${className}`}
     >
-      {theme === 'dark' ? (
-        <Sun className="w-4 h-4 text-amber-400" />
-      ) : (
-        <Moon className="w-4 h-4 text-emerald-800" />
-      )}
+      <span className={`relative z-10 flex items-center justify-center w-5 h-5 ${isDark ? 'text-slate-500' : 'text-amber-500'}`}>
+        <Sun className="w-4 h-4" />
+      </span>
+      <span className={`relative z-10 flex items-center justify-center w-5 h-5 ${isDark ? 'text-amber-300' : 'text-slate-400'}`}>
+        <Moon className="w-4 h-4" />
+      </span>
+      <span
+        className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-all duration-300 ${
+          onDark ? 'shadow-black/40' : 'shadow-emerald-900/20'
+        } ${isDark ? 'left-1' : 'right-1'}`}
+      />
     </button>
   );
 }
