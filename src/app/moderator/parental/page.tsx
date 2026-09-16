@@ -31,17 +31,24 @@ interface ReadyMessage {
 const isCompleted = (p?: { completed?: boolean; watchPercentage?: number } | null) => !!p && (p.completed === true || (p.watchPercentage ?? 0) >= 90);
 
 function toInternational(phone: string): string {
-  const n = normalizePhone(phone);
-  if (!n) return '';
-  return n.startsWith('0') ? '2' + n.slice(1) : n;
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  const m12 = digits.match(/201[0125]\d{8}$/);
+  if (m12) return m12[0];
+  const m11 = digits.match(/01[0125]\d{8}$/);
+  if (m11) return '2' + m11[0].slice(1);
+  const m10 = digits.match(/1[0125]\d{8}$/);
+  if (m10) return '20' + m10[0];
+  return digits;
 }
 
 function formatIntlDisplay(phone: string): string {
-  let n = normalizePhone(phone).replace(/\D/g, '');
-  if (!n) return phone.trim();
-  if (n.startsWith('0')) n = '2' + n.slice(1);
-  if (n.length >= 12) return `+20 ${n.slice(2, 4)} ${n.slice(4, 8)} ${n.slice(8)}`;
-  return `+${n}`;
+  const intl = toInternational(phone);
+  if (!intl) return (phone || '').trim();
+  if (/^201[0125]\d{8}$/.test(intl)) {
+    return `+20 ${intl.slice(2, 4)} ${intl.slice(4, 8)} ${intl.slice(8)}`;
+  }
+  return `+${intl}`;
 }
 
 function waLink(parentPhone: string, message: string): string {
