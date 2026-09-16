@@ -66,7 +66,7 @@ export default function Navbar() {
 
           {/* Brand */}
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden border-2 border-green-200 shrink-0">
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden border-2 border-green-200 shrink-0 animate-logo-pop">
               <Image
                 src="/images/teacher.png"
                 alt="مستر عمرو شاهين"
@@ -75,13 +75,15 @@ export default function Navbar() {
                 priority
               />
             </div>
-            <div className="flex flex-col leading-tight min-w-0">
-              <span className="font-black text-sm sm:text-base text-gray-900 group-hover:text-green-800 transition-colors truncate">
-                مادة التكنولوجيا
-              </span>
-              <span className="text-[11px] sm:text-xs font-medium text-green-700 truncate">
-                مستر عمرو شاهين
-              </span>
+            <div className="brand-text-reveal">
+              <div className="flex flex-col leading-tight min-w-0 whitespace-nowrap text-right">
+                <span className="font-black text-sm sm:text-base text-gray-900 group-hover:text-green-800 transition-colors block">
+                  مادة التكنولوجيا
+                </span>
+                <span className="text-[11px] sm:text-xs font-medium text-green-700 block">
+                  مستر عمرو شاهين
+                </span>
+              </div>
             </div>
           </Link>
 
