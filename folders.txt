@@ -1,4 +1,0 @@
-F:\ادوات خاصة\اداة الصور || git=False src=False
-F:\ادوات خاصة\اداة لتنزيل فديوهات التيك توك || git=True src=False
-F:\ادوات خاصة\منصة مدرس || git=True src=True
-F:\ادوات خاصة\منصة مدرس - Copy || git=False src=False
