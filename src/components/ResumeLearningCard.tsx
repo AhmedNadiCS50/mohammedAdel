@@ -28,10 +28,10 @@ export default function ResumeLearningCard({ student }: { student: Student }) {
         <div className="min-w-0">
           <p className="text-[10px] font-black text-emerald-700 mb-0.5">استكمل من حيث وقفت 🎬</p>
           <h3 className="text-sm font-black text-gray-900 truncate">{lesson.title}</h3>
-          <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
-            <Clock className="w-3.5 h-3.5 text-amber-500" />
+          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+            <Clock className="w-3.5 h-3.5 inline-block align-[-2px] text-amber-500 ml-1" />
             <span>فضل حوالي <strong className="text-gray-700">{remainingMin} دقيقة</strong></span>
-            <span className="text-gray-400">·</span>
+            <span className="text-gray-400 mx-1">·</span>
             <span>الإنجاز: <strong className="text-emerald-700">{percentage}%</strong></span>
           </p>
           <div className="mt-2 w-full max-w-xs bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">

@@ -29,25 +29,23 @@ export default function StudyStreakBanner({ student }: { student: Student }) {
   }
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 shadow-sm flex flex-col gap-4">
+      <div className="flex items-center gap-3 min-w-0">
         <div className="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/15 border border-amber-200 flex items-center justify-center">
           <Flame className="w-7 h-7 text-amber-600" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h3 className="text-sm sm:text-base font-black text-gray-900 leading-relaxed">
             {current > 0 ? (
-              <span className="flex flex-wrap items-baseline gap-x-1">
-                <span>أنت ملتزم لليوم الـ</span>
-                <span className="text-amber-600 text-lg">{current}</span>
-                <span>على التوالي؛ حافظ على الشعلة 🔥</span>
-              </span>
+              <>
+                أنت ملتزم لليوم الـ <span className="text-amber-600">{current}</span> على التوالي؛ حافظ على الشعلة 🔥
+              </>
             ) : (
-              <span>ابدأ أول يوم التزام النهاردة 🔥</span>
+              <>ابدأ أول يوم التزام النهاردة 🔥</>
             )}
           </h3>
           <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            <Sparkles className="w-3.5 h-3.5 inline-block align-[-2px] text-amber-500 ml-1" />
+            <Sparkles className="w-3.5 h-3.5 inline-block align-[-2px] text-amber-600 ml-1" />
             {current > 0
               ? 'شاهد محاضرة أو حل امتحان يومياً عشان الشعلة تفضل مضيئة.'
               : 'أكمل محاضرة واحدة دلوقتي ورجعلنا بكرة — خليها عادة!'}
@@ -61,7 +59,7 @@ export default function StudyStreakBanner({ student }: { student: Student }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 justify-center sm:justify-start">
         {days.map((d, i) => (
           <div key={i} className="flex flex-col items-center gap-1">
             <div
