@@ -286,6 +286,28 @@ export async function deleteForumPost(postId: string): Promise<{ success: boolea
   }
 }
 
+/** A student deletes one of their OWN posts (plus all of its replies). */
+export async function deleteMyForumPost(postId: string, authorStudentId: string): Promise<{ success: boolean; error?: string }> {
+  if (!isFirebaseConfigured() || !db) return { success: false, error: 'المنتدى غير متصل بـ Firebase حالياً.' };
+  try {
+    const post = await getForumPostById(postId);
+    if (!post) return { success: false, error: 'المنشور غير موجود.' };
+    if (post.authorStudentId !== authorStudentId) {
+      return { success: false, error: 'لا يمكنك حذف منشورات الآخرين.' };
+    }
+    await ensureForumAuth();
+    const replies = await getDocs(query(collection(db, REPLY_COLLECTION), where('postId', '==', postId)));
+    for (const r of replies.docs) {
+      await deleteDoc(r.ref);
+    }
+    await deleteDoc(doc(db, POST_COLLECTION, postId));
+    return { success: true };
+  } catch (err: any) {
+    console.error('deleteMyForumPost error:', err);
+    return { success: false, error: err?.message || 'حدث خطأ أثناء حذف المنشور.' };
+  }
+}
+
 /** Live listener for ALL posts (teacher moderation page). */
 export function subscribeAllPosts(
   onData: (posts: ForumPost[]) => void,
@@ -487,6 +509,37 @@ export async function deleteForumReply(replyId: string, postId: string, wasPubli
   } catch (err: any) {
     console.error('deleteForumReply error:', err);
     return { success: false, error: err?.message || 'فشل حذف الرد.' };
+  }
+}
+
+/** A student deletes one of their OWN replies; published ones decrease the thread counter. */
+export async function deleteMyForumReply(
+  replyId: string,
+  postId: string,
+  wasPublished: boolean,
+  authorStudentId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!isFirebaseConfigured() || !db) return { success: false, error: 'المنتدى غير متصل بـ Firebase حالياً.' };
+  try {
+    const { getDoc } = await import('firebase/firestore');
+    const snap = await getDoc(doc(db, REPLY_COLLECTION, replyId));
+    if (!snap.exists()) return { success: false, error: 'الرد غير موجود.' };
+    const data = snap.data();
+    if (data.authorStudentId !== authorStudentId) {
+      return { success: false, error: 'لا يمكنك حذف ردود الآخرين.' };
+    }
+    await ensureForumAuth();
+    await deleteDoc(doc(db, REPLY_COLLECTION, replyId));
+    if (wasPublished) {
+      await updateDoc(doc(db, POST_COLLECTION, postId), {
+        replyCount: increment(-1),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('deleteMyForumReply error:', err);
+    return { success: false, error: err?.message || 'حدث خطأ أثناء حذف الرد.' };
   }
 }
 

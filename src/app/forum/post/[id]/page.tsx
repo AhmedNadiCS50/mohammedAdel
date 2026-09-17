@@ -14,6 +14,8 @@ import {
   subscribePostReplies,
   addForumReply,
   setPostResolved,
+  deleteMyForumPost,
+  deleteMyForumReply,
   ensureForumAuth
 } from '@/lib/forumService';
 import { isFirebaseConfigured } from '@/lib/firebase';
@@ -30,7 +32,8 @@ import {
   AlertCircle,
   CheckCheck,
   BookOpen,
-  AudioLines
+  AudioLines,
+  Trash2
 } from 'lucide-react';
 import { formatTimeAgo, forumErrorMessage, forumTopicLabel } from '@/lib/forumUtils';
 import { subscribeStudentMute, isStudentMuted, formatMuteUntil } from '@/lib/muteService';
@@ -57,6 +60,8 @@ export default function ForumPostPage() {
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState('');
   const [myMute, setMyMute] = useState<StudentMute | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     const s = getCurrentStudent();
@@ -153,6 +158,32 @@ export default function ForumPostPage() {
     if (!res.success) setError(res.error || 'فشل تحديث حالة السؤال.');
   };
 
+  const handleDeletePost = async () => {
+    if (!post || !student) return;
+    if (!window.confirm('هل تريد حذف هذا المنشور نهائياً؟ سيتم حذف كل ردوده أيضاً ولا يمكن التراجع.')) return;
+    setActionError('');
+    setBusyAction('post');
+    const res = await deleteMyForumPost(post.id, student.id);
+    setBusyAction(null);
+    if (res.success) {
+      router.push('/forum');
+    } else {
+      setActionError(res.error || 'حدث خطأ أثناء حذف المنشور.');
+    }
+  };
+
+  const handleDeleteReply = async (reply: ForumReply) => {
+    if (!student || !post) return;
+    if (!window.confirm('هل تريد حذف ردّك نهائياً؟ لا يمكن التراجع.')) return;
+    setActionError('');
+    setBusyAction(reply.id);
+    const res = await deleteMyForumReply(reply.id, post.id, reply.status === 'published', student.id);
+    setBusyAction(null);
+    if (!res.success) {
+      setActionError(res.error || 'حدث خطأ أثناء حذف الرد.');
+    }
+  };
+
   if (!student || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -223,6 +254,13 @@ export default function ForumPostPage() {
         <Link href="/forum" className="inline-flex items-center gap-1.5 text-xs font-bold text-green-800 hover:underline">
           <ArrowRight className="w-3.5 h-3.5" /> العودة إلى المنتدى
         </Link>
+
+        {actionError && (
+          <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-xs text-red-800">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{actionError}</span>
+          </div>
+        )}
 
         {/* Post Card */}
         <article className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm">
@@ -315,6 +353,20 @@ export default function ForumPostPage() {
           )}
         </article>
 
+        {isAuthor && (
+          <div className="bg-white border border-red-200 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-[11px] text-gray-500">أنت صاحب هذا المنشور — يمكنك حذفه في أي وقت.</span>
+            <button
+              onClick={handleDeletePost}
+              disabled={busyAction === 'post'}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-black text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {busyAction === 'post' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              حذف المنشور
+            </button>
+          </div>
+        )}
+
         {/* Replies Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
@@ -362,6 +414,16 @@ export default function ForumPostPage() {
                       )}
                       <span className="w-1 h-1 rounded-full bg-gray-300" />
                       <span className="text-[10px] text-gray-400">{formatTimeAgo(reply.createdAt)}</span>
+                      {reply.authorStudentId === student.id && (
+                        <button
+                          onClick={() => handleDeleteReply(reply)}
+                          disabled={busyAction === reply.id}
+                          className="mr-auto inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
+                          title="حذف الرد"
+                        >
+                          {busyAction === reply.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                        </button>
+                      )}
                     </div>
 <p className="text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
                       {reply.imageUrls && reply.imageUrls.length > 0 && (

@@ -13,6 +13,7 @@ import {
   subscribePublishedPosts,
   subscribeMyPosts,
   createForumPost,
+  deleteMyForumPost,
   ensureForumAuth
 } from '@/lib/forumService';
 import { isFirebaseConfigured } from '@/lib/firebase';
@@ -35,7 +36,8 @@ import {
   Inbox,
   AlertCircle,
   BookOpen,
-  CheckCheck
+  CheckCheck,
+  Trash2
 } from 'lucide-react';
 
 function statusBadge(post: ForumPost) {
@@ -86,6 +88,8 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
 
   const [resolveFilter, setResolveFilter] = useState<'all' | 'unresolved' | 'solved' | 'no_replies'>('all');
   const [myMute, setMyMute] = useState<StudentMute | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
   // Pre-fill composer when arriving from a lesson ("اسأل عن هذا الدرس")
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -190,6 +194,18 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
       setTimeout(() => setSentOk(false), 6000);
     } else {
       setError(res.error || 'فشل إرسال السؤال.');
+    }
+  };
+
+  const handleDeletePost = async (post: ForumPost) => {
+    if (!student) return;
+    if (!window.confirm('هل تريد حذف هذا المنشور نهائياً؟ سيتم حذف كل ردوده أيضاً ولا يمكن التراجع.')) return;
+    setDeletingId(post.id);
+    setDeleteError('');
+    const res = await deleteMyForumPost(post.id, student.id);
+    setDeletingId(null);
+    if (!res.success) {
+      setDeleteError(res.error || 'حدث خطأ أثناء حذف المنشور.');
     }
   };
 
@@ -359,6 +375,13 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
           />
         </div>
 
+        {deleteError && (
+          <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-xs text-red-800">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{deleteError}</span>
+          </div>
+        )}
+
       {/* Filters: topic + resolved state */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -459,9 +482,8 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
           ) : (
             <div className="space-y-3">
               {filteredPublished.map((post) => (
-                <Link
+                <div
                   key={post.id}
-                  href={`/forum/post/${post.id}`}
                   className="block bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-green-300 transition-all"
                 >
                   <div className="flex flex-col gap-2">
@@ -482,8 +504,22 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
                           )}
                         </span>
                       )}
-                      <span className="text-[11px] text-gray-400">{formatTimeAgo(post.createdAt)}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {post.authorStudentId === student.id && (
+                          <button
+                            onClick={() => handleDeletePost(post)}
+                            disabled={deletingId === post.id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
+                            title="حذف المنشور"
+                          >
+                            {deletingId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            حذف
+                          </button>
+                        )}
+                        <span className="text-[11px] text-gray-400">{formatTimeAgo(post.createdAt)}</span>
+                      </div>
                     </div>
+                    <Link href={`/forum/post/${post.id}`} className="block">
                     <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-snug line-clamp-1">{post.title}</h3>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{post.content}</p>
                     {(post.resolved || post.topic || post.lessonId) && (
@@ -521,8 +557,9 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
                         <StaffIdentityBadge role={post.authorRole} name={post.authorName} compact />
                       )}
                     </div>
+                    </Link>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )
@@ -536,16 +573,29 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
           ) : (
             <div className="space-y-3">
               {myPosts.map((post) => (
-                <Link
+                <div
                   key={post.id}
-                  href={`/forum/post/${post.id}`}
                   className="block bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 >
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between gap-2">
                       {statusBadge(post)}
-                      <span className="text-[11px] text-gray-400">{GRADE_LABELS[post.grade]} · {formatTimeAgo(post.createdAt)}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {post.authorStudentId === student.id && (
+                          <button
+                            onClick={() => handleDeletePost(post)}
+                            disabled={deletingId === post.id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
+                            title="حذف المنشور"
+                          >
+                            {deletingId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            حذف
+                          </button>
+                        )}
+                        <span className="text-[11px] text-gray-400">{GRADE_LABELS[post.grade]} · {formatTimeAgo(post.createdAt)}</span>
+                      </div>
                     </div>
+                    <Link href={`/forum/post/${post.id}`} className="block">
                     <h3 className="text-sm sm:text-base font-bold text-gray-900 line-clamp-1">{post.title}</h3>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{post.content}</p>
                     {(post.topic || post.resolved) && (
@@ -575,8 +625,9 @@ const [topicFilter, setTopicFilter] = useState<'all' | ForumTopic>('all');
                         <span className="font-bold">سبب الرفض: </span>{post.rejectionReason}
                       </div>
                     )}
+                  </Link>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )
