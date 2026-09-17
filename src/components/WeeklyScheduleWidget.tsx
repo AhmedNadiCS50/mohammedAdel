@@ -56,7 +56,7 @@ export default function WeeklyScheduleWidget({ lessons, exams, assignments }: We
   const meta = {
     lesson: { label: 'محاضرة تنزل', icon: <Video className="w-3.5 h-3.5" />, cls: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
     exam: { label: 'امتحان متاح', icon: <HelpCircle className="w-3.5 h-3.5" />, cls: 'bg-amber-50 border-amber-200 text-amber-800' },
-    assignment: { label: 'تسليم واجب', icon: <ClipboardList className="w-3.5 h-3.5" />, cls: 'bg-sky-50 border-sky-200 text-sky-800' },
+    assignment: { label: 'تسليم واجب', icon: <ClipboardList className="w-3.5 h-3.5" />, cls: 'bg-teal-50 border-teal-200 text-teal-800' },
   } as const;
 
   return (

@@ -17,9 +17,9 @@ interface ClassLeaderboardProps {
 }
 
 const rankMeta = (rank: number) => {
-  if (rank === 1) return { icon: <Crown className="w-4 h-4 text-amber-500" />, cls: 'bg-amber-100 border-amber-300 text-amber-900' };
+  if (rank === 1) return { icon: <Crown className="w-4 h-4 text-amber-600" />, cls: 'bg-amber-100 border-amber-300 text-amber-900' };
   if (rank === 2) return { icon: <Medal className="w-4 h-4 text-slate-500" />, cls: 'bg-slate-100 border-slate-300 text-slate-800' };
-  if (rank === 3) return { icon: <Medal className="w-4 h-4 text-orange-600" />, cls: 'bg-orange-100 border-orange-300 text-orange-900' };
+  if (rank === 3) return { icon: <Medal className="w-4 h-4 text-emerald-600" />, cls: 'bg-emerald-100 border-emerald-300 text-emerald-900' };
   return { icon: null, cls: 'bg-slate-50 border-slate-200 text-slate-600' };
 };
 

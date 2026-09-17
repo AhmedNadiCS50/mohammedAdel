@@ -29,26 +29,35 @@ export default function StudyStreakBanner({ student }: { student: Student }) {
   }
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-gradient-to-l from-amber-50 to-white p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-300 flex items-center justify-center shrink-0">
-          <Flame className="w-7 h-7 text-amber-500" />
+        <div className="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/15 border border-amber-200 flex items-center justify-center">
+          <Flame className="w-7 h-7 text-amber-600" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm sm:text-base font-black text-gray-900">
+          <h3 className="text-sm sm:text-base font-black text-gray-900 leading-relaxed">
             {current > 0 ? (
-              <>أنت ملتزم لليوم الـ <span className="text-amber-600">{current}</span> على التوالي! حافظ على الشعلة 🔥</>
+              <span className="flex flex-wrap items-baseline gap-x-1">
+                <span>أنت ملتزم لليوم الـ</span>
+                <span className="text-amber-600 text-lg">{current}</span>
+                <span>على التوالي؛ حافظ على الشعلة 🔥</span>
+              </span>
             ) : (
-              <>ابدأ أول يوم التزام النهاردة 🔥</>
+              <span>ابدأ أول يوم التزام النهاردة 🔥</span>
             )}
           </h3>
-          <p className="text-xs text-gray-600 mt-0.5 flex items-center gap-1.5 flex-wrap">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+            <Sparkles className="w-3.5 h-3.5 inline-block align-[-2px] text-amber-500 ml-1" />
             {current > 0
               ? 'شاهد محاضرة أو حل امتحان يومياً عشان الشعلة تفضل مضيئة.'
-              : 'أكمل محاضرة واحدة حالياً ورجعلنا بكرة — خليها عادة!'}
-            {best > 0 && <span className="font-bold text-gray-700">أفضل ستريك: {best} 🔥</span>}
+              : 'أكمل محاضرة واحدة دلوقتي ورجعلنا بكرة — خليها عادة!'}
           </p>
+          {best > 0 && (
+            <span className="inline-flex items-center gap-1 mt-1.5 bg-amber-500/15 border border-amber-200 text-amber-700 rounded-full px-2 py-0.5 text-[10px] font-black">
+              <Flame className="w-3 h-3" />
+              أفضل ستريك: {best}
+            </span>
+          )}
         </div>
       </div>
 
