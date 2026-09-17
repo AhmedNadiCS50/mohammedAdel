@@ -55,7 +55,7 @@ export default function Navbar() {
     { name: 'لوحة المدرس',   href: '/admin',      icon: ShieldCheck },
   ];
 
-  if (pathname && pathname.startsWith('/admin')) {
+  if (pathname && (pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/moderator'))) {
     return null;
   }
 
