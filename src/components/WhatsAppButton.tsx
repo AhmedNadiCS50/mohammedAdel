@@ -7,7 +7,7 @@ import { getSettings } from '@/lib/storage';
 
 export default function WhatsAppButton() {
   const pathname = usePathname();
-  const [number, setNumber] = useState('201030585226');
+  const [number, setNumber] = useState('201112807869');
 
   useEffect(() => {
     const s = getSettings();

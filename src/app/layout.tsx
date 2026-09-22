@@ -32,7 +32,7 @@ const jsonLd = {
       founder: { "@type": "Person", name: "مستر عمرو شاهين" },
       contactPoint: {
         "@type": "ContactPoint",
-        telephone: "+201030585226",
+        telephone: "+201112807869",
         contactType: "customer support",
         availableLanguage: "ar",
       },

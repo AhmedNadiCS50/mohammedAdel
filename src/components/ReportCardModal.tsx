@@ -271,7 +271,7 @@ export default function ReportCardModal({
 
     ctx.fillStyle = "#94A3B8";
     ctx.font = "600 18px 'Cairo', 'Tajawal', sans-serif";
-    ctx.fillText("المتابعة المستمرة تصنع الفارق ✦ للتواصل والواتساب: 01030585226", w / 2, footerY + 35);
+    ctx.fillText("المتابعة المستمرة تصنع الفارق ✦ للتواصل والواتساب: 01112807869", w / 2, footerY + 35);
 
     // Official Certified Stamp
     const stampX = w / 2;
